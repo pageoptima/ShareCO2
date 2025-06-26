@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+model User {
+  id                 String    @id @default(auto()) @map("_id") @db.ObjectId
+  name               String?
+  email              String    @unique
+  gender             String?
+  age                Int?
+  phone              String?
+  carbonPoints       Float     @default(0)
+  isAdmin            Boolean   @default(false)
+  emailVerified      DateTime?
+  disclaimerAccepted Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  // User relation
+  transactions  Transaction[]
+  createdRides  Ride[]         @relation("DriverRides")
+  bookedRides   RideBooking[]
+  rideRequests  RideRequest[]
+  messages      ChatMessage[]
+  vehicles      Vehicle[]
+  topUpRequests TopUpRequest[]
+}
+
+// Add the VerificationToken model for Auth.js
+model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+model Transaction {
+  id          String          @id @default(auto()) @map("_id") @db.ObjectId
+  user        User            @relation(fields: [userId], references: [id])
+  userId      String          @db.ObjectId
+  type        TransactionType
+  amount      Float
+  description String
+  createdAt   DateTime        @default(now())
+}
+
+enum TransactionType {
+  debit
+  credit
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+model Ride {
+  id                    String        @id @default(auto()) @map("_id") @db.ObjectId
+  driver                User          @relation("DriverRides", fields: [driverId], references: [id])
+  driverId              String        @db.ObjectId
+  startingTime          DateTime
+  startingLocation      Location?     @relation("RideStartLocation", fields: [startingLocationId], references: [id], onDelete: SetNull)
+  startingLocationId    String?       @db.ObjectId
+  destinationLocation   Location?     @relation("RideDestination", fields: [destinationLocationId], references: [id], onDelete: SetNull)
+  destinationLocationId String?       @db.ObjectId
+  status                RideStatus    @default(Pending)
+  vehicle               Vehicle?      @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  vehicleId             String?       @db.ObjectId
+  carbonCost            Float         @default(0)
+  maxPassengers         Int           @default(3)
+  createdAt             DateTime      @default(now())
+  bookings              RideBooking[]
+  messages              ChatMessage[]
+}
+
+enum RideStatus {
+  Active
+  Pending
+  Confirmed
+  Completed
+  Cancelled
+}
+
+model RideBooking {
+  id        String            @id @default(auto()) @map("_id") @db.ObjectId
+  ride      Ride              @relation(fields: [rideId], references: [id])
+  rideId    String            @db.ObjectId
+  user      User              @relation(fields: [userId], references: [id])
+  userId    String            @db.ObjectId
+  status    RideBookingStatus @default(Pending)
+  createdAt DateTime          @default(now())
+
+  @@unique([rideId, userId])
+}
+
+enum RideBookingStatus {
+  Pending
+  Confirmed
+  Cancelled
+  Completed
+  Denied
+}
+
+model RideRequest {
+  id                    String            @id @default(auto()) @map("_id") @db.ObjectId
+  userId                String            @db.ObjectId
+  user                  User              @relation(fields: [userId], references: [id])
+  startingTime          DateTime
+  startingLocation      Location?         @relation("RequestStartLocation", fields: [startingLocationId], references: [id], onDelete: SetNull)
+  startingLocationId    String?           @db.ObjectId
+  destinationLocation   Location?         @relation("RequestDestLocation", fields: [destinationLocationId], references: [id], onDelete: SetNull)
+  destinationLocationId String?           @db.ObjectId
+  status                RideRequestStatus @default(Pending)
+  fulfilled             Boolean           @default(false)
+  createdAt             DateTime          @default(now())
+
+  @@index([userId, createdAt])
+}
+
+enum RideRequestStatus {
+  Pending
+  Accepted
+  Rejected
+  Cancelled
+  Fulfilled
+}
+
+model Location {
+  id                  String        @id @default(auto()) @map("_id") @db.ObjectId
+  name                String        @unique
+  distanceFromOrg     Float         @default(0)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  deletedAt           DateTime?
+  ridesStarting       Ride[]        @relation("RideStartLocation")
+  ridesDestination    Ride[]        @relation("RideDestination")
+  requestsStarting    RideRequest[] @relation("RequestStartLocation")
+  requestsDestination RideRequest[] @relation("RequestDestLocation")
+}
+
+model Vehicle {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String      @db.ObjectId
+  user          User        @relation(fields: [userId], references: [id])
+  type          VehicleType
+  vehicleNumber String
+  model         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
+
+  rides Ride[] @relation(fields: [], references: [])
+
+  @@index([userId])
+}
+
+enum VehicleType {
+  Wheeler2
+  Wheeler4
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+model ChatMessage {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  rideId    String   @db.ObjectId
+  ride      Ride     @relation(fields: [rideId], references: [id])
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  content   String
+  createdAt DateTime @default(now())
+}
+
+// Add TopUpRequest model for carbon points top-up requests
+model TopUpRequest {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @db.ObjectId
+  user         User     @relation(fields: [userId], references: [id])
+  amount       Int // Amount in INR (keeping as Int since it's currency)
+  phoneNumber  String // Phone number for contact
+  status       String   @default("Pending") // Pending, Approved, Rejected
+  adminComment String? // Optional comment from admin
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}

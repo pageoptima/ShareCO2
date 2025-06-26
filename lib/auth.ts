@@ -1,0 +1,91 @@
+import NextAuth from "next-auth";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { prisma } from "@/lib/prisma";
+import Resend from "next-auth/providers/resend";
+
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  // —————————————
+  // ADAPTER
+  // —————————————
+  adapter: PrismaAdapter(prisma),
+
+  // —————————————
+  // AUTH PROVIDER
+  // —————————————
+  providers: [
+    Resend({
+      apiKey: process.env.AUTH_RESEND_KEY!,
+      from: process.env.AUTH_RESEND_FROM!,
+    }),
+  ],
+
+  // —————————————
+  // SESSIONS
+  // —————————————
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60,  // 30 days
+  },
+
+  // —————————————
+  // CALLBACKS
+  // —————————————
+  callbacks: {
+
+    // Persist user.id into the token on first sign-in
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+
+    // Make token.id available on session.user.id
+    async session({ session, token }) {
+
+      if ( process.env.DEBUG_MODE ) {
+        console.log("Session callback:", { sessionData: session, tokenData: token });
+      }
+
+      if (session?.user && token?.sub) {
+        // Make sure the session includes the user ID from the token
+        session.user.id = token.sub;
+
+        // Fetch user from database to get isAdmin status
+        const user = await prisma.user.findUnique({
+          where: { id: token.sub }
+        });
+
+        // Add isAdmin flag to session with proper typing
+        if (user && 'isAdmin' in user) {
+          (session.user as { isAdmin?: boolean }).isAdmin = user.isAdmin;
+        } else {
+          (session.user as { isAdmin?: boolean }).isAdmin = false;
+        }
+      }
+      return session;
+    },
+
+    // Redirect after authentication
+    async redirect({ url, baseUrl }) {
+      
+      if( process.env.DEBUG_MODE ) {
+        console.log("Redirect callback:", { url, baseUrl });
+      }
+
+      // Always redirect to dashboard after authentication
+      if (url.startsWith(baseUrl)) {
+        return `${baseUrl}/dashboard`;
+      }
+      // For safety, if external URL, go to base URL
+      return `${baseUrl}/dashboard`;
+    }
+
+  },
+
+  // —————————————
+  // DEBUG
+  // —————————————
+  debug: !!process.env.DEBUG_MODE,
+  secret: process.env.AUTH_SECRET,
+});
