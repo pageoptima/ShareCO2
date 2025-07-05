@@ -1,7 +1,10 @@
 import React from "react";
 
+/**
+ * Un-reachable code
+ */
 export default function Home() {
   return (
-    <div>Hello World</div>
+    <div>Silence is golden!</div>
   );
 }

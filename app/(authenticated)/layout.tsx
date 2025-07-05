@@ -1,18 +1,14 @@
 "use client";
 
+import React, { Suspense, ReactNode, JSX } from "react";
 import { useSession } from "next-auth/react";
-import { BottomNav } from "../_components/BottomNav";
 import { redirect } from "next/navigation";
-import { AuthProvider, useAuth } from "../_contexts/AuthContext";
-import { LocationProvider } from "../_contexts/LocationContext";
-import { RideRequestProvider } from "../_contexts/RideRequestContext";
-import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { UserMenu } from "../_components/UserMenu";
-import { DisclaimerModal } from "../_components/DisclaimerModal";
+import { BottomNav } from "@/app/_components/layout/BottomNav";
+import { UserMenu } from "@/app/_components/layout/UserMenu";
 
-// Add a loading component for a better UX
-function LoadingScreen() {
+// Loading placeholder for UX
+function LoadingScreen(): JSX.Element {
   return (
     <div className="min-h-screen bg-emerald-900 bg-radial from-emerald-700 to-black to-90% p-4 flex flex-col space-y-4">
       <Skeleton className="h-8 w-60 bg-white/10 rounded-md" />
@@ -23,27 +19,21 @@ function LoadingScreen() {
   );
 }
 
-// Component to handle auth check and protected content
-function AuthenticatedContent({ children }: { children: React.ReactNode }) {
+// Auth check and protected layout
+interface AuthenticatedContentProps {
+  children: ReactNode;
+}
+
+function AuthenticatedContent({ children }: AuthenticatedContentProps): JSX.Element {
   const { data: session, status } = useSession();
-  const { showDisclaimer, setShowDisclaimer, refreshUserData } = useAuth();
-  
-  // Show loading state while checking authentication
+
   if (status === "loading") {
     return <LoadingScreen />;
   }
-  
-  // Redirect to login if not authenticated
+
   if (status === "unauthenticated") {
     redirect("/");
   }
-
-  // Handle disclaimer acceptance
-  const handleDisclaimerAccept = async () => {
-    setShowDisclaimer(false);
-    // Refresh user data to update disclaimerAccepted status
-    await refreshUserData();
-  };
 
   return (
     <div className="min-h-screen bg-emerald-900 bg-radial from-emerald-700 to-black to-90%">
@@ -52,30 +42,18 @@ function AuthenticatedContent({ children }: { children: React.ReactNode }) {
       </header>
       {children}
       {session && <BottomNav />}
-      
-      {/* Disclaimer Modal */}
-      <DisclaimerModal 
-        isOpen={showDisclaimer} 
-        onAccept={handleDisclaimerAccept} 
-      />
     </div>
   );
 }
 
-export default function AuthenticatedLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+interface AuthenticatedLayoutProps {
+  children: ReactNode;
+}
+
+export default function AuthenticatedLayout({ children }: AuthenticatedLayoutProps): JSX.Element {
   return (
-    <AuthProvider>
-      <LocationProvider>
-        <RideRequestProvider>
-          <Suspense fallback={<LoadingScreen />}>
-            <AuthenticatedContent>{children}</AuthenticatedContent>
-          </Suspense>
-        </RideRequestProvider>
-      </LocationProvider>
-    </AuthProvider>
+    <Suspense fallback={<LoadingScreen />}>
+      <AuthenticatedContent>{children}</AuthenticatedContent>
+    </Suspense>
   );
-} 
+}

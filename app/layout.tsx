@@ -1,6 +1,7 @@
 import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { SessionProvider } from "next-auth/react";
+import { ReactQueryProvider } from "@/app/_components/providers/ReactQueryProvider";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -11,6 +12,7 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+
   return (
     <html lang="en">
       <head>
@@ -22,10 +24,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="logo.png" />
       </head>
       <body className={inter.className}>
-        <SessionProvider>
-          {children}
-          <Toaster position="top-center" richColors closeButton={true} />
-        </SessionProvider>
+        <ReactQueryProvider>
+          <SessionProvider>
+            {children}
+            <Toaster position="top-center" richColors closeButton={true} />
+          </SessionProvider>
+        </ReactQueryProvider>
       </body>
     </html>
   );

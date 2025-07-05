@@ -21,7 +21,7 @@ export async function middleware(req: NextRequest) {
 
   const isAuthenticated = !!token;
   
-  if ( process.env.DEBUG_MODE ) {
+  if ( process.env.NEXT_PUBLIC_DEBUG_MODE ) {
     console.log(`[Middleware] Path: ${req.nextUrl.pathname}, Authenticated: ${isAuthenticated}`);
   }
 
