@@ -80,8 +80,14 @@ export default function BookRidePage() {
         {/* Available ride container */}
         <TabsContent value="available-rides" className="mt-0">
           <AvilableRides
-            onSuccess={message => setSuccessMessage(message)}
-            onError={message => setErrorMessage(message)}
+            onSuccess={ message => {
+              setSuccessMessage(message);
+              refechCarbonPoints();
+            }}
+            onError={message => {
+              setErrorMessage(message);
+              refechCarbonPoints();
+            }}
           />
         </TabsContent>
 

@@ -97,10 +97,8 @@ export async function createRide(
 
     return ride;
 
-  } catch ( error: any ) {
-
-    logger.error( `Error creating ride: ${error.stack}` );
-
+  } catch ( error ) {
+    logger.error( `Error creating ride: ${error}` );
     throw error;
   }
 }

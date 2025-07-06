@@ -58,28 +58,29 @@ const RideBookedHistory = () => {
         isLoading: isRideBookingsFetching,
         isError: isRideBookingsFetchingError,
         error: rideBookingsFetchingError,
-        isRefetching: isRideBookingsRefetching,
-        isRefetchError: isRideBookingsRefetchingError,
-        refetch: refetchRideBookings,
+        // isRefetching: isRideBookingsRefetching,
+        // isRefetchError: isRideBookingsRefetchingError,
+        // refetch: refetchRideBookings,
     } = useQuery({
         queryKey: ['ride-bookings'],
         queryFn: getUserRideBookings,
     });
 
-    if ( isRideBookingsFetchingError || isRideBookingsRefetchingError ) {
+    if ( isRideBookingsFetchingError ) {
         console.error( rideBookingsFetchingError );
     }
 
     const handleCompleteRide = ( bookingId: string ) => {
-
+        console.log(bookingId);
     }
 
     const handleCancelBooking = ( bookingId: string ) => {
+        console.log(bookingId);
 
     }
 
     const handleOpenChat = ( bookingId: string ) => {
-
+        console.log(bookingId);
     }
 
     if ( isRideBookingsFetching ) {

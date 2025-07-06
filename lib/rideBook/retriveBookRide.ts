@@ -47,7 +47,7 @@ export async function getUserRideBookings( userId: string, limit: number = 20 ) 
         });
         console.log(rideBookings);
         return rideBookings;
-    } catch (error: any) {
+    } catch (error) {
         logger.error( `Error on fetching user rides: ${error}` )
         throw error;
     }

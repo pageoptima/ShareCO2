@@ -19,8 +19,8 @@ export async function getUserVehicles( userId: string ) {
         });
 
         return vehicles;
-    } catch ( error: any ) {
-        logger.error( `Error fetching vehicles: ${error.stack}`);
-        throw new Error( 'Failed to fetch vehicles.' );
+    } catch ( error ) {
+        logger.error( `Error fetching vehicles: ${error}`);
+        throw error;
     }
 }

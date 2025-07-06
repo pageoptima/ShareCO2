@@ -47,7 +47,7 @@ export const getOthersRideRequests = async (userId: string) => {
 
         return rideRequests;
 
-    } catch (error: any) {
+    } catch (error) {
         logger.error(`Error fetching ride requests: ${error}`);
         throw error;
     }
@@ -165,7 +165,7 @@ export const getAggregatedRideRequests = async (userId: string) => {
 
         return groupedRequestsList;
 
-    } catch (error: any) {
+    } catch (error) {
         logger.error( `Error fetching aggregated ride requests: ${error}` );
         throw error;
     }

@@ -28,8 +28,8 @@ export async function deleteVehicle({ id, userId } : { id: string, userId: strin
 
         return true;
 
-    } catch ( error: any ) {
-        logger.error( `Error updating profile: ${error.stack}`);
-        throw new Error( 'Failed to delete vehicle.' );
+    } catch ( error ) {
+        logger.error( `Error updating profile: ${error}`);
+        throw error;
     }
 }

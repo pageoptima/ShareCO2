@@ -103,7 +103,7 @@ export async function getUserRides(userId: string, limit: number = 20) {
         });
 
         return rides;
-    } catch (error: any) {
+    } catch (error) {
         logger.error(`Error on fetching user rides: ${error}`)
         throw error;
     }

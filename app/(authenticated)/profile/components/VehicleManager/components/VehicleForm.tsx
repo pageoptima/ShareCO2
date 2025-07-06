@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { addVehicle, updateVehicle } from "../actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -56,7 +56,6 @@ interface VehicleFormProps {
 export function VehicleForm( { vehicle, onSuccess }: VehicleFormProps ) {
     
     const isEditing   = Boolean(vehicle);
-    const queryClient = useQueryClient();
 
     const form = useForm<VehicleFormData>({
         resolver: zodResolver(vehicleSchema),
@@ -75,7 +74,7 @@ export function VehicleForm( { vehicle, onSuccess }: VehicleFormProps ) {
             form.reset({ type: "Wheeler4", vehicleNumber: "", model: "" });
             onSuccess?.();
         },
-        onError: ( error: any ) => {
+        onError: ( error ) => {
             toast.error( error.message );
         },
     });

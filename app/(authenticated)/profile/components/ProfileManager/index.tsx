@@ -1,8 +1,7 @@
-import { useEffect, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
     Card,
     CardContent,
@@ -31,8 +30,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/app/_contexts/AuthContext";
-import { updateUserProfile } from "./actions";
+import { getUserProfile, updateUserProfile } from "./actions";
+import { useEffect } from "react";
 
 // Schema for personal information
 const userProfileSchema = z.object({
@@ -45,47 +44,65 @@ type UserProfileValues = z.infer<typeof userProfileSchema>;
 
 export default function ProfileManager() {
 
-    const { userData, refreshUserData } = useAuth();
-
-    const defaultValues: UserProfileValues = {
-        name  : userData?.name || "",
-        gender: (userData?.gender as UserProfileValues['gender']) || "",
-        age   : userData?.age || undefined,
-    };
-
-    const form = useForm<UserProfileValues>({
-        resolver: zodResolver(userProfileSchema),
-        defaultValues,
+    // Hook for fetching the user profile
+    const {
+        data: userData,
+        isLoading: isUserDataFetching,
+        isError: isUserDataError,
+        error: userDataError,
+        refetch: refetchUserData,
+    } = useQuery({
+        queryKey: ['userProfile'],
+        queryFn: getUserProfile,
     });
+
+    if (isUserDataError) {
+        console.error(userDataError);
+    }
 
     // Update mutation
     const mutation = useMutation(
         {
-            mutationFn: ( data: Partial<UserProfileValues> ) => updateUserProfile(data),         
+            mutationFn: (data: Partial<UserProfileValues>) => updateUserProfile(data),
             onSuccess: async () => {
-                toast.success( 'Profile updated successfully' );
-                await refreshUserData();
+                toast.success('Profile updated successfully');
+                await refetchUserData();
                 form.reset(form.getValues());
             },
-            onError: (error: any) => {
+            onError: (error) => {
                 toast.error(error.message);
             },
         }
     );
 
-    const watchedValues = form.watch();
-
-    const hasChanges = useMemo(() => {
-        if (!userData) return false;
-        const current = form.getValues();
-        return Object.keys(defaultValues).some(
-            (key) => (current as any)[key] !== (defaultValues as any)[key]
-        );
-    }, [watchedValues, defaultValues, userData]);
+    const form = useForm<UserProfileValues>({
+        resolver: zodResolver(userProfileSchema),
+    });
 
     useEffect(() => {
-        form.reset(defaultValues);
-    }, [userData]);
+        if (!userData) return;
+
+        form.reset({
+            name: userData?.name as string,
+            gender: userData?.gender as UserProfileValues['gender'],
+            age: userData?.age as number
+        });
+    }, [userData, form])
+
+
+    const hasChanges = () => {
+        if (!userData) return false;
+        return true;
+    }
+
+    const handleSubmit = async (data: UserProfileValues) => {
+        if (mutation.isPending) return;
+        await mutation.mutateAsync(data);
+    }
+
+    if (isUserDataFetching) {
+        return <div>Loadig should be implemented</div>
+    }
 
     return (
         <Card className="bg-[#1A3C34] text-white border-none">
@@ -95,19 +112,7 @@ export default function ProfileManager() {
             </CardHeader>
             <CardContent>
                 <Form {...form}>
-                    <form id="profile-form" onSubmit={form.handleSubmit((data) => {
-                        const changedData: Partial<UserProfileValues> = {};
-                        (Object.keys(defaultValues) as Array<keyof UserProfileValues>).forEach((key) => {
-                            if (data[key] !== defaultValues[key]) {
-                                (changedData as any)[key] = data[key];
-                            }
-                        });
-                        if (Object.keys(changedData).length > 0) {
-                            mutation.mutate(changedData);
-                        } else {
-                            toast.info("No changes to save");
-                        }
-                    })} className="space-y-4">
+                    <form id="profile-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
                         {/* Name */}
                         <FormField control={form.control} name="name" render={({ field }) => (
                             <FormItem>
@@ -123,18 +128,23 @@ export default function ProfileManager() {
                         <FormField control={form.control} name="gender" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Gender</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value || undefined}>
-                                    <FormControl>
+
+                                <FormControl>
+                                    <Select
+                                        {...field}
+                                    >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select your gender" />
                                         </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        <SelectItem value="Male">Male</SelectItem>
-                                        <SelectItem value="Female">Female</SelectItem>
-                                        <SelectItem value="Other">Other</SelectItem>
-                                    </SelectContent>
-                                </Select>
+
+                                        <SelectContent>
+                                            <SelectItem value="Male">Male</SelectItem>
+                                            <SelectItem value="Female">Female</SelectItem>
+                                            <SelectItem value="Other">Other</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </FormControl>
+
                                 <FormMessage />
                             </FormItem>
                         )} />
@@ -165,7 +175,7 @@ export default function ProfileManager() {
                     form="profile-form"
                     type="submit"
                     className="w-full"
-                    disabled={mutation.isPending || !hasChanges}
+                    disabled={mutation.isPending}
                 >
                     {mutation.isPending ? (
                         <span className="flex items-center">
@@ -173,7 +183,7 @@ export default function ProfileManager() {
                         </span>
                     ) : (
                         <span className="flex items-center">
-                            <Save className="mr-2 h-4 w-4" /> {hasChanges ? "Save Changes" : "No Changes"}
+                            <Save className="mr-2 h-4 w-4" /> {hasChanges() ? "Save Changes" : "No Changes"}
                         </span>
                     )}
                 </Button>

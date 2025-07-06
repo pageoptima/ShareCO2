@@ -3,28 +3,16 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { User as UserIcon, Car, HomeIcon } from "lucide-react";
-import { useAuth } from "../../_contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
-
 import VehicleManager from "./components/VehicleManager";
 import ProfileManager from "./components/ProfileManager";
+import { useSession } from "next-auth/react";
 
 export default function ProfilePage() {
 
   const router = useRouter();
-  const { userData, isLoading } = useAuth();
-  
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="p-4 pb-20 max-w-2xl mx-auto">
-        <Skeleton className="h-8 w-60 bg-white/10 rounded-md mb-6" />
-        <Skeleton className="h-[400px] w-full bg-white/10 rounded-lg" />
-      </div>
-    );
-  }
+  const { data: session } = useSession();
   
   return (
     <div className="p-4 pb-20 max-w-2xl mx-auto">
@@ -45,11 +33,11 @@ export default function ProfilePage() {
       <div className="flex items-center justify-center mb-6">
         <Avatar className="h-24 w-24 border-4 border-emerald-600">
           <AvatarImage 
-            src={`https://avatar.vercel.sh/${userData?.email}`} 
-            alt={userData?.email || ""} 
+            src={`https://avatar.vercel.sh/${session?.user?.email}`} 
+            alt={session?.user?.email || ''}
           />
           <AvatarFallback className="bg-emerald-800 text-white text-2xl">
-            {userData?.email ? userData.email.substring(0, 2).toUpperCase() : "U"}
+            {session?.user?.name || session?.user?.email}
           </AvatarFallback>
         </Avatar>
       </div>
