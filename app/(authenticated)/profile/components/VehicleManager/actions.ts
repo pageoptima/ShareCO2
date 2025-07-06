@@ -58,26 +58,19 @@ export async function updateVehicle(id: string, data: PublicVehicleArgs) {
  * Delete a vehicle
  */
 export async function deleteVehicle(id: string) {
-    try {
-
-        // Get authenticated user
-        const session = await auth();
-        if (!session?.user?.id) {
-            return { error: "You must be signed in to delete a vehicle" };
-        }
-
-        // Check if vehicle exists and belongs to user
-        const success = await deleteVehicleDb({
-            id,
-            userId: session.user.id,
-        })
-
-        revalidatePath('/profile');
-        return { success: success };
-
-    } catch (error: any) {
-        return { error: error.message };
+    // Get authenticated user
+    const session = await auth();
+    if (!session?.user?.id) {
+        return { error: "You must be signed in to delete a vehicle" };
     }
+
+    // Check if vehicle exists and belongs to user
+    const success = await deleteVehicleDb({
+        id,
+        userId: session.user.id,
+    })
+
+    return success;
 }
 
 /**

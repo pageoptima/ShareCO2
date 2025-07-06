@@ -14,7 +14,8 @@ import { PublicLocation, PublicRideRequest } from "./types";
 export const getLocations = async (): Promise<PublicLocation[]> => {
     try {
         return await getLocationDb();
-    } catch (error) {
+    } catch (error: unknown ) {
+        console.error( error );
         throw new Error('Failed to fetch locations');
     }
 };

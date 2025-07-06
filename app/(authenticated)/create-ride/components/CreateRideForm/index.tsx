@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/select";
 import {
     MapPin,
-    Clock,
     Users
 } from "lucide-react";
 import {
@@ -108,11 +107,11 @@ export default function CreateRideForm({
             )
 
         },
-        onSuccess: (response) => {
+        onSuccess: () => {
             toast.success( "Ride created successfully!" );
             onSuccess?.();
         },
-        onError: (error: any) => {
+        onError: (error) => {
             console.error( error );
             toast.error( "Failed to create ride", {
                 description: error?.message ?? "Unknown error",

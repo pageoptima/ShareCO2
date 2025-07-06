@@ -99,7 +99,7 @@ export async function bookRide(
 
         return true;
 
-    } catch ( error: any ) {
+    } catch ( error ) {
         logger.error( `Error booking ride: ${error}` );
         throw error;
     }

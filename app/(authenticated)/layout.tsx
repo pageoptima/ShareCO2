@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BottomNav } from "@/app/_components/layout/BottomNav";
 import { UserMenu } from "@/app/_components/layout/UserMenu";
+import { DisclaimerModal } from "@/app/_components/modals/DisclaimerModal";
 
 // Loading placeholder for UX
 function LoadingScreen(): JSX.Element {
@@ -40,6 +41,7 @@ function AuthenticatedContent({ children }: AuthenticatedContentProps): JSX.Elem
       <header className="fixed top-0 right-0 z-50 p-4">
         <UserMenu />
       </header>
+      <DisclaimerModal/>
       {children}
       {session && <BottomNav />}
     </div>

@@ -32,7 +32,7 @@ export async function updateVehicle(
   try {
 
     // Validate input
-    const validatedData = vehicleSchema.parse({
+    vehicleSchema.parse({
         type,
         vehicleNumber,
         model,
@@ -64,11 +64,11 @@ export async function updateVehicle(
 
     return vehicle;
     
-    } catch ( error: any ) {
+    } catch ( error ) {
         if (error instanceof z.ZodError) {
             throw new Error(error.errors[0].message);
         }
-        logger.error( `Error updating profile: ${error.stack}`);
-        throw new Error( 'Failed to update vehicle' );
+        logger.error( `Error updating profile: ${error}`);
+        throw error;
     }
 }

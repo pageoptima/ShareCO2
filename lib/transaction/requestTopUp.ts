@@ -49,9 +49,9 @@ export async function requestTopUp(
                 },
             },
         });
-    } catch ( error: any ) {
+    } catch ( error ) {
         logger.error( `Error on creating topUpRequest. ${error}` );
-        throw new Error( 'Something Went Wrong. Please Try Again Letter.' );
+        throw error;
     }
 
     return true;

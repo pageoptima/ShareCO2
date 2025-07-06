@@ -55,8 +55,8 @@ export async function createRideRequest(
         });
 
         return rideRequest.id;
-    } catch (error: any) {
+    } catch (error) {
         logger.error( `Error creating ride request: ${error}`);
-        throw new Error( 'Something went wrong. Please try again.' );
+        throw error;
     }
 }

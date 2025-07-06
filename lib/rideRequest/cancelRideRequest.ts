@@ -42,8 +42,8 @@ export async function cancelRideRequest(
     });
 
     return true;
-  } catch (error: any) {
+  } catch (error) {
     logger.error( `Error cancelling ride request: ${error}`);
-    throw new Error( 'Something went wrong. Please try again.' );
+    throw error;
   }
 }
