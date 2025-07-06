@@ -29,7 +29,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Clock, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { createRideRequest, getLocations } from "../actions";
 import { localToUtcIso } from "@/utils/time";
 
@@ -96,7 +96,7 @@ export default function RideRequestForm(
                 toast.success('Ride request created successfully');
                 onSuccess?.('Ride request created successfully');
             },
-            onError: (error: any) => {
+            onError: (error) => {
                 toast.error(error.message);
                 onError?.(error.message);
             },

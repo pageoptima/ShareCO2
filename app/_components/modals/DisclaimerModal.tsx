@@ -13,12 +13,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { acceptDisclaimer } from "@/app/_actions/acceptDisclaimer";
 
-interface DisclaimerModalProps {
-  isOpen: boolean;
-  onAccept: () => void;
-}
+export function DisclaimerModal() {
 
-export function DisclaimerModal({ isOpen, onAccept }: DisclaimerModalProps) {
+  const disclaimerAccepted = localStorage.getItem( 'disclaimerAccepted' );
+  
+  const [isOpen, setIsOpen] = useState( ! Boolean(disclaimerAccepted) );
   const [isAccepting, setIsAccepting] = useState(false);
 
   const handleAccept = async () => {
@@ -27,8 +26,9 @@ export function DisclaimerModal({ isOpen, onAccept }: DisclaimerModalProps) {
       const result = await acceptDisclaimer();
       
       if (result.success) {
+        setIsOpen(false);
+        localStorage.setItem( 'disclaimerAccepted', 'true' );
         toast.success("Disclaimer accepted successfully");
-        onAccept();
       } else {
         toast.error(result.error || "Failed to accept disclaimer");
       }
@@ -39,6 +39,10 @@ export function DisclaimerModal({ isOpen, onAccept }: DisclaimerModalProps) {
       setIsAccepting(false);
     }
   };
+
+  if ( disclaimerAccepted ) {
+    return;
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>

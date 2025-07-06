@@ -54,12 +54,12 @@ export async function updateProfile(
 
         return { success: true };
 
-    } catch (error: any) {
+    } catch (error) {
         if (error instanceof z.ZodError) {
             throw new Error(error.errors[0].message);
         }
 
-        logger.error( `Error updating profile: ${error.stack}`);
-        throw new Error( 'Failed to update profile. Please try again.' );
+        logger.error( `Error updating profile: ${error}`);
+        throw error;
     }
 }

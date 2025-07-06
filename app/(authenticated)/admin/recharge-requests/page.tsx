@@ -203,3 +203,5 @@ const RechargeRequestsPage = () => {
     <div>Not implemented</div>
   );
 }
+
+export default RechargeRequestsPage;

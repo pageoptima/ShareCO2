@@ -29,7 +29,7 @@ export async function cancelRide(
 
         return true;
         
-    } catch (error: any) {
+    } catch (error) {
         logger.error( `Error cancelling ride: ${error}` );
         throw error;
     }

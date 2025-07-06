@@ -61,6 +61,7 @@ export const getLocations = async (): Promise<PublicLocation[]> => {
     try {
         return await getLocationDb();
     } catch (error) {
+        console.error(error);
         throw new Error('Failed to fetch locations');
     }
 };

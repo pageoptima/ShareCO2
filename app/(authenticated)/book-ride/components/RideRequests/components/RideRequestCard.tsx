@@ -47,8 +47,8 @@ export default function RideRequestCard({ rideRequest, isUserOwned = false, onSu
                 toast.success( 'Ride request cancelled successfully' );
                 onSuccess?.( 'Ride request cancelled successfully' );
             },
-            onError: (error: any) => {
-                toast.error(error.message);
+            onError: (error) => {
+                toast.error( error.message );
                 onError?.( error.message );
             },
         }

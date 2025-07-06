@@ -27,7 +27,7 @@ export function CarbonPointsCard() {
         isLoading: isCarbonPointFetching,
         isError: isCarbonPointFetchingError,
         error: carbonPointFetchingError,
-        refetch: refechCarbonPoints,
+        // refetch: refechCarbonPoints,
     } = useQuery({
         queryKey: ['carbonpoint'],
         queryFn: getCarbonPoint,
@@ -49,7 +49,7 @@ export function CarbonPointsCard() {
             onSuccess: async () => {
                 toast.success( 'Top-up request submitted successfully' );
             },
-            onError: (error: any) => {
+            onError: (error) => {
                 toast.error(error.message);
             },
         }

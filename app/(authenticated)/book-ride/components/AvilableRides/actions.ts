@@ -14,7 +14,7 @@ export async function getAvialableRides(): Promise<PublicAvialableRides[]> {
     const session = await auth();
 
     if (!session?.user?.id) {
-        throw new Error('You must be signed in to view avilalable rides');
+        throw new Error( 'You must be signed in to view avilalable rides' );
     }
 
     // Get avialable rides

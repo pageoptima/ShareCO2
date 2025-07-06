@@ -77,11 +77,13 @@ const RideRequestList = ({
                             ? "ring-2 ring-green-500 ring-opacity-75 animate-pulse"
                             : ""
                             }`}
-                        onClick={() => onSelectRoute(
+                        onClick={() => {
+                            setHighlightedRequestId(rideRequest.requestIds[0]);
+                            onSelectRoute(
                             rideRequest.startingLocationId as string,
                             rideRequest.destinationLocationId as string,
                             new Date( rideRequest.startingTime ).toString(),
-                        )}
+                        )}}
                     >
                         <CardHeader className="pb-2 border-b border-white/10">
                             <div className="flex flex-col gap-2">

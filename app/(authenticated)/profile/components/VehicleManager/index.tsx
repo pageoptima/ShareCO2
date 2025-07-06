@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { getUserVehicles, deleteVehicle } from "./actions";
 import { VehicleForm } from "./components/VehicleForm";
 import { Button } from "@/components/ui/button";
@@ -95,7 +95,7 @@ export default function VehicleManagement() {
             toast.success( 'Vehicle deleted successfully' );
             refechVehicle();
         },
-        onError: (error: any) => {
+        onError: (error) => {
             toast.error( error.message );
         }, 
     });

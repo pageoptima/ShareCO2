@@ -98,7 +98,7 @@ const CreatedRideHistory = () => {
             onSuccess: async () => {
                 toast.success( 'Ride cancelled successfully' );
             },
-            onError: (error: any) => {
+            onError: (error) => {
                 toast.error(error.message);
             },
         }
@@ -116,7 +116,7 @@ const CreatedRideHistory = () => {
             onSuccess: async () => {
                 toast.success( 'Ride complete successfully' );
             },
-            onError: (error: any) => {
+            onError: (error) => {
                 toast.error(error.message);
             },
         }
@@ -134,7 +134,7 @@ const CreatedRideHistory = () => {
             onSuccess: async () => {
                 toast.success( 'Ride Booking denyed successfully' );
             },
-            onError: ( error: any ) => {
+            onError: ( error ) => {
                 toast.error( error.message );
             },
         }
@@ -152,7 +152,7 @@ const CreatedRideHistory = () => {
             onSuccess: async () => {
                 toast.success( 'Ride Booking complete successfully' );
             },
-            onError: (error: any) => {
+            onError: (error) => {
                 toast.error(error.message);
             },
         }

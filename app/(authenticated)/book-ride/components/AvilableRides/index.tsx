@@ -2,13 +2,12 @@ import React from 'react'
 import { toast } from 'sonner';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { TabsContent } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, Clock, Coins, MapPin, User, Users } from 'lucide-react';
 import { bookRide, getAvialableRides } from './actions';
 import { PublicAvialableRides } from './types';
-import { utcIsoToLocal, utcIsoToLocalTime12 } from '@/utils/time';
+import { utcIsoToLocalTime12 } from '@/utils/time';
 
 const AvilableRides = (
     {
@@ -46,7 +45,7 @@ const AvilableRides = (
                 toast.success('Ride booked and confirmed successfully');
                 onSuccess?.('Ride booked and confirmed successfully');
             },
-            onError: (error: any) => {
+            onError: (error: Error) => {
                 toast.error(error.message);
                 onError?.(error.message);
             },

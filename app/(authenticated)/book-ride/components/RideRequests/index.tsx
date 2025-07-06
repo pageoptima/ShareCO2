@@ -52,8 +52,8 @@ const RideRequest = () => {
         <div className="mb-6">
             <div className="mb-6">
                 <RideRequestForm
-                    onSuccess={(message) => { refechRideRequests() }}
-                    onError={(message) => { refechRideRequests() }}
+                    onSuccess={() => { refechRideRequests() }}
+                    onError={() => { refechRideRequests() }}
                 />
             </div>
 
@@ -75,8 +75,8 @@ const RideRequest = () => {
                                 key={request.id}
                                 rideRequest={request}
                                 isUserOwned={true}
-                                onSuccess={(message) => { refechRideRequests() }}
-                                onError={(message) => { refechRideRequests() }}
+                                onSuccess={() => { refechRideRequests() }}
+                                onError={() => { refechRideRequests() }}
                             />
                         ))}
                     </div>
