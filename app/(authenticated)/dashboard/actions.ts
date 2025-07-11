@@ -1,15 +1,18 @@
 "use server";
 
 import { auth } from "@/lib/auth/auth";
-import { getUserById } from "@/lib/user/getUser";
+import { getUserById } from "@/lib/user/userServices";
 import { requestTopUp as requestTopUpDb } from "@/lib/transaction/requestTopUp";
-import { getUserTransactions } from "@/lib/transaction/retriveTransaction";
-import { getUserRides as getUserRidesDb } from "@/lib/ride/retriveRide";
-import { getUserRideBookings as getUserRideBookingsDb } from "@/lib/rideBook/retriveBookRide";
-import { cancelRide as cancelRideDb } from "@/lib/ride/cancelRide";
-import { completeDriverRide } from "@/lib/ride/completeRide";
-import { confirmRideBooking as confirmRideBookingDb } from "@/lib/rideBook/confirmeRideBooking";
-import { denyRideBooking as denyRideBookingDb } from "@/lib/rideBook/denyRideBooking";
+import { getUserTransactions } from "@/lib/transaction/transactionServices";
+import { activateRide, getUserRides as getUserRidesDb } from "@/lib/ride/rideServices";
+import {
+    getUserRideBookings as getUserRideBookingsDb,
+    cancleRideBookingByDriverOnPurpose,
+    activateRideBooking as activateRideBookingDb,
+    cancleRideBookingByUser
+} from "@/lib/rideBook/rideBookServices";
+import { cancelRide as cancelRideDb } from "@/lib/ride/rideServices";
+import { completeRide as completeRideDb } from "@/lib/ride/rideServices";
 import { PublicUserRides, PublicUserRideBookings, PublicTransactions } from "./types";
 
 /**
@@ -118,6 +121,25 @@ export async function cancelRide(rideId: string) {
 }
 
 /**
+ * Start a ride
+ */
+export async function startRide(rideId: string) {
+
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        throw new Error('User not authenticated');
+    }
+
+    const success = await activateRide({
+        userId: session.user.id,
+        rideId: rideId,
+    })
+
+    return success;
+}
+
+/**
  * Complete a ride
  */
 export async function completeRide(rideId: string) {
@@ -128,35 +150,16 @@ export async function completeRide(rideId: string) {
         throw new Error('User not authenticated');
     }
 
-    const success = await completeDriverRide({
+    const success = await completeRideDb({
         userId: session.user.id,
         rideId: rideId,
-    })
-
-    return success;
-}
-
-/**
- * Confirm a ridebooking
- */
-export async function confirmRideBooking(bookingId: string) {
-
-    const session = await auth();
-
-    if (!session?.user?.id) {
-        throw new Error('User not authenticated');
-    }
-
-    const success = await confirmRideBookingDb({
-        userId: session.user.id,
-        bookingId: bookingId,
     });
 
     return success;
 }
 
 /**
- * Cancell a ridebooking
+ * Cancell a ridebooking by champion
  */
 export async function denyRideBooking(bookingId: string) {
 
@@ -166,7 +169,45 @@ export async function denyRideBooking(bookingId: string) {
         throw new Error('User not authenticated');
     }
 
-    const success = await denyRideBookingDb({
+    const success = await cancleRideBookingByDriverOnPurpose({
+        driverId: session.user.id,
+        bookingId: bookingId,
+    });
+
+    return success;
+}
+
+/**
+ * Activate a ridebooking by rider
+ */
+export async function activateRideBooking(bookingId: string) {
+
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        throw new Error('User not authenticated');
+    }
+
+    const success = await activateRideBookingDb({
+        userId: session.user.id,
+        bookingId: bookingId,
+    });
+
+    return success;
+}
+
+/**
+ * Cancle a ridebooking by rider
+ */
+export async function cancleRideBooking(bookingId: string) {
+
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        throw new Error('User not authenticated');
+    }
+
+    const success = await cancleRideBookingByUser({
         userId: session.user.id,
         bookingId: bookingId,
     });

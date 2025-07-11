@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createRide } from '@/lib/ride/createRide';
+import { createRide } from '@/lib/ride/rideServices';
 import logger from '@/config/logger';
 
 export default async function handler( request: Request ) {

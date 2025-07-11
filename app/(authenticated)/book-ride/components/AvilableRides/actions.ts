@@ -1,8 +1,8 @@
 "use server";
 
 import { auth } from "@/lib/auth/auth";
-import { getAvailableRidesForUser } from "@/lib/ride/retriveRide";
-import { bookRide as bookRideDb } from "@/lib/rideBook/bookRide";
+import { getAvailableRidesForUser } from "@/lib/ride/rideServices";
+import { bookRide as bookRideDb } from "@/lib/rideBook/rideBookServices";
 import { PublicAvialableRides } from "./types";
 
 /**
