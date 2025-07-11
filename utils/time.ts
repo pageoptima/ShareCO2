@@ -89,7 +89,7 @@ export function utcIsoToLocalTime(input: string | Date): string {
  * @returns time string like "4:40 PM"
  */
 export function utcIsoToLocalTime12(input: string | Date): string {
-    
+
     // 1. Parse into a Date (string → UTC under the hood)
     const date = typeof input === "string" ? new Date(input) : input;
     if (isNaN(date.getTime())) {
@@ -108,5 +108,26 @@ export function utcIsoToLocalTime12(input: string | Date): string {
 
     // 4. Return formatted string
     return `${hours}:${minutes} ${ampm}`;
+}
+
+/**
+ * Check is more then a cirten amount of minute left
+ */
+export function isMoreThanNMinutesLeft(startTime: Date, minutes: number): boolean {
+    const now = new Date();
+    const thresholdTime = new Date(startTime.getTime() - minutes * 60 * 1000);
+    return now < thresholdTime;
+}
+
+/**
+ * Checks if the threshold time before the ride has already passed.
+ * @param rideStartTime - The Date/time when the ride is scheduled to start
+ * @param thresholdMinutes - Minutes before the ride when the threshold is set
+ * @returns true if current time is past the threshold, false otherwise
+ */
+export function hasPassedNMinutes(rideStartTime: Date, thresholdMinutes: number): boolean {
+    const now = new Date();
+    const thresholdTime = new Date(rideStartTime.getTime() - thresholdMinutes * 60 * 1000);
+    return now >= thresholdTime;
 }
 

@@ -14,6 +14,7 @@ model User {
   name               String?
   email              String    @unique
   gender             String?
+  image              String?
   age                Int?
   phone              String?
   carbonPoints       Float     @default(0)
@@ -31,6 +32,7 @@ model User {
   messages      ChatMessage[]
   vehicles      Vehicle[]
   topUpRequests TopUpRequest[]
+  Wallet        Wallet?
 }
 
 // Add the VerificationToken model for Auth.js
@@ -46,13 +48,14 @@ model VerificationToken {
 //////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
 model Transaction {
-  id          String          @id @default(auto()) @map("_id") @db.ObjectId
-  user        User            @relation(fields: [userId], references: [id])
-  userId      String          @db.ObjectId
-  type        TransactionType
-  amount      Float
-  description String
-  createdAt   DateTime        @default(now())
+  id                String              @id @default(auto()) @map("_id") @db.ObjectId
+  user              User                @relation(fields: [userId], references: [id])
+  userId            String              @db.ObjectId
+  type              TransactionType
+  amount            Float
+  description       String
+  createdAt         DateTime            @default(now())
+  WalletTransaction WalletTransaction[]
 }
 
 enum TransactionType {
@@ -63,48 +66,51 @@ enum TransactionType {
 //////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////
 model Ride {
-  id                    String        @id @default(auto()) @map("_id") @db.ObjectId
-  driver                User          @relation("DriverRides", fields: [driverId], references: [id])
-  driverId              String        @db.ObjectId
+  id                    String              @id @default(auto()) @map("_id") @db.ObjectId
+  driver                User                @relation("DriverRides", fields: [driverId], references: [id])
+  driverId              String              @db.ObjectId
   startingTime          DateTime
-  startingLocation      Location?     @relation("RideStartLocation", fields: [startingLocationId], references: [id], onDelete: SetNull)
-  startingLocationId    String?       @db.ObjectId
-  destinationLocation   Location?     @relation("RideDestination", fields: [destinationLocationId], references: [id], onDelete: SetNull)
-  destinationLocationId String?       @db.ObjectId
-  status                RideStatus    @default(Pending)
-  vehicle               Vehicle?      @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
-  vehicleId             String?       @db.ObjectId
-  carbonCost            Float         @default(0)
-  maxPassengers         Int           @default(3)
-  createdAt             DateTime      @default(now())
+  startingLocation      Location?           @relation("RideStartLocation", fields: [startingLocationId], references: [id], onDelete: SetNull)
+  startingLocationId    String?             @db.ObjectId
+  destinationLocation   Location?           @relation("RideDestination", fields: [destinationLocationId], references: [id], onDelete: SetNull)
+  destinationLocationId String?             @db.ObjectId
+  status                RideStatus          @default(Pending)
+  vehicle               Vehicle?            @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  vehicleId             String?             @db.ObjectId
+  carbonCost            Float               @default(0)
+  maxPassengers         Int                 @default(3)
+  createdAt             DateTime            @default(now())
   bookings              RideBooking[]
   messages              ChatMessage[]
+  WalletTransaction     WalletTransaction[]
 }
 
 enum RideStatus {
   Active
   Pending
-  Confirmed
   Completed
   Cancelled
 }
 
 model RideBooking {
-  id        String            @id @default(auto()) @map("_id") @db.ObjectId
-  ride      Ride              @relation(fields: [rideId], references: [id])
-  rideId    String            @db.ObjectId
-  user      User              @relation(fields: [userId], references: [id])
-  userId    String            @db.ObjectId
-  status    RideBookingStatus @default(Pending)
-  createdAt DateTime          @default(now())
+  id                String              @id @default(auto()) @map("_id") @db.ObjectId
+  ride              Ride                @relation(fields: [rideId], references: [id])
+  rideId            String              @db.ObjectId
+  user              User                @relation(fields: [userId], references: [id])
+  userId            String              @db.ObjectId
+  carbonCost        Float               @default(0)
+  status            RideBookingStatus   @default(Confirmed)
+  createdAt         DateTime            @default(now())
+  WalletTransaction WalletTransaction[]
 
   @@unique([rideId, userId])
 }
 
 enum RideBookingStatus {
-  Pending
+  Active
   Confirmed
-  Cancelled
+  CancelledUser
+  CancelledDriver
   Completed
   Denied
 }
@@ -167,7 +173,7 @@ enum VehicleType {
   Wheeler4
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////
 model ChatMessage {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -193,4 +199,60 @@ model TopUpRequest {
 
   @@index([userId])
   @@index([status])
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
+model Wallet {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique @db.ObjectId
+
+  spendableBalance Float    @default(0)
+  reservedBalance  Float    @default(0)
+  version          Int      @default(1)
+  updatedAt        DateTime @updatedAt
+
+  transactions WalletTransaction[] @relation("WalletTxns")
+}
+
+model WalletTransaction {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  wallet   Wallet @relation("WalletTxns", fields: [walletId], references: [id])
+  walletId String @db.ObjectId
+
+  amount      Float
+  direction   WalletTransactionDirection
+  purpose     WalletTransactionPurpose
+  description String?
+  createdAt   DateTime                   @default(now())
+
+  // exactly one reference
+  ride          Ride?        @relation(fields: [rideId], references: [id])
+  rideId        String?      @db.ObjectId
+  rideBook      RideBooking? @relation(fields: [rideBookId], references: [id])
+  rideBookId    String?      @db.ObjectId
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+  transactionId String?      @db.ObjectId
+
+  @@index([walletId])
+}
+
+enum WalletTransactionDirection {
+  CREDIT // coin into wallet
+  DEBIT // coin out of wallet
+  NEUTRAL // internal move
+}
+
+enum WalletTransactionPurpose {
+  TOPUP // User adds funds via external payment
+  BOOKING_RESERVE // on ride request (HOLD)
+  BOOKING_RELEASE // on ride cancel (UNHOLD)
+  BOOKING_SETTLE // on ride complete (DEBIT)
+  PAYOUT // on ride complete driver (CREDIT)
+  REFUND // for refunds back to user (DEBIT)
+  FINE_CHARGE // penalty or fine deducted from user
+  PROMOTION // marketing or referral bonuses (DEBIT)
+  ADJUSTMENT // admin/system corrections
 }

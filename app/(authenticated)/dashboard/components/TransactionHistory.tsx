@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatCarbonPointsForUI } from "@/utils/carbonPointsConversion";
-import { formatDate } from "@/utils/formatTime";
+import { utcIsoToLocalDate, utcIsoToLocalTime12 } from "@/utils/time";
 import { useQuery } from "@tanstack/react-query";
 import { getTransactions } from "../actions";
 
@@ -41,7 +41,9 @@ export function TransactionHistory() {
                             >
                                 <div>
                                     <p className="text-sm">{txn.description}</p>
-                                    <p className="text-xs text-gray-400">{formatDate(txn.createdAt)}</p>
+                                    <p className="text-xs text-gray-400">
+                                        {utcIsoToLocalDate(txn.createdAt)} <pre>  </pre> {utcIsoToLocalTime12(txn.createdAt)}
+                                    </p>
                                 </div>
                                 <p
                                     className={

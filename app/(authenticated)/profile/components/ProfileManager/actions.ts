@@ -1,8 +1,8 @@
 "use server";
 
 import { auth } from "@/lib/auth/auth";
-import { getUserById } from "@/lib/user/getUser";
-import { updateProfile } from "@/lib/user/updateProfile";
+import { getUserById } from "@/lib/user/userServices";
+import { updateProfile } from "@/lib/user/userServices";
 
 /**
  * Get the user profile

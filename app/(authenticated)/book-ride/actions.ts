@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth/auth";
-import { getUserById } from "@/lib/user/getUser";
+import { getUserById } from "@/lib/user/userServices";
 
 /**
  * Get the carbon point of the user
