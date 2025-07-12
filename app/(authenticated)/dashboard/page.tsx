@@ -9,7 +9,6 @@ import CreatedRideHistory from "./components/CreatedRideHistory";
 import RideBookedHistory from "./components/RideBookedHistory";
 
 export default function DashboardPage() {
-
   const { data: session } = useSession();
 
   // Extract user display name from session
@@ -19,7 +18,9 @@ export default function DashboardPage() {
   // Show dashboard with data
   return (
     <div className="p-4 pb-20">
-      <h1 className="text-xl font-semibold text-white mb-6">Welcome, {displayName}!</h1>
+      <h1 className="text-xl font-semibold text-white mb-6">
+        Welcome, {displayName}!
+      </h1>
       <div className="space-y-6">
         <div className="w-full">
           <CarbonPointsCard />
@@ -28,7 +29,9 @@ export default function DashboardPage() {
           <TransactionHistory />
           <Card className="bg-gradient-to-br from-[#1A3C34] to-[#2C5046] text-white border-none shadow-xl">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xl font-bold tracking-tight">My Rides</CardTitle>
+              <CardTitle className="text-xl font-bold tracking-tight">
+                My Rides
+              </CardTitle>
             </CardHeader>
             <CardContent className="p-0 overflow-hidden">
               <Tabs defaultValue="created" className="w-full">
@@ -56,17 +59,9 @@ export default function DashboardPage() {
                 </TabsContent>
               </Tabs>
             </CardContent>
-
-            {/* {currentRide && (
-              <RideChatModal
-                isOpen={isChatOpen}
-                onClose={() => setIsChatOpen(false)}
-                ride={currentRide}
-              />
-            )} */}
           </Card>
         </div>
       </div>
     </div>
   );
-} 
+}
