@@ -1,5 +1,4 @@
-
-
+"use client"
 import React from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -94,12 +93,13 @@ const CreatedRideHistory = () => {
   });
 
   // Hook for cancelled ride
-  const { mutateAsync: mutateCancelRide, isPending: isCancelRidePending } =
+  const { mutateAsync: mutateCancellRide, isPending: isCancellRidePending } =
     useMutation({
-      mutationFn: (rideId: string) => cancelRide(rideId),
+      mutationFn: (rideId: string) => {
+        return cancelRide(rideId);
+      },
       onSuccess: async () => {
         toast.success("Ride cancelled successfully");
-        await refetchCreatedRides(); // Refetch after success
       },
       onError: (error) => {
         toast.error(error.message);
@@ -109,10 +109,11 @@ const CreatedRideHistory = () => {
   // Hook for complete ride
   const { mutateAsync: mutateCompleteRide, isPending: isCompleteRidePending } =
     useMutation({
-      mutationFn: (rideId: string) => completeRide(rideId),
+      mutationFn: (rideId: string) => {
+        return completeRide(rideId);
+      },
       onSuccess: async () => {
         toast.success("Ride complete successfully");
-        await refetchCreatedRides(); // Refetch after success
       },
       onError: (error) => {
         toast.error(error.message);
@@ -124,25 +125,27 @@ const CreatedRideHistory = () => {
     mutateAsync: mutateDenyRideBooking,
     isPending: isDenyRideBookingPending,
   } = useMutation({
-    mutationFn: (bookingId: string) => denyRideBooking(bookingId),
+    mutationFn: (bookingId: string) => {
+      return denyRideBooking(bookingId);
+    },
     onSuccess: async () => {
-      toast.success("Ride Booking denied successfully");
-      await refetchCreatedRides(); // Refetch after success
+      toast.success("Ride Booking denyed successfully");
     },
     onError: (error) => {
       toast.error(error.message);
     },
   });
 
-  // Hook for confirm ride booking
+  // Hook for complete ride
   const {
     mutateAsync: mutateConfirmRideBooking,
     isPending: isConfirmRideBookingPending,
   } = useMutation({
-    mutationFn: (rideId: string) => confirmRideBooking(rideId),
+    mutationFn: (rideId: string) => {
+      return confirmRideBooking(rideId);
+    },
     onSuccess: async () => {
-      toast.success("Ride Booking confirmed successfully");
-      await refetchCreatedRides(); // Refetch after success
+      toast.success("Ride Booking complete successfully");
     },
     onError: (error) => {
       toast.error(error.message);
@@ -150,63 +153,75 @@ const CreatedRideHistory = () => {
   });
 
   if (isCreatedRidesFetchingError) {
-    console.error("Fetch error:", createdRidesFetchingError);
-    return <div>Error loading rides. Please try again later.</div>; // Graceful error handling
+    console.error(createdRidesFetchingError);
   }
 
   if (isCreatedRidesRefetching) {
-    console.error("Refetch error:", isCreatedRidesRefetchingError);
+    console.error(isCreatedRidesRefetchingError);
   }
 
   /**
    * Handle complete ride
    */
   const handleCompleteRide = async (rideId: string) => {
-    if (isCompleteRidePending) return;
+    if (isCompleteRidePending) {
+      return;
+    }
+
     await mutateCompleteRide(rideId);
+    refetchCreatedRides();
   };
 
   /**
    * Handle cancel ride
    */
   const handleCancelRide = async (rideId: string) => {
-    if (isCancelRidePending) return;
-    await mutateCancelRide(rideId);
+    if (isCancellRidePending) {
+      return;
+    }
+
+    await mutateCancellRide(rideId);
+    refetchCreatedRides();
   };
 
   /**
    * Handle confirm ride booking
    */
   const handleConfirmRideBooking = async (bookingId: string) => {
-    if (isConfirmRideBookingPending) return;
+    if (isConfirmRideBookingPending) {
+      return;
+    }
+
     await mutateConfirmRideBooking(bookingId);
+    refetchCreatedRides();
   };
 
   /**
    * Handle deny ride booking
    */
   const handleDenyRideBooking = async (bookingId: string) => {
-    if (isDenyRideBookingPending) return;
+    if (isDenyRideBookingPending) {
+      return;
+    }
+
     await mutateDenyRideBooking(bookingId);
+    refetchCreatedRides();
   };
 
   const handleOpenChat = async (rideId: string) => {
-    console.log("Opening chat for ride:", rideId);
+    console.log(rideId);
   };
 
   if (
     isCreatedRidesFetching ||
     isCreatedRidesRefetching ||
-    isCancelRidePending ||
+    isCancellRidePending ||
     isCompleteRidePending ||
     isDenyRideBookingPending ||
     isConfirmRideBookingPending
   ) {
-    console.log("Loading state triggered in CreatedRideHistory");
-    return <div>Loading...</div>; // Fixed typo and simplified
+    return <div>Loading should be implement</div>;
   }
-
-  console.log("Rendering CreatedRideHistory with rides:", createdRides);
 
   return (
     <ScrollArea className="h-[500px] w-full px-4 pb-4">
@@ -224,14 +239,14 @@ const CreatedRideHistory = () => {
                       <div className="flex items-center">
                         <MapPin className="h-4 w-4 text-emerald-400 mr-1" />
                         <p className="font-medium">
-                          {ride.startingLocation?.name || "Unknown"}
+                          {ride.startingLocation?.name}
                         </p>
                       </div>
                       <span className="hidden sm:inline mx-1">→</span>
                       <div className="flex items-center">
                         <MapPin className="h-4 w-4 text-red-400 mr-1" />
                         <p className="font-medium">
-                          {ride.destinationLocation?.name || "Unknown"}
+                          {ride.destinationLocation?.name}
                         </p>
                       </div>
                     </div>
@@ -240,11 +255,11 @@ const CreatedRideHistory = () => {
                   <div className="flex flex-wrap gap-3 text-xs text-gray-300">
                     <div className="flex items-center bg-white/10 rounded-3xl px-2 py-1">
                       <Calendar className="h-3 w-3 mr-1 opacity-70" />
-                      {utcIsoToLocalDate(ride.startingTime) || "N/A"}
+                      {utcIsoToLocalDate(ride.startingTime)}
                     </div>
                     <div className="flex items-center bg-white/10 rounded-3xl px-2 py-1">
                       <Clock className="h-3 w-3 mr-1 opacity-70" />
-                      {utcIsoToLocalTime12(ride.startingTime) || "N/A"}
+                      {utcIsoToLocalTime12(ride.startingTime)}
                     </div>
                     <div
                       className={`flex items-center bg-white/10 rounded-3xl px-2 py-1 ${getStatusColor(
@@ -252,7 +267,7 @@ const CreatedRideHistory = () => {
                       )}`}
                     >
                       <AlertCircle className="h-3 w-3 mr-1" />
-                      {ride.status || "Unknown"}
+                      {ride.status}
                     </div>
                   </div>
                 </div>
@@ -272,7 +287,7 @@ const CreatedRideHistory = () => {
                   {(ride.status === "Pending" || ride.status === "Active") && (
                     <Button
                       variant="destructive"
-                      disabled={isCancelRidePending}
+                      disabled={isCancellRidePending}
                       onClick={() => handleCancelRide(ride.id)}
                       className="px-3 py-1 h-8 text-xs bg-red-500/20 text-red-300 hover:bg-red-500/40 border border-red-500/30"
                     >
@@ -282,7 +297,7 @@ const CreatedRideHistory = () => {
 
                   {ride.status === "Active" && (
                     <Button
-                      disabled={isCompleteRidePending || isCancelRidePending}
+                      disabled={isCompleteRidePending || isCancellRidePending}
                       onClick={() => handleOpenChat(ride.id)}
                       className="px-3 py-1 h-8 text-xs bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 border border-blue-500/30"
                     >
@@ -308,9 +323,7 @@ const CreatedRideHistory = () => {
 
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium truncate">
-                                {booking.user.name ||
-                                  booking.user.email ||
-                                  "Unknown User"}
+                                {booking.user.name || booking.user.email}
                               </p>
                               <Badge
                                 className={`mt-1.5 text-xs px-2 py-0.5 border ${getBookingStatusColor(
@@ -319,7 +332,7 @@ const CreatedRideHistory = () => {
                                 variant="outline"
                               >
                                 {getBookingStatusIcon(booking.status)}
-                                {booking.status || "Unknown"}
+                                {booking.status}
                               </Badge>
                             </div>
                           </div>
