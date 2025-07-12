@@ -7,7 +7,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   // —————————————
   // ADAPTER
   // —————————————
-  adapter: PrismaAdapter(prisma),
+  adapter: {
+    ...PrismaAdapter(prisma),
+
+    /**
+     * Create user
+     */
+    async createUser(data) {
+      // Create user and wallet in one transection
+      return await prisma.$transaction(async (tx) => {
+        const user = await tx.user.create({data: {
+          email        : data.email,
+          emailVerified: data.emailVerified,
+          name         : data?.name,
+          image        : data?.image,
+        }});
+
+        await tx.wallet.create({
+          data: { userId: user.id },
+        });
+        
+        return user;
+      });
+    },
+  },
 
   // —————————————
   // AUTH PROVIDER
@@ -43,11 +66,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     // Make token.id available on session.user.id
     async session({ session, token }) {
 
-      if ( process.env.NEXT_PUBLIC_DEBUG_MODE ) {
-        console.info( "Session callback:", { sessionData: session, tokenData: token });
+      if (process.env.NEXT_PUBLIC_DEBUG_MODE) {
+        console.info("Session callback:", { sessionData: session, tokenData: token });
       }
 
-      if ( session?.user && token?.sub ) {
+      if (session?.user && token?.sub) {
         // Make sure the session includes the user ID from the token
         session.user.id = token.sub;
 
@@ -58,8 +81,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         // Update user id, name, eamil
         if (dbUser) {
-          session.user.id    = dbUser.id;
-          session.user.name  = dbUser.name;
+          session.user.id = dbUser.id;
+          session.user.name = dbUser.name;
           session.user.email = dbUser.email;
         }
 
@@ -70,14 +93,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           (session.user as { isAdmin?: boolean }).isAdmin = false;
         }
       }
-      
+
       return session;
     },
 
     // Redirect after authentication
     async redirect({ url, baseUrl }) {
-      
-      if( process.env.NEXT_PUBLIC_DEBUG_MODE ) {
+      if (process.env.NEXT_PUBLIC_DEBUG_MODE) {
         console.info("Redirect callback:", { url, baseUrl });
       }
 

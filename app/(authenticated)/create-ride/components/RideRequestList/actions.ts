@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth/auth";
-import { getAggregatedRideRequests as getAggregatedRideRequestsDb  } from "@/lib/rideRequest/retriveRideRequest";
+import { getAggregatedRideRequests as getAggregatedRideRequestsDb  } from "@/lib/rideRequest/rideRequestServices";
 import { PublicAggregatedRideRequests } from "./types";
 
 

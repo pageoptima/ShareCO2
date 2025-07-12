@@ -1,9 +1,9 @@
 "use server";
 
 import { auth } from "@/lib/auth/auth";
-import { createRide as createRideDb } from "@/lib/ride/createRide";
-import { getUserVehicles as getUserVehiclesDb } from '@/lib/vehicle/retriveVehicle';
-import { getLocations as getLocationDb } from '@/lib/location/getLocations';
+import { createRide as createRideDb } from "@/lib/ride/rideServices";
+import { getUserVehicles as getUserVehiclesDb } from '@/lib/vehicle/vehicleServices';
+import { getLocations as getLocationDb } from '@/lib/location/locationServices';
 import { PublicLocation, PublicRide, PublicVehicle } from "./types";
 
 /**

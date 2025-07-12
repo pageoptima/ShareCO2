@@ -1,7 +1,112 @@
-import logger from "@/config/logger";
-import { prisma } from "@/config/prisma";
-import { RideRequestStatus } from "@prisma/client";
+import logger from '@/config/logger';
+import { prisma } from '@/config/prisma';
+import { RideRequestStatus } from '@prisma/client';
 import { endOfDay, startOfDay } from "date-fns";
+
+/**
+ * Create a new ride request for user
+ */
+export async function createRideRequest(
+    {
+        userId,
+        startingLocationId,
+        destinationLocationId,
+        startingTime,
+    }: {
+        userId: string,
+        startingLocationId: string,
+        destinationLocationId: string,
+        startingTime: string,
+    }
+) {
+    try {
+
+        // Create date object for requestest time
+        const requestTime = new Date(startingTime).getTime();
+        const thirtyMinutesLater = Date.now() + 30 * 60 * 1000;
+
+        if (requestTime < thirtyMinutesLater) {
+            throw new Error('Ride request time must be at least 30 minutes from now');
+        }
+
+        // Check for duplicate ride request with same start, destination and time from the SAME user
+        const duplicateRequest = await prisma.rideRequest.findFirst({
+            where: {
+                userId: userId,
+                startingLocationId,
+                destinationLocationId,
+                startingTime,
+                status: RideRequestStatus.Pending,
+            },
+        });
+
+        if (duplicateRequest) {
+            throw new Error('You already have a ride request with the same details');
+        }
+
+        // Create the ride request in the database
+        const rideRequest = await prisma.rideRequest.create({
+            data: {
+                userId,
+                startingLocationId,
+                destinationLocationId,
+                startingTime,
+                status: RideRequestStatus.Pending,
+            },
+        });
+
+        return rideRequest.id;
+    } catch (error) {
+        logger.error(`Error creating ride request: ${error}`);
+        throw error;
+    }
+}
+
+/**
+ * Cancel ride request for a user by a user
+ */
+export async function cancelRideRequest(
+    {
+        userId,
+        requestId,
+    }: {
+        userId: string,
+        requestId: string,
+    }
+) {
+    try {
+
+        // Find the ride request
+        const rideRequest = await prisma.rideRequest.findUnique({
+            where: { id: requestId },
+        });
+
+        if (!rideRequest) {
+            throw new Error('Ride request not found');
+        }
+
+        // Check if the user is the owner of the ride request
+        if (rideRequest.userId !== userId) {
+            throw new Error('You can only cancel your own ride requests');
+        }
+
+        // Check if the ride request is already cancelled or matched
+        if (rideRequest.status !== RideRequestStatus.Pending) {
+            throw new Error('Cannot cancel a ride request that is not pending');
+        }
+
+        // Update the ride request status to Canceled
+        await prisma.rideRequest.update({
+            where: { id: requestId },
+            data: { status: RideRequestStatus.Cancelled },
+        });
+
+        return true;
+    } catch (error) {
+        logger.error(`Error cancelling ride request: ${error}`);
+        throw error;
+    }
+}
 
 /**
  * Get other's ride request except user
@@ -80,7 +185,7 @@ export const getUserRideRequests = async (userId: string) => {
                         email: true,
                     },
                 },
-                startingLocation: { select: { id: true, name: true }},
+                startingLocation: { select: { id: true, name: true } },
                 destinationLocation: { select: { id: true, name: true } },
             },
             orderBy: {
@@ -126,16 +231,16 @@ export const getAggregatedRideRequests = async (userId: string) => {
 
         // Group by starting point, destination, and time
         const groupedRequests: Record<string, {
-            key                  : string,
-            startingLocationId   : string | null,
+            key: string,
+            startingLocationId: string | null,
             destinationLocationId: string | null,
-            startingLocation     : { id: string, name: string } | null,
-            destinationLocation  : { id: string, name: string } | null,
-            startingTime         : Date,
-            requestIds           : string[],
+            startingLocation: { id: string, name: string } | null,
+            destinationLocation: { id: string, name: string } | null,
+            startingTime: Date,
+            requestIds: string[],
         }> = {};
 
-        rideRequests.forEach( request => {
+        rideRequests.forEach(request => {
 
             const requestTime = new Date(request.startingTime);
 
@@ -145,12 +250,12 @@ export const getAggregatedRideRequests = async (userId: string) => {
             if (!groupedRequests[key]) {
                 groupedRequests[key] = {
                     key,
-                    startingLocationId   : request.startingLocationId,
+                    startingLocationId: request.startingLocationId,
                     destinationLocationId: request.destinationLocationId,
-                    startingLocation     : request.startingLocation,
-                    destinationLocation  : request.destinationLocation,
-                    startingTime         : request.startingTime,
-                    requestIds           : [request.id],
+                    startingLocation: request.startingLocation,
+                    destinationLocation: request.destinationLocation,
+                    startingTime: request.startingTime,
+                    requestIds: [request.id],
                 };
             } else {
                 groupedRequests[key].requestIds.push(request.id);
@@ -166,7 +271,7 @@ export const getAggregatedRideRequests = async (userId: string) => {
         return groupedRequestsList;
 
     } catch (error) {
-        logger.error( `Error fetching aggregated ride requests: ${error}` );
+        logger.error(`Error fetching aggregated ride requests: ${error}`);
         throw error;
     }
 };

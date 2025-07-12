@@ -2,10 +2,10 @@
 
 import { auth } from '@/lib/auth/auth';
 import { revalidatePath } from 'next/cache';
-import { createVehicle as createVehicleDb } from '@/lib/vehicle/createVehicle';
-import { updateVehicle as updateVehicleDb } from '@/lib/vehicle/updateVehicle';
-import { deleteVehicle as deleteVehicleDb } from '@/lib/vehicle/deleteVehicle';
-import { getUserVehicles as getUserVehiclesDb } from '@/lib/vehicle/retriveVehicle';
+import { createVehicle as createVehicleDb } from '@/lib/vehicle/vehicleServices';
+import { updateVehicle as updateVehicleDb } from '@/lib/vehicle/vehicleServices';
+import { deleteVehicle as deleteVehicleDb } from '@/lib/vehicle/vehicleServices';
+import { getUserVehicles as getUserVehiclesDb } from '@/lib/vehicle/vehicleServices';
 
 import { PublicVehicle, PublicVehicleArgs } from './types';
 

@@ -1,10 +1,10 @@
 "use server";
 
 import { auth } from "@/lib/auth/auth";
-import { getLocations as getLocationDb } from '@/lib/location/getLocations';
-import { createRideRequest as createRideRequestDb } from "@/lib/rideRequest/createRideRequest";
-import { cancelRideRequest as cancelRideRequestDb } from "@/lib/rideRequest/cancelRideRequest";
-import { getUserRideRequests as getUserRideRequestsDb } from "@/lib/rideRequest/retriveRideRequest";
+import { getLocations as getLocationDb } from '@/lib/location/locationServices';
+import { createRideRequest as createRideRequestDb } from "@/lib/rideRequest/rideRequestServices";
+import { cancelRideRequest as cancelRideRequestDb } from "@/lib/rideRequest/rideRequestServices";
+import { getUserRideRequests as getUserRideRequestsDb } from "@/lib/rideRequest/rideRequestServices";
 import { PublicLocation, PublicRideRequest } from "./types";
 
 
