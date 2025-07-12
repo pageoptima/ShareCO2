@@ -22,6 +22,53 @@ export async function getWalletByUserId(userId: string) {
 }
 
 /**
+ * Get the wallet transection for the user
+ */
+export async function getWalletTransactions({
+    userId,
+    page = 1,
+    limit = 10,
+}: {
+    userId: string,
+    page: number,
+    limit: number,
+}) {
+
+    const skip = (page - 1) * limit;
+
+    // Find wallet ID from userId
+    const wallet = await prisma.wallet.findUnique({
+        where: { userId },
+        select: { id: true },
+    });
+
+    if (!wallet) {
+        throw new Error( `Wallet not found for user ${userId}` );
+    }
+
+    // Fetch paginated transactions
+    const [ transactions, total ] = await prisma.$transaction([
+        prisma.walletTransaction.findMany({
+            where: {
+                walletId: wallet.id,
+                direction: { not: 'NEUTRAL' }
+            },
+            orderBy: { createdAt: 'desc' },
+            skip: skip,
+            take: limit,
+        }),
+        prisma.walletTransaction.count({
+            where: { walletId: wallet.id },
+        }),
+    ]);
+
+    return {
+        transactions,
+        total,
+    };
+}
+
+/**
  * Ensure the user has at least `amount` in their spendable (available) balance.
  */
 export async function hasSufficientSpendableBalance(
