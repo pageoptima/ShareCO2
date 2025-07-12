@@ -19,8 +19,7 @@ import {
   formatCarbonPointsForUI,
 } from "@/utils/carbonPointsConversion";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { requestTopUp } from "../actions";
-import { getCarbonPoint } from "../actions";
+import { requestTopUp, getCarbonPoint } from "../actions";
 
 export function CarbonPointsCard() {
   // Hook for fetching the carbon point
@@ -29,7 +28,6 @@ export function CarbonPointsCard() {
     isLoading: isCarbonPointFetching,
     isError: isCarbonPointFetchingError,
     error: carbonPointFetchingError,
-    // refetch: refechCarbonPoints,
   } = useQuery({
     queryKey: ["carbonpoint"],
     queryFn: getCarbonPoint,
@@ -39,7 +37,7 @@ export function CarbonPointsCard() {
     console.error(carbonPointFetchingError);
   }
 
-  // Hook for toupupRequest
+  // Hook for topupRequest
   const { mutateAsync: mutateRequestTopup, isPending: isRequestTopupPending } =
     useMutation({
       mutationFn: (amount: number) => {
@@ -73,7 +71,17 @@ export function CarbonPointsCard() {
   };
 
   if (isCarbonPointFetching) {
-    return <div>Carbon point fetching, should be implemented the loading</div>;
+    return (
+      <Card className="bg-[#1A3C34] text-white border-none">
+        <CardContent className="space-y-4 p-6">
+          <div className="text-center">
+            <div className="h-4 w-24 bg-gray-600/50 rounded animate-pulse mx-auto mb-2" />
+            <div className="h-8 w-32 bg-gray-600/50 rounded animate-pulse mx-auto" />
+          </div>
+          <div className="h-10 w-full bg-gray-600/50 rounded animate-pulse" />
+        </CardContent>
+      </Card>
+    );
   }
 
   return (

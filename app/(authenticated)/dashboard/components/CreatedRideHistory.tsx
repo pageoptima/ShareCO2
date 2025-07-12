@@ -217,7 +217,75 @@ const CreatedRideHistory = () => {
     isCompleteRidePending ||
     isDenyRideBookingPending
   ) {
-    return <div>Loading should be implement</div>;
+    return (
+      <ScrollArea className="h-[500px] w-full px-4 pb-4">
+        <div className="space-y-3">
+          {/* Render 3 skeleton cards to mimic ride cards */}
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div
+              key={index}
+              className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 animate-pulse"
+            >
+              <div className="flex flex-col gap-3">
+                {/* Location and Status Section */}
+                <div className="space-y-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <div className="flex items-center">
+                      <MapPin className="h-4 w-4 text-gray-400 mr-1" />
+                      <div className="h-4 w-32 bg-gray-600/50 rounded" />
+                    </div>
+                    <span className="hidden sm:inline mx-1">→</span>
+                    <div className="flex items-center">
+                      <MapPin className="h-4 w-4 text-gray-400 mr-1" />
+                      <div className="h-4 w-32 bg-gray-600/50 rounded" />
+                    </div>
+                  </div>
+
+                  {/* Date, Time, and Status Badges */}
+                  <div className="flex flex-wrap gap-3">
+                    <div className="h-6 w-20 bg-gray-600/50 rounded-3xl" />
+                    <div className="h-6 w-20 bg-gray-600/50 rounded-3xl" />
+                    <div className="h-6 w-24 bg-gray-600/50 rounded-3xl" />
+                  </div>
+                </div>
+
+                {/* Button Section */}
+                <div className="flex flex-wrap gap-2">
+                  <div className="h-8 w-24 bg-gray-600/50 rounded-md" />
+                  <div className="h-8 w-24 bg-gray-600/50 rounded-md" />
+                  <div className="h-8 w-20 bg-gray-600/50 rounded-md" />
+                </div>
+
+                {/* Booking Section */}
+                <div className="pt-3 border-t border-white/10">
+                  <div className="h-4 w-24 bg-gray-600/50 rounded mb-2" />
+                  <div className="space-y-3">
+                    {/* Simulate 2 booking placeholders */}
+                    {Array.from({ length: 2 }).map((_, bookingIndex) => (
+                      <div
+                        key={bookingIndex}
+                        className="bg-white/5 rounded-xl p-3 border border-white/10"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 bg-gray-600/50 rounded-full" />
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 w-36 bg-gray-600/50 rounded" />
+                            <div className="h-4 w-20 bg-gray-600/50 rounded" />
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          <div className="h-8 w-24 bg-gray-600/50 rounded-md" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
+    );
   }
 
   return (

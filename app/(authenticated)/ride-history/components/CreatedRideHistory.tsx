@@ -74,6 +74,65 @@ const getBookingStatusIcon = (status: PublicRideBookingStatus) => {
   }
 };
 
+
+// Shimmer component for a single ride card
+    const RideCardShimmer = () => {
+      return (
+        <div className="p-4 bg-white/5 rounded-xl border border-white/10 animate-pulse">
+          <div className="flex flex-col gap-3">
+            {/* Shimmer for ride location and status */}
+            <div className="space-y-2">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 bg-gray-600/50 rounded-full" />
+                  <div className="h-4 w-24 bg-gray-600/50 rounded" />
+                </div>
+                <div className="hidden sm:inline h-4 w-4 bg-gray-600/50 rounded" />
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 bg-gray-600/50 rounded-full" />
+                  <div className="h-4 w-24 bg-gray-600/50 rounded" />
+                </div>
+              </div>
+
+              {/* Shimmer for date, time, and status */}
+              <div className="flex flex-wrap gap-3">
+                <div className="h-6 w-20 bg-gray-600/50 rounded-3xl" />
+                <div className="h-6 w-20 bg-gray-600/50 rounded-3xl" />
+                <div className="h-6 w-20 bg-gray-600/50 rounded-3xl" />
+              </div>
+            </div>
+
+            {/* Shimmer for buttons */}
+            <div className="flex flex-wrap gap-2">
+              <div className="h-8 w-24 bg-gray-600/50 rounded-md" />
+              <div className="h-8 w-24 bg-gray-600/50 rounded-md" />
+              <div className="h-8 w-24 bg-gray-600/50 rounded-md" />
+            </div>
+
+            {/* Shimmer for ride bookings */}
+            <div className="mt-2 pt-3 border-t border-white/10">
+              <div className="h-4 w-24 bg-gray-600/50 rounded mb-2" />
+              <div className="space-y-3">
+                <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 bg-gray-600/50 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 w-32 bg-gray-600/50 rounded" />
+                      <div className="h-4 w-16 bg-gray-600/50 rounded" />
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <div className="h-8 w-20 bg-gray-600/50 rounded-md flex-1 sm:flex-initial" />
+                    <div className="h-8 w-20 bg-gray-600/50 rounded-md flex-1 sm:flex-initial" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
 const CreatedRideHistory = () => {
   // Fetch user's created rides via react-query
   const {
@@ -208,6 +267,8 @@ const CreatedRideHistory = () => {
    */
   const handleOpenChat = async (rideId: string) => {
     console.log(rideId);
+
+    
   };
 
   if (
@@ -217,9 +278,17 @@ const CreatedRideHistory = () => {
     isCompleteRidePending ||
     isDenyRideBookingPending
   ) {
-    return <div>Loading should be implement</div>;
+    return (
+      <ScrollArea className="h-[500px] w-full px-4 pb-4">
+        <div className="space-y-3">
+          {/* Render multiple shimmer cards to simulate loading */}
+          {Array.from({ length: 3 }).map((_, index) => (
+            <RideCardShimmer key={index} />
+          ))}
+        </div>
+      </ScrollArea>
+    );
   }
-
   return (
     <ScrollArea className="h-[500px] w-full px-4 pb-4">
       <div className="space-y-3">
