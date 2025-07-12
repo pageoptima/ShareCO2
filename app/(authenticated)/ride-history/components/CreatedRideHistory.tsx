@@ -1,4 +1,3 @@
-"use client"
 import React from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -19,9 +18,9 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   cancelRide,
   completeRide,
-  confirmRideBooking,
   denyRideBooking,
   getUserRides,
+  startRide,
 } from "../actions";
 import { PublicRideBookingStatus, PublicRideStatus } from "../types";
 import { toast } from "sonner";
@@ -40,8 +39,6 @@ const getStatusColor = (status: PublicRideStatus) => {
       return "text-blue-400";
     case "Cancelled":
       return "text-red-400";
-    case "Confirmed":
-      return "text-gray-400";
     default:
       return "";
   }
@@ -52,10 +49,10 @@ const getStatusColor = (status: PublicRideStatus) => {
  */
 const getBookingStatusColor = (status: PublicRideBookingStatus) => {
   switch (status) {
+    case "Active":
+      return "bg-amber-500/20 text-amber-400 border-amber-500/30";
     case "Confirmed":
       return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
-    case "Pending":
-      return "bg-amber-500/20 text-amber-400 border-amber-500/30";
     case "Denied":
       return "bg-red-500/20 text-red-400 border-red-500/30";
     default:
@@ -106,6 +103,20 @@ const CreatedRideHistory = () => {
       },
     });
 
+  // Hook for start ride
+  const { mutateAsync: mutateStartRide, isPending: isStartRidePending } =
+    useMutation({
+      mutationFn: (rideId: string) => {
+        return startRide(rideId);
+      },
+      onSuccess: async () => {
+        toast.success("Ride start successfully");
+      },
+      onError: (error) => {
+        toast.error(error.message);
+      },
+    });
+
   // Hook for complete ride
   const { mutateAsync: mutateCompleteRide, isPending: isCompleteRidePending } =
     useMutation({
@@ -136,22 +147,6 @@ const CreatedRideHistory = () => {
     },
   });
 
-  // Hook for complete ride
-  const {
-    mutateAsync: mutateConfirmRideBooking,
-    isPending: isConfirmRideBookingPending,
-  } = useMutation({
-    mutationFn: (rideId: string) => {
-      return confirmRideBooking(rideId);
-    },
-    onSuccess: async () => {
-      toast.success("Ride Booking complete successfully");
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
-
   if (isCreatedRidesFetchingError) {
     console.error(createdRidesFetchingError);
   }
@@ -161,23 +156,11 @@ const CreatedRideHistory = () => {
   }
 
   /**
-   * Handle complete ride
-   */
-  const handleCompleteRide = async (rideId: string) => {
-    if (isCompleteRidePending) {
-      return;
-    }
-
-    await mutateCompleteRide(rideId);
-    refetchCreatedRides();
-  };
-
-  /**
    * Handle cancel ride
    */
   const handleCancelRide = async (rideId: string) => {
     if (isCancellRidePending) {
-      return;
+      return true;
     }
 
     await mutateCancellRide(rideId);
@@ -185,14 +168,26 @@ const CreatedRideHistory = () => {
   };
 
   /**
-   * Handle confirm ride booking
+   * Handle start ride
    */
-  const handleConfirmRideBooking = async (bookingId: string) => {
-    if (isConfirmRideBookingPending) {
-      return;
+  const handleStartRide = async (rideId: string) => {
+    if (isStartRidePending) {
+      return true;
     }
 
-    await mutateConfirmRideBooking(bookingId);
+    await mutateStartRide(rideId);
+    refetchCreatedRides();
+  };
+
+  /**
+   * Handle complete ride
+   */
+  const handleCompleteRide = async (rideId: string) => {
+    if (isCompleteRidePending) {
+      return true;
+    }
+
+    await mutateCompleteRide(rideId);
     refetchCreatedRides();
   };
 
@@ -201,13 +196,16 @@ const CreatedRideHistory = () => {
    */
   const handleDenyRideBooking = async (bookingId: string) => {
     if (isDenyRideBookingPending) {
-      return;
+      return true;
     }
 
     await mutateDenyRideBooking(bookingId);
     refetchCreatedRides();
   };
 
+  /**
+   * Handle Chat open
+   */
   const handleOpenChat = async (rideId: string) => {
     console.log(rideId);
   };
@@ -217,8 +215,7 @@ const CreatedRideHistory = () => {
     isCreatedRidesRefetching ||
     isCancellRidePending ||
     isCompleteRidePending ||
-    isDenyRideBookingPending ||
-    isConfirmRideBookingPending
+    isDenyRideBookingPending
   ) {
     return <div>Loading should be implement</div>;
   }
@@ -273,9 +270,18 @@ const CreatedRideHistory = () => {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
+                  {ride.status === "Pending" && (
+                    <Button
+                      onClick={() => handleStartRide(ride.id)}
+                      className="px-3 py-1 h-8 text-xs bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/40 border border-emerald-500/30"
+                    >
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Start Ride
+                    </Button>
+                  )}
+
                   {ride.status === "Active" && (
                     <Button
-                      disabled={isCompleteRidePending}
                       onClick={() => handleCompleteRide(ride.id)}
                       className="px-3 py-1 h-8 text-xs bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/40 border border-emerald-500/30"
                     >
@@ -287,7 +293,6 @@ const CreatedRideHistory = () => {
                   {(ride.status === "Pending" || ride.status === "Active") && (
                     <Button
                       variant="destructive"
-                      disabled={isCancellRidePending}
                       onClick={() => handleCancelRide(ride.id)}
                       className="px-3 py-1 h-8 text-xs bg-red-500/20 text-red-300 hover:bg-red-500/40 border border-red-500/30"
                     >
@@ -295,9 +300,8 @@ const CreatedRideHistory = () => {
                     </Button>
                   )}
 
-                  {ride.status === "Active" && (
+                  {(ride.status === "Pending" || ride.status === "Active") && (
                     <Button
-                      disabled={isCompleteRidePending || isCancellRidePending}
                       onClick={() => handleOpenChat(ride.id)}
                       className="px-3 py-1 h-8 text-xs bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 border border-blue-500/30"
                     >
@@ -337,21 +341,17 @@ const CreatedRideHistory = () => {
                             </div>
                           </div>
 
-                          {booking.status === "Pending" && (
+                          {booking.status === "Confirmed" && (
                             <div className="flex flex-wrap gap-2 mt-3">
+                              {/* <Button
+                                                                onClick={() => handleConfirmRideBooking( booking.id ) }
+                                                                className="bg-emerald-600/20 hover:bg-emerald-600/40 text-xs border border-emerald-500/30 text-emerald-300 flex-1 sm:flex-initial"
+                                                                size="sm"
+                                                            >
+                                                                <ShieldCheck className="h-3.5 w-3.5 mr-1.5" />
+                                                                Accept
+                                                            </Button> */}
                               <Button
-                                disabled={isConfirmRideBookingPending}
-                                onClick={() =>
-                                  handleConfirmRideBooking(booking.id)
-                                }
-                                className="bg-emerald-600/20 hover:bg-emerald-600/40 text-xs border border-emerald-500/30 text-emerald-300 flex-1 sm:flex-initial"
-                                size="sm"
-                              >
-                                <ShieldCheck className="h-3.5 w-3.5 mr-1.5" />
-                                Accept
-                              </Button>
-                              <Button
-                                disabled={isDenyRideBookingPending}
                                 onClick={() =>
                                   handleDenyRideBooking(booking.id)
                                 }

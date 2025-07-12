@@ -1,10 +1,11 @@
+"use client"
+
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HomeIcon } from "lucide-react";
 import Link from "next/link"; 
 import CreatedRideHistory from "./components/CreatedRideHistory";
 import RideBookedHistory from "./components/RideBookedHistory";
-
 export default function RideHistory() {
   return (
     <div className="p-4 pb-20 max-w-2xl mx-auto">
