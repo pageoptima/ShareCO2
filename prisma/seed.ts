@@ -130,7 +130,7 @@ async function main() {
       data: {
         rideId: pendingRide.id,
         userId: passenger.id,
-        status: RideBookingStatus.Pending, // Passenger pending for pending ride
+        status: RideBookingStatus.Active, // Passenger pending for pending ride
       },
     });
   }

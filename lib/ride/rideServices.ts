@@ -169,7 +169,7 @@ export async function cancelRide(
           bookingId: rideBooking.id
         })
       } catch (error) {
-        logger.error(`Unable to cancle the ride booking: ${rideBooking.id}`);
+        logger.error(`Unable to cancle the ride booking: ${rideBooking.id}: ${error}`);
       }
     }
 
@@ -317,7 +317,7 @@ export async function completeRide(
       try {
         await completeRideBooking({ driverId: userId, bookingId: rideBooking.id });
       } catch (error) {
-        logger.error(`Unable to complete the ride booking: ${rideBooking.id}`);
+        logger.error(`Unable to complete the ride booking: ${rideBooking.id}: ${error}`);
       }
     }
   }
