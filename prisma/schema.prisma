@@ -17,7 +17,6 @@ model User {
   image              String?
   age                Int?
   phone              String?
-  carbonPoints       Float     @default(0)
   isAdmin            Boolean   @default(false)
   emailVerified      DateTime?
   disclaimerAccepted Boolean   @default(false)
