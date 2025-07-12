@@ -1,7 +1,6 @@
 "use server";
 
 import { auth } from "@/lib/auth/auth";
-import { getUserById } from "@/lib/user/userServices";
 import { requestTopUp as requestTopUpDb } from "@/lib/transaction/requestTopUp";
 import { getUserTransactions } from "@/lib/transaction/transactionServices";
 import {
@@ -21,6 +20,7 @@ import {
   PublicUserRideBookings,
   PublicTransactions,
 } from "./types";
+import { getWalletByUserId } from "@/lib/wallet/walletServices";
 
 /**
  * Get the carbon point of the user
@@ -35,9 +35,11 @@ export async function getCarbonPoint(): Promise<number> {
   }
 
   // Get user's data
-  const user = await getUserById(session.user.id);
+  const wallet = await getWalletByUserId(session.user.id);
 
-  return user.carbonPoints;
+  //console.log(user)
+
+  return wallet.spendableBalance + wallet.reservedBalance;
 }
 
 /**

@@ -1,23 +1,24 @@
 "use server";
 
 import { auth } from "@/lib/auth/auth";
-import { getUserById } from "@/lib/user/userServices";
+import { getWalletByUserId } from "@/lib/wallet/walletServices";
 
 /**
  * Get the carbon point of the user
- * @returns 
+ * @returns
  */
 export async function getCarbonPoint(): Promise<number> {
+  // Get authenticated user
+  const session = await auth();
 
-    // Get authenticated user
-    const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("You must be signed in to view your carbon point");
+  }
 
-    if (!session?.user?.id) {
-        throw new Error('You must be signed in to view your carbon point');
-    }
+  // Get user's data
+  const wallet = await getWalletByUserId(session.user.id);
 
-    // Get user's data
-    const user = await getUserById(session.user.id);
+  //console.log(user)
 
-    return user.carbonPoints;
+  return wallet.spendableBalance + wallet.reservedBalance;
 }
