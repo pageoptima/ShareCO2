@@ -9,35 +9,44 @@ import { PublicAvialableRides } from "./types";
  * Get all avialable ride for the authenticated user
  */
 export async function getAvialableRides(): Promise<PublicAvialableRides[]> {
+  // Get authenticated user
+  const session = await auth();
 
-    // Get authenticated user
-    const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("You must be signed in to view avilalable rides");
+  }
 
-    if (!session?.user?.id) {
-        throw new Error( 'You must be signed in to view avilalable rides' );
-    }
+  // Get avialable rides
+  const avialableRides = await getAvailableRidesForUser(session.user.id);
 
-    // Get avialable rides
-    const avialableRides = await getAvailableRidesForUser(session.user.id);
-
-    return avialableRides;
+  return avialableRides;
 }
 
 /**
  * Book ride for the user
  */
-export async function bookRide( rideId: string ) {
-    // Get authenticated user
+// Refactored function
+export async function bookRide(rideId: string) {
+  try {
     const session = await auth();
 
     if (!session?.user?.id) {
-        throw new Error('You must be signed in to book rides');
+      throw new Error("You must be signed in to book rides");
     }
 
     const success = await bookRideDb({
-        userId: session.user.id,
-        rideId: rideId,
+      userId: session.user.id,
+      rideId: rideId,
     });
 
-    return success;
+    return {
+      success: success,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
+  }
 }

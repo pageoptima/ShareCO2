@@ -22,7 +22,6 @@ export default function RideRequestCard({
   rideRequest,
   isUserOwned = false,
   onSuccess,
-  onError,
 }: RideRequestCardProps) {
   const router = useRouter();
 
@@ -31,16 +30,17 @@ export default function RideRequestCard({
     mutateAsync: mutateCancellRideRequest,
     isPending: isRideReqestCancellPending,
   } = useMutation({
-    mutationFn: (rideRequestId: string) => {
-      return cancelRideRequest(rideRequestId);
-    },
-    onSuccess: async () => {
-      toast.success("Ride request cancelled successfully");
-      onSuccess?.("Ride request cancelled successfully");
+    mutationFn: (rideRequestId: string) => cancelRideRequest(rideRequestId),
+    onSuccess: async (result) => {
+      if (result.success) {
+        toast.success("Ride request cancelled successfully");
+        onSuccess?.("Ride request cancelled successfully");
+      } else {
+        toast.error(result.error);
+      }
     },
     onError: (error) => {
-      toast.error(error.message);
-      onError?.(error.message);
+      console.error(error.message);
     },
   });
 

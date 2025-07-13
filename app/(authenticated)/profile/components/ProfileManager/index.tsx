@@ -73,13 +73,17 @@ export default function ProfileManager() {
   // Update mutation
   const mutation = useMutation({
     mutationFn: (data: Partial<UserProfileValues>) => updateUserProfile(data),
-    onSuccess: async () => {
-      toast.success("Profile updated successfully");
-      await refetchUserData();
-      form.reset(form.getValues());
+    onSuccess: async (result) => {
+      if (result.success) {
+        toast.success("Profile updated successfully");
+        await refetchUserData();
+        form.reset(form.getValues());
+      } else {
+        toast.error(result.error);
+      }
     },
     onError: (error) => {
-      toast.error(error.message);
+      console.error(error.message);
     },
   });
 

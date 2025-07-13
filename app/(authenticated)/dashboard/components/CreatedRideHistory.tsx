@@ -95,11 +95,15 @@ const CreatedRideHistory = () => {
       mutationFn: (rideId: string) => {
         return cancelRide(rideId);
       },
-      onSuccess: async () => {
-        toast.success("Ride cancelled successfully");
+      onSuccess: async (result) => {
+        if (result.success) {
+          toast.success("Ride cancelled successfully");
+        } else {
+          toast.error(result.error);
+        }
       },
       onError: (error) => {
-        toast.error(error.message);
+        console.error(error.message);
       },
     });
 
@@ -109,11 +113,15 @@ const CreatedRideHistory = () => {
       mutationFn: (rideId: string) => {
         return startRide(rideId);
       },
-      onSuccess: async () => {
-        toast.success("Ride start successfully");
+      onSuccess: async (result) => {
+        if (result.success) {
+          toast.success("Ride start successfully");
+        } else {
+          toast.error(result.error);
+        }
       },
       onError: (error) => {
-        toast.error(error.message);
+        console.error(error.message);
       },
     });
 
@@ -123,11 +131,15 @@ const CreatedRideHistory = () => {
       mutationFn: (rideId: string) => {
         return completeRide(rideId);
       },
-      onSuccess: async () => {
-        toast.success("Ride complete successfully");
+      onSuccess: async (result) => {
+        if (result.success) {
+          toast.success("Ride complete successfully");
+        } else {
+          toast.error(result.error);
+        }
       },
       onError: (error) => {
-        toast.error(error.message);
+        console.error(error.message);
       },
     });
 
@@ -139,11 +151,15 @@ const CreatedRideHistory = () => {
     mutationFn: (bookingId: string) => {
       return denyRideBooking(bookingId);
     },
-    onSuccess: async () => {
-      toast.success("Ride Booking denyed successfully");
+    onSuccess: async (result) => {
+      if (result.success) {
+        toast.success("Ride Booking denyed successfully");
+      } else {
+        toast.error(result.error);
+      }
     },
     onError: (error) => {
-      toast.error(error.message);
+      console.error(error.message);
     },
   });
 

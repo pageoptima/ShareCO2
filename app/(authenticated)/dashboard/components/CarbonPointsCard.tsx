@@ -19,7 +19,8 @@ import {
   formatCarbonPointsForUI,
 } from "@/utils/carbonPointsConversion";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { requestTopUp, getCarbonPoint } from "../actions";
+import { getCarbonPoint, requestTopUp } from "../actions";
+
 
 export function CarbonPointsCard() {
   // Hook for fetching the carbon point
@@ -43,11 +44,15 @@ export function CarbonPointsCard() {
       mutationFn: (amount: number) => {
         return requestTopUp(amount);
       },
-      onSuccess: async () => {
-        toast.success("Top-up request submitted successfully");
+      onSuccess: async (result) => {
+        if (result.success) {
+          toast.success("Top-up request submitted successfully");
+        } else {
+          toast.error(result.error);
+        }
       },
       onError: (error) => {
-        toast.error(error.message);
+        console.error(error.message);
       },
     });
 

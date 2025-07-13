@@ -69,21 +69,23 @@ const RideBookedHistory = () => {
   }
 
   // Hook for confirm reach
-  const {
-    mutateAsync: mutateConfirmReach,
-    isPending: isConfirmReachPending,
-  } = useMutation({
-    mutationFn: (bookingId: string) => {
-      return activateRideBooking(bookingId);
-    },
-    onSuccess: async () => {
-      toast.success("Ride booking activated");
-      refetchRideBookings();
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
+  const { mutateAsync: mutateConfirmReach, isPending: isConfirmReachPending } =
+    useMutation({
+      mutationFn: (bookingId: string) => {
+        return activateRideBooking(bookingId);
+      },
+      onSuccess: async (result) => {
+        if (result.success) {
+          toast.success("Ride booking activated");
+          await refetchRideBookings();
+        } else {
+          toast.error(result.error);
+        }
+      },
+      onError: (error) => {
+        console.error(error.message);
+      },
+    });
 
   // Hook for cancel booking
   const {
@@ -93,12 +95,16 @@ const RideBookedHistory = () => {
     mutationFn: (bookingId: string) => {
       return cancleRideBooking(bookingId);
     },
-    onSuccess: async () => {
-      toast.success("Ride booking canceled successfully");
-      refetchRideBookings();
+    onSuccess: async (result) => {
+      if (result.success) {
+        toast.success("Ride booking canceled successfully");
+        await refetchRideBookings();
+      } else {
+        toast.error(result.error);
+      }
     },
     onError: (error) => {
-      toast.error(error.message);
+      console.error(error.message);
     },
   });
 
