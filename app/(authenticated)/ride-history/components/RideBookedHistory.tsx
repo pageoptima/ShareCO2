@@ -19,6 +19,42 @@ import { PublicRideBookingStatus, PublicRideStatus } from "../types";
 import { utcIsoToLocalDate, utcIsoToLocalTime12 } from "@/utils/time";
 import { toast } from "sonner";
 
+// Shimmer Component for Loading State
+const ShimmerCard = () => (
+  <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 animate-pulse">
+    <div className="flex flex-col gap-3">
+      <div className="space-y-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+          <div className="flex items-center">
+            <div className="h-4 w-4 bg-gray-600/50 rounded-full mr-1" />
+            <div className="h-4 w-32 bg-gray-600/50 rounded" />
+          </div>
+          <span className="hidden sm:inline mx-1">→</span>
+          <div className="flex items-center">
+            <div className="h-4 w-4 bg-gray-600/50 rounded-full mr-1" />
+            <div className="h-4 w-32 bg-gray-600/50 rounded" />
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <div className="h-6 w-20 bg-gray-600/50 rounded-3xl" />
+          <div className="h-6 w-20 bg-gray-600/50 rounded-3xl" />
+          <div className="h-6 w-24 bg-gray-600/50 rounded-3xl" />
+          <div className="h-6 w-24 bg-gray-600/50 rounded-3xl" />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <div className="h-8 w-24 bg-gray-600/50 rounded" />
+        <div className="h-8 w-24 bg-gray-600/50 rounded" />
+        <div className="h-8 w-20 bg-gray-600/50 rounded" />
+      </div>
+    </div>
+  </div>
+);
+
+// ... (rest of the imports and functions remain unchanged)
+
 /**
  * Get the color of the ride status
  */
@@ -78,16 +114,20 @@ const RideBookedHistory = () => {
       mutationFn: (bookingId: string) => {
         return activateRideBooking(bookingId);
       },
-      onSuccess: async () => {
-        toast.success("Ride booking activated");
-        refetchRideBookings();
+      onSuccess: async (result) => {
+        if (result.success) {
+          toast.success("Ride booking activated");
+          await refetchRideBookings();
+        } else {
+          toast.error(result.error);
+        }
       },
       onError: (error) => {
-        toast.error(error.message);
+        console.error(error.message);
       },
     });
 
-  // Hook for cancle booking
+  // Hook for cancel booking
   const {
     mutateAsync: mutateCancleBooking,
     isPending: isCancleBookingPending,
@@ -95,12 +135,16 @@ const RideBookedHistory = () => {
     mutationFn: (bookingId: string) => {
       return cancleRideBooking(bookingId);
     },
-    onSuccess: async () => {
-      toast.success("Ride booking cancled successfully");
-      refetchRideBookings();
+    onSuccess: async (result) => {
+      if (result.success) {
+        toast.success("Ride booking canceled successfully");
+        await refetchRideBookings();
+      } else {
+        toast.error(result.error);
+      }
     },
     onError: (error) => {
-      toast.error(error.message);
+      console.error(error.message);
     },
   });
 
@@ -115,7 +159,7 @@ const RideBookedHistory = () => {
   };
 
   /**
-   * Cancle Ride booking
+   * Cancel Ride booking
    */
   const handleCancelBooking = async (bookingId: string) => {
     if (isCancleBookingPending) {
@@ -130,7 +174,16 @@ const RideBookedHistory = () => {
   };
 
   if (isRideBookingsFetching || isRideBookingsRefetching) {
-    return <div>Loading should be implemented</div>;
+    return (
+      <ScrollArea className="h-[500px] w-full px-4 pb-4">
+        <div className="space-y-3">
+          {/* Render multiple shimmer cards to simulate loading */}
+          {Array.from({ length: 3 }).map((_, index) => (
+            <ShimmerCard key={index} />
+          ))}
+        </div>
+      </ScrollArea>
+    );
   }
 
   return (
@@ -179,7 +232,7 @@ const RideBookedHistory = () => {
                     </div>
                     {rideBooking.ride.status && (
                       <div
-                        className={`flex items-center bg-white/10 rounded-3xl px-2 py-1 ${getStatusColor(
+                        className={`flex items nacimiento-center bg-white/10 rounded-3xl px-2 py-1 ${getStatusColor(
                           rideBooking.ride.status
                         )}`}
                       >

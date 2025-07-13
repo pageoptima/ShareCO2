@@ -4,37 +4,47 @@ import { auth } from "@/lib/auth/auth";
 import { createRide as createRideDb } from "@/lib/ride/rideServices";
 import { getUserVehicles as getUserVehiclesDb } from '@/lib/vehicle/vehicleServices';
 import { getLocations as getLocationDb } from '@/lib/location/locationServices';
-import { PublicLocation, PublicRide, PublicVehicle } from "./types";
+import { PublicLocation, PublicVehicle } from "./types";
 
 /**
  * Create a new ride
  */
-export const createRide = async (
-    startingLocationId: string,
-    destinationLocationId: string,
-    startingTime: string,
-    maxPassengers: number,
-    vehicleId: string
-) => {
-
+export async function createRide(
+  startingLocationId: string,
+  destinationLocationId: string,
+  startingTime: string,
+  maxPassengers: number,
+  vehicleId: string
+) {
+  try {
     // Get the session
     const session = await auth();
 
     // Check if user is authenticated
     if (!session?.user?.id) {
-        throw new Error( 'You must be logged in to create a ride' )
+      throw new Error("You must be logged in to create a ride");
     }
 
-    return await createRideDb({
-        userId: session.user.id,
-        startingLocationId,
-        destinationLocationId,
-        startingTime,
-        maxPassengers,
-        vehicleId,
-    }) as PublicRide;
-};
+    const success = await createRideDb({
+      userId: session.user.id,
+      startingLocationId,
+      destinationLocationId,
+      startingTime,
+      maxPassengers,
+      vehicleId,
+    });
 
+    return {
+      success: success,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
+  }
+}
 /**
  * Get all vehicles for the authenticated user
  */

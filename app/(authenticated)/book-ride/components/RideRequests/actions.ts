@@ -23,50 +23,70 @@ export const getLocations = async (): Promise<PublicLocation[]> => {
 /**
  * Create a new ride request for a user
  */
-export async function createRideRequest(
-    {
-        startingLocationId,
-        destinationLocationId,
-        startingTime,
-    }: {
-        startingLocationId: string,
-        destinationLocationId: string,
-        startingTime: string,
-    }
-) {
-    // Authenticate the user
+export async function createRideRequest({
+  startingLocationId,
+  destinationLocationId,
+  startingTime,
+}: {
+  startingLocationId: string;
+  destinationLocationId: string;
+  startingTime: string;
+}) {
+  try {
     const session = await auth();
+
     if (!session?.user?.id) {
-        throw new Error('You must be signed in to request a ride');
+      throw new Error("You must be signed in to request a ride");
     }
 
     const success = await createRideRequestDb({
-        userId: session.user.id,
-        startingLocationId,
-        destinationLocationId,
-        startingTime,
+      userId: session.user.id,
+      startingLocationId,
+      destinationLocationId,
+      startingTime,
     });
 
-    return success;
-};
+    return {
+      success: success,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
+  }
+}
+
 
 /**
  * Cancelled a ride request for a user
  */
-export async function cancelRideRequest( requestId: string ) {
-    // Authenticate the user
+export async function cancelRideRequest(requestId: string) {
+  try {
     const session = await auth();
+
     if (!session?.user?.id) {
-        throw new Error( 'You must be signed in to cancel a ride request' );
+      throw new Error("You must be signed in to cancel a ride request");
     }
 
     const success = await cancelRideRequestDb({
-        userId: session.user.id,
-        requestId: requestId,
+      userId: session.user.id,
+      requestId: requestId,
     });
 
-    return success;
+    return {
+      success: success,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
+  }
 }
+
     
 /**
  * Get all ride request for a user

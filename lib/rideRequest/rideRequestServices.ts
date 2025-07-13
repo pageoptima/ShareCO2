@@ -1,277 +1,267 @@
-import logger from '@/config/logger';
-import { prisma } from '@/config/prisma';
-import { RideRequestStatus } from '@prisma/client';
+import logger from "@/config/logger";
+import { prisma } from "@/config/prisma";
+import { RideRequestStatus } from "@prisma/client";
 import { endOfDay, startOfDay } from "date-fns";
 
 /**
  * Create a new ride request for user
  */
-export async function createRideRequest(
-    {
+export async function createRideRequest({
+  userId,
+  startingLocationId,
+  destinationLocationId,
+  startingTime,
+}: {
+  userId: string;
+  startingLocationId: string;
+  destinationLocationId: string;
+  startingTime: string;
+}) {
+  try {
+    // Create date object for requestest time
+    const requestTime = new Date(startingTime).getTime();
+    const thirtyMinutesLater = Date.now() + 30 * 60 * 1000;
+
+    if (requestTime < thirtyMinutesLater) {
+      throw new Error("Ride request time must be at least 30 minutes from now");
+    }
+
+    // Check for duplicate ride request with same start, destination and time from the SAME user
+    const duplicateRequest = await prisma.rideRequest.findFirst({
+      where: {
+        userId: userId,
+        startingLocationId,
+        destinationLocationId,
+        startingTime,
+        status: RideRequestStatus.Pending,
+      },
+    });
+
+    if (duplicateRequest) {
+      throw new Error("You already have a ride request with the same details");
+    }
+
+    // Create the ride request in the database
+    await prisma.rideRequest.create({
+      data: {
         userId,
         startingLocationId,
         destinationLocationId,
         startingTime,
-    }: {
-        userId: string,
-        startingLocationId: string,
-        destinationLocationId: string,
-        startingTime: string,
-    }
-) {
-    try {
+        status: RideRequestStatus.Pending,
+      },
+    });
 
-        // Create date object for requestest time
-        const requestTime = new Date(startingTime).getTime();
-        const thirtyMinutesLater = Date.now() + 30 * 60 * 1000;
-
-        if (requestTime < thirtyMinutesLater) {
-            throw new Error('Ride request time must be at least 30 minutes from now');
-        }
-
-        // Check for duplicate ride request with same start, destination and time from the SAME user
-        const duplicateRequest = await prisma.rideRequest.findFirst({
-            where: {
-                userId: userId,
-                startingLocationId,
-                destinationLocationId,
-                startingTime,
-                status: RideRequestStatus.Pending,
-            },
-        });
-
-        if (duplicateRequest) {
-            throw new Error('You already have a ride request with the same details');
-        }
-
-        // Create the ride request in the database
-        const rideRequest = await prisma.rideRequest.create({
-            data: {
-                userId,
-                startingLocationId,
-                destinationLocationId,
-                startingTime,
-                status: RideRequestStatus.Pending,
-            },
-        });
-
-        return rideRequest.id;
-    } catch (error) {
-        logger.error(`Error creating ride request: ${error}`);
-        throw error;
-    }
+    return true;
+  } catch (error) {
+    logger.error(`Error creating ride request: ${error}`);
+    throw error;
+  }
 }
 
 /**
  * Cancel ride request for a user by a user
  */
-export async function cancelRideRequest(
-    {
-        userId,
-        requestId,
-    }: {
-        userId: string,
-        requestId: string,
+export async function cancelRideRequest({
+  userId,
+  requestId,
+}: {
+  userId: string;
+  requestId: string;
+}) {
+  try {
+    // Find the ride request
+    const rideRequest = await prisma.rideRequest.findUnique({
+      where: { id: requestId },
+    });
+
+    if (!rideRequest) {
+      throw new Error("Ride request not found");
     }
-) {
-    try {
 
-        // Find the ride request
-        const rideRequest = await prisma.rideRequest.findUnique({
-            where: { id: requestId },
-        });
-
-        if (!rideRequest) {
-            throw new Error('Ride request not found');
-        }
-
-        // Check if the user is the owner of the ride request
-        if (rideRequest.userId !== userId) {
-            throw new Error('You can only cancel your own ride requests');
-        }
-
-        // Check if the ride request is already cancelled or matched
-        if (rideRequest.status !== RideRequestStatus.Pending) {
-            throw new Error('Cannot cancel a ride request that is not pending');
-        }
-
-        // Update the ride request status to Canceled
-        await prisma.rideRequest.update({
-            where: { id: requestId },
-            data: { status: RideRequestStatus.Cancelled },
-        });
-
-        return true;
-    } catch (error) {
-        logger.error(`Error cancelling ride request: ${error}`);
-        throw error;
+    // Check if the user is the owner of the ride request
+    if (rideRequest.userId !== userId) {
+      throw new Error("You can only cancel your own ride requests");
     }
+
+    // Check if the ride request is already cancelled or matched
+    if (rideRequest.status !== RideRequestStatus.Pending) {
+      throw new Error("Cannot cancel a ride request that is not pending");
+    }
+
+    // Update the ride request status to Canceled
+    await prisma.rideRequest.update({
+      where: { id: requestId },
+      data: { status: RideRequestStatus.Cancelled },
+    });
+
+    return true;
+  } catch (error) {
+    logger.error(`Error cancelling ride request: ${error}`);
+    throw error;
+  }
 }
 
 /**
  * Get other's ride request except user
  */
 export const getOthersRideRequests = async (userId: string) => {
-    try {
+  try {
+    // Get today's date range
+    const today = new Date();
+    const startDay = startOfDay(today);
+    const endDay = endOfDay(today);
 
-        // Get today's date range
-        const today = new Date();
-        const startDay = startOfDay(today);
-        const endDay = endOfDay(today);
+    // Get all pending ride requests for today (excluding the user's own)
+    const rideRequests = await prisma.rideRequest.findMany({
+      where: {
+        // Exclude the current user's requests
+        userId: {
+          not: userId,
+        },
+        createdAt: {
+          gte: startDay,
+          lte: endDay,
+        },
+        status: RideRequestStatus.Pending,
+        // Only get future ride requests
+        startingTime: {
+          gte: today,
+        },
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
-
-        // Get all pending ride requests for today (excluding the user's own)
-        const rideRequests = await prisma.rideRequest.findMany({
-            where: {
-                // Exclude the current user's requests
-                userId: {
-                    not: userId,
-                },
-                createdAt: {
-                    gte: startDay,
-                    lte: endDay,
-                },
-                status: RideRequestStatus.Pending,
-                // Only get future ride requests
-                startingTime: {
-                    gte: today,
-                },
-            },
-            include: {
-                user: {
-                    select: {
-                        name: true,
-                        email: true,
-                    },
-                },
-            },
-            orderBy: {
-                createdAt: 'desc',
-            },
-        });
-
-        return rideRequests;
-
-    } catch (error) {
-        logger.error(`Error fetching ride requests: ${error}`);
-        throw error;
-    }
-}
+    return rideRequests;
+  } catch (error) {
+    logger.error(`Error fetching ride requests: ${error}`);
+    throw error;
+  }
+};
 
 /**
  * Get all of the user's ride requests for today
  */
 export const getUserRideRequests = async (userId: string) => {
-    try {
+  try {
+    // Get today's date range
+    const today = new Date();
+    const startDay = startOfDay(today);
+    const endDay = endOfDay(today);
 
-        // Get today's date range
-        const today = new Date();
-        const startDay = startOfDay(today);
-        const endDay = endOfDay(today);
+    // Get all the user's ride requests for today
+    const rideRequests = await prisma.rideRequest.findMany({
+      where: {
+        userId,
+        createdAt: {
+          gte: startDay,
+          lte: endDay,
+        },
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+        startingLocation: { select: { id: true, name: true } },
+        destinationLocation: { select: { id: true, name: true } },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
-        // Get all the user's ride requests for today
-        const rideRequests = await prisma.rideRequest.findMany({
-            where: {
-                userId,
-                createdAt: {
-                    gte: startDay,
-                    lte: endDay,
-                },
-            },
-            include: {
-                user: {
-                    select: {
-                        name: true,
-                        email: true,
-                    },
-                },
-                startingLocation: { select: { id: true, name: true } },
-                destinationLocation: { select: { id: true, name: true } },
-            },
-            orderBy: {
-                createdAt: 'desc',
-            },
-        });
-
-        return rideRequests;
-    } catch (error) {
-        logger.error(`Error fetching ride requests: ${error}`);
-        throw error;
-    }
+    return rideRequests;
+  } catch (error) {
+    logger.error(`Error fetching ride requests: ${error}`);
+    throw error;
+  }
 };
 
 /**
  * Get aggregated ride requests for today and future
  */
 export const getAggregatedRideRequests = async (userId: string) => {
-    try {
+  try {
+    // Get current date and time
+    const now = new Date();
 
-        // Get current date and time
-        const now = new Date();
+    // Fetch ALL pending ride requests (including future dates, not just today)
+    const rideRequests = await prisma.rideRequest.findMany({
+      where: {
+        userId: {
+          not: userId,
+        },
+        status: RideRequestStatus.Pending,
+        startingTime: {
+          gte: now,
+        },
+      },
+      include: {
+        startingLocation: { select: { id: true, name: true } },
+        destinationLocation: { select: { id: true, name: true } },
+      },
+      orderBy: {
+        startingTime: "asc",
+      },
+    });
 
-        // Fetch ALL pending ride requests (including future dates, not just today)
-        const rideRequests = await prisma.rideRequest.findMany({
-            where: {
-                userId: {
-                    not: userId,
-                },
-                status: RideRequestStatus.Pending,
-                startingTime: {
-                    gte: now,
-                },
-            },
-            include: {
-                startingLocation: { select: { id: true, name: true } },
-                destinationLocation: { select: { id: true, name: true } },
-            },
-            orderBy: {
-                startingTime: 'asc',
-            },
-        });
+    // Group by starting point, destination, and time
+    const groupedRequests: Record<
+      string,
+      {
+        key: string;
+        startingLocationId: string | null;
+        destinationLocationId: string | null;
+        startingLocation: { id: string; name: string } | null;
+        destinationLocation: { id: string; name: string } | null;
+        startingTime: Date;
+        requestIds: string[];
+      }
+    > = {};
 
-        // Group by starting point, destination, and time
-        const groupedRequests: Record<string, {
-            key: string,
-            startingLocationId: string | null,
-            destinationLocationId: string | null,
-            startingLocation: { id: string, name: string } | null,
-            destinationLocation: { id: string, name: string } | null,
-            startingTime: Date,
-            requestIds: string[],
-        }> = {};
+    rideRequests.forEach((request) => {
+      const requestTime = new Date(request.startingTime);
 
-        rideRequests.forEach(request => {
+      // Prepare key for gorup request
+      const key = `${request.startingLocationId}|${request.destinationLocationId}|${requestTime}`;
 
-            const requestTime = new Date(request.startingTime);
+      if (!groupedRequests[key]) {
+        groupedRequests[key] = {
+          key,
+          startingLocationId: request.startingLocationId,
+          destinationLocationId: request.destinationLocationId,
+          startingLocation: request.startingLocation,
+          destinationLocation: request.destinationLocation,
+          startingTime: request.startingTime,
+          requestIds: [request.id],
+        };
+      } else {
+        groupedRequests[key].requestIds.push(request.id);
+      }
+    });
 
-            // Prepare key for gorup request
-            const key = `${request.startingLocationId}|${request.destinationLocationId}|${requestTime}`;
+    const groupedRequestsList = Object.values(groupedRequests).sort((a, b) => {
+      const tA = new Date(a.startingTime).getTime();
+      const tB = new Date(b.startingTime).getTime();
+      return tA - tB; // ascending: earliest first
+    });
 
-            if (!groupedRequests[key]) {
-                groupedRequests[key] = {
-                    key,
-                    startingLocationId: request.startingLocationId,
-                    destinationLocationId: request.destinationLocationId,
-                    startingLocation: request.startingLocation,
-                    destinationLocation: request.destinationLocation,
-                    startingTime: request.startingTime,
-                    requestIds: [request.id],
-                };
-            } else {
-                groupedRequests[key].requestIds.push(request.id);
-            }
-        });
-
-        const groupedRequestsList = Object.values(groupedRequests).sort((a, b) => {
-            const tA = new Date(a.startingTime).getTime();
-            const tB = new Date(b.startingTime).getTime();
-            return tA - tB;  // ascending: earliest first
-        });
-
-        return groupedRequestsList;
-
-    } catch (error) {
-        logger.error(`Error fetching aggregated ride requests: ${error}`);
-        throw error;
-    }
+    return groupedRequestsList;
+  } catch (error) {
+    logger.error(`Error fetching aggregated ride requests: ${error}`);
+    throw error;
+  }
 };

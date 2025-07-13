@@ -20,44 +20,37 @@ import {
   PublicUserRideBookings,
   PublicTransactions,
 } from "./types";
+
+
 import { getWalletByUserId } from "@/lib/wallet/walletServices";
 
-/**
- * Get the carbon point of the user
- * @returns
- */
-export async function getCarbonPoint(): Promise<number> {
-  // Get authenticated user
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    throw new Error("You must be signed in to view your carbon point");
-  }
-
-  // Get user's data
-  const wallet = await getWalletByUserId(session.user.id);
-
-  //console.log(user)
-
-  return wallet.spendableBalance + wallet.reservedBalance;
-}
 
 /**
  * Submit a top-up request for carbon points
  */
 export async function requestTopUp(amount: number) {
-  const session = await auth();
+  try {
+    const session = await auth();
 
-  if (!session?.user?.id) {
-    throw new Error("Not authenticated");
+    if (!session?.user?.id) {
+      throw new Error("Not authenticated");
+    }
+
+    const success = await requestTopUpDb({
+      userId: session.user.id,
+      amount: amount,
+    });
+
+    return {
+      success: success,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
   }
-
-  const success = await requestTopUpDb({
-    userId: session.user.id,
-    amount: amount,
-  });
-
-  return success;
 }
 
 /**
@@ -109,106 +102,193 @@ export async function getUserRideBookings(): Promise<PublicUserRideBookings[]> {
  * Cancel a ride
  */
 export async function cancelRide(rideId: string) {
-  const session = await auth();
+  try {
+    const session = await auth();
 
-  if (!session?.user?.id) {
-    throw new Error("User not authenticated");
+    if (!session?.user?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    const success = await cancelRideDb({
+      userId: session.user.id,
+      rideId: rideId,
+    });
+
+    return {
+      success: success,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
   }
-
-  const success = await cancelRideDb({
-    userId: session.user.id,
-    rideId: rideId,
-  });
-
-  return success;
 }
 
 /**
  * Start a ride
  */
 export async function startRide(rideId: string) {
-  const session = await auth();
+  try {
+    const session = await auth();
 
-  if (!session?.user?.id) {
-    throw new Error("User not authenticated");
+    if (!session?.user?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    const success = await activateRide({
+      userId: session.user.id,
+      rideId: rideId,
+    });
+
+    return {
+      success: success,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
   }
-
-  const success = await activateRide({
-    userId: session.user.id,
-    rideId: rideId,
-  });
-
-  return success;
 }
 
 /**
  * Complete a ride
  */
 export async function completeRide(rideId: string) {
-  const session = await auth();
+  try {
+    const session = await auth();
 
-  if (!session?.user?.id) {
-    throw new Error("User not authenticated");
+    if (!session?.user?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    const success = await completeRideDb({
+      userId: session.user.id,
+      rideId: rideId,
+    });
+
+    return {
+      success: success,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
   }
-
-  const success = await completeRideDb({
-    userId: session.user.id,
-    rideId: rideId,
-  });
-
-  return success;
 }
 
 /**
  * Cancell a ridebooking by champion
  */
 export async function denyRideBooking(bookingId: string) {
-  const session = await auth();
+  try {
+    const session = await auth();
 
-  if (!session?.user?.id) {
-    throw new Error("User not authenticated");
+    if (!session?.user?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    const success = await cancleRideBookingByDriverOnPurpose({
+      driverId: session.user.id,
+      bookingId: bookingId,
+    });
+
+    return {
+      success: success,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
   }
-
-  const success = await cancleRideBookingByDriverOnPurpose({
-    driverId: session.user.id,
-    bookingId: bookingId,
-  });
-
-  return success;
 }
 
 /**
  * Activate a ridebooking by rider
  */
 export async function activateRideBooking(bookingId: string) {
-  const session = await auth();
+  try {
+    const session = await auth();
 
-  if (!session?.user?.id) {
-    throw new Error("User not authenticated");
+    if (!session?.user?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    const success = await activateRideBookingDb({
+      userId: session.user.id,
+      bookingId: bookingId,
+    });
+
+    return {
+      success: success,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
   }
-
-  const success = await activateRideBookingDb({
-    userId: session.user.id,
-    bookingId: bookingId,
-  });
-
-  return success;
 }
 
 /**
  * Cancle a ridebooking by rider
  */
 export async function cancleRideBooking(bookingId: string) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    const success = await cancleRideBookingByUser({
+      // Changed to 'cancel' (optional)
+      userId: session.user.id,
+      bookingId: bookingId,
+    });
+
+    return {
+      success: success,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
+  }
+}
+
+
+
+
+
+
+
+/**
+ * Get the carbon point of the user
+ * @returns
+ */
+export async function getCarbonPoint(): Promise<number> {
+  // Get authenticated user
   const session = await auth();
 
   if (!session?.user?.id) {
-    throw new Error("User not authenticated");
+    throw new Error("You must be signed in to view your carbon point");
   }
 
-  const success = await cancleRideBookingByUser({
-    userId: session.user.id,
-    bookingId: bookingId,
-  });
+  // Get user's data
+  const wallet = await getWalletByUserId(session.user.id);
 
-  return success;
+  //console.log(user)
+
+  return wallet.spendableBalance + wallet.reservedBalance;
 }

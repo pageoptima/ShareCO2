@@ -109,106 +109,164 @@ export async function getUserRideBookings(): Promise<PublicUserRideBookings[]> {
  * Cancel a ride
  */
 export async function cancelRide(rideId: string) {
-  const session = await auth();
+  try {
+    const session = await auth();
 
-  if (!session?.user?.id) {
-    throw new Error("User not authenticated");
+    if (!session?.user?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    const success = await cancelRideDb({
+      userId: session.user.id,
+      rideId: rideId,
+    });
+
+    return {
+      success: success,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
   }
-
-  const success = await cancelRideDb({
-    userId: session.user.id,
-    rideId: rideId,
-  });
-
-  return success;
 }
 
 /**
  * Start a ride
  */
 export async function startRide(rideId: string) {
-  const session = await auth();
+  try {
+    const session = await auth();
 
-  if (!session?.user?.id) {
-    throw new Error("User not authenticated");
+    if (!session?.user?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    const success = await activateRide({
+      userId: session.user.id,
+      rideId: rideId,
+    });
+
+    return {
+      success: success,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
   }
-
-  const success = await activateRide({
-    userId: session.user.id,
-    rideId: rideId,
-  });
-
-  return success;
 }
-
 /**
  * Complete a ride
  */
 export async function completeRide(rideId: string) {
-  const session = await auth();
+  try {
+    const session = await auth();
 
-  if (!session?.user?.id) {
-    throw new Error("User not authenticated");
+    if (!session?.user?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    const success = await completeRideDb({
+      userId: session.user.id,
+      rideId: rideId,
+    });
+
+    return {
+      success: success,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
   }
-
-  const success = await completeRideDb({
-    userId: session.user.id,
-    rideId: rideId,
-  });
-
-  return success;
 }
 
 /**
  * Cancell a ridebooking by champion
  */
 export async function denyRideBooking(bookingId: string) {
-  const session = await auth();
+  try {
+    const session = await auth();
 
-  if (!session?.user?.id) {
-    throw new Error("User not authenticated");
+    if (!session?.user?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    const success = await cancleRideBookingByDriverOnPurpose({
+      driverId: session.user.id,
+      bookingId: bookingId,
+    });
+
+    return {
+      success: success,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
   }
-
-  const success = await cancleRideBookingByDriverOnPurpose({
-    driverId: session.user.id,
-    bookingId: bookingId,
-  });
-
-  return success;
 }
 
 /**
  * Activate a ridebooking by rider
  */
 export async function activateRideBooking(bookingId: string) {
-  const session = await auth();
+  try {
+    const session = await auth();
 
-  if (!session?.user?.id) {
-    throw new Error("User not authenticated");
+    if (!session?.user?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    const success = await activateRideBookingDb({
+      userId: session.user.id,
+      bookingId: bookingId,
+    });
+
+    return {
+      success: success,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
   }
-
-  const success = await activateRideBookingDb({
-    userId: session.user.id,
-    bookingId: bookingId,
-  });
-
-  return success;
 }
-
 /**
  * Cancle a ridebooking by rider
  */
 export async function cancleRideBooking(bookingId: string) {
-  const session = await auth();
+  try {
+    const session = await auth();
 
-  if (!session?.user?.id) {
-    throw new Error("User not authenticated");
+    if (!session?.user?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    const success = await cancleRideBookingByUser({
+      userId: session.user.id,
+      bookingId: bookingId,
+    });
+
+    return {
+      success: success,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
   }
-
-  const success = await cancleRideBookingByUser({
-    userId: session.user.id,
-    bookingId: bookingId,
-  });
-
-  return success;
 }
