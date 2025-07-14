@@ -31,29 +31,30 @@ import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 import { toast } from "sonner";
 import { getUserProfile, updateUserProfile } from "./actions";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 // Schema for personal information
 const userProfileSchema = z.object({
-  name: z
-    .string()
-    .min(2, { message: "Name must be at least 2 characters" })
-    .optional(),
-  gender: z
-    .enum(["Male", "Female", "Other", ""], {
-      required_error: "Gender is required",
-    })
-    .optional(),
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  gender: z.enum(["Male", "Female", "Other", ""], {
+    required_error: "Gender is required",
+  }),
   age: z
     .number()
     .min(18, { message: "You must be at least 18 years old" })
-    .max(100)
-    .optional(),
+    .max(100),
+  phone: z
+    .string()
+    .regex(/^\+?1?\s?\(?[2-9][0-9]{2}\)?[-. ]?[2-9][0-9]{2}[-. ]?[0-9]{4}$/, {
+      message: "Invalid phone number format",
+    }),
 });
 
 type UserProfileValues = z.infer<typeof userProfileSchema>;
 
 export default function ProfileManager() {
+  const [formInitialized, setFormInitialized] = useState(false);
+
   // Hook for fetching the user profile
   const {
     data: userData,
@@ -89,17 +90,26 @@ export default function ProfileManager() {
 
   const form = useForm<UserProfileValues>({
     resolver: zodResolver(userProfileSchema),
+    defaultValues: {
+      name: "",
+      gender: "",
+      age: undefined,
+      phone: "", // Add phone to default values
+    },
   });
 
+  // Populate form once data is available
   useEffect(() => {
-    if (!userData) return;
-
-    form.reset({
-      name: userData?.name as string,
-      gender: userData?.gender as UserProfileValues["gender"],
-      age: userData?.age as number,
-    });
-  }, [userData, form]);
+    if (userData && !formInitialized) {
+      form.reset({
+        name: userData?.name ?? "",
+        gender: (userData?.gender as UserProfileValues["gender"]) ?? "",
+        age: userData?.age ?? undefined,
+        phone: userData?.phone ?? "",
+      });
+      setFormInitialized(true); // Mark form as initialized
+    }
+  }, [userData, form, formInitialized]);
 
   const hasChanges = () => {
     if (!userData) return false;
@@ -111,7 +121,7 @@ export default function ProfileManager() {
     await mutation.mutateAsync(data);
   };
 
-  if (isUserDataFetching) {
+  if (isUserDataFetching || !formInitialized) {
     return (
       <Card className="bg-[#1A3C34] text-white border-none">
         <CardHeader>
@@ -135,6 +145,11 @@ export default function ProfileManager() {
             <div className="h-10 w-20 bg-gray-600/50 rounded animate-pulse" />
             <div className="h-4 w-64 bg-gray-600/50 rounded animate-pulse" />
           </div>
+          {/* Phone Field */}
+          <div className="space-y-2">
+            <div className="h-4 w-24 bg-gray-600/50 rounded animate-pulse" />
+            <div className="h-10 w-full bg-gray-600/50 rounded animate-pulse" />
+          </div>
         </CardContent>
         <CardFooter>
           <div className="h-10 w-full bg-gray-600/50 rounded animate-pulse" />
@@ -152,7 +167,7 @@ export default function ProfileManager() {
       <CardContent>
         <Form {...form}>
           <form
-            id="profile-form"
+            id="profile-form2"
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-4"
           >
@@ -179,7 +194,10 @@ export default function ProfileManager() {
                 <FormItem>
                   <FormLabel>Gender</FormLabel>
                   <FormControl>
-                    <Select {...field}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value ?? ""}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select your gender" />
                       </SelectTrigger>
@@ -208,7 +226,7 @@ export default function ProfileManager() {
                       placeholder="Enter your age"
                       min={18}
                       max={100}
-                      value={field.value || ""}
+                      value={field.value ?? ""}
                       onChange={(e) =>
                         field.onChange(
                           e.target.value === ""
@@ -225,14 +243,33 @@ export default function ProfileManager() {
                 </FormItem>
               )}
             />
+
+            {/* Phone */}
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Enter your phone number"
+                      type="tel"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </form>
         </Form>
       </CardContent>
       <CardFooter>
         <Button
-          form="profile-form"
+          form="profile-form2"
           type="submit"
-          className="w-full"
+          className="w-full cursor-pointer"
           disabled={mutation.isPending}
         >
           {mutation.isPending ? (
@@ -240,7 +277,7 @@ export default function ProfileManager() {
               <Save className="mr-2 h-4 w-4 animate-spin" /> Saving...
             </span>
           ) : (
-            <span className="flex items-center">
+            <span className="flex items-center cursor-pointer">
               <Save className="mr-2 h-4 w-4" />{" "}
               {hasChanges() ? "Save Changes" : "No Changes"}
             </span>

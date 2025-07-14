@@ -20,7 +20,7 @@ export function BottomNav() {
           key={item.path}
           onClick={() => router.push(item.path)}
           className={cn(
-            "flex-1 text-center p-2 rounded-lg transition-colors",
+            "flex-1 text-center p-2 rounded-lg transition-colors cursor-pointer",
             pathname === item.path ? "bg-[#2E7D32]" : "hover:bg-[#2F4F4F]"
           )}
         >

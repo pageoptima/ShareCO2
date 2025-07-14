@@ -99,7 +99,7 @@ const AvilableRides = ({
       <Button
         onClick={() => refechAvailableRides()}
         disabled={isAvailableRidesRefetching}
-        className="mb-4 bg-[#2E7D32] hover:bg-emerald-800"
+        className="mb-4 bg-[#2E7D32] hover:bg-emerald-800 cursor-pointer"
       >
         {isAvailableRidesRefetching ? (
           <span className="flex items-center">

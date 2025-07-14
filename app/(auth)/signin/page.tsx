@@ -77,7 +77,7 @@ const SignInForm = () => {
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full p-3 bg-[#2E7D32] text-white rounded-lg hover:bg-[#388E3C] transition-colors"
+                        className="w-full p-3 bg-[#2E7D32] text-white rounded-lg hover:bg-[#388E3C] transition-colors cursor-pointer"
                     >
                         {isSubmitting ? "Sending..." : "Next"}
                     </button>

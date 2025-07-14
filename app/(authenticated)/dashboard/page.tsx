@@ -2,7 +2,6 @@
 
 import { useSession } from "next-auth/react";
 import { CarbonPointsCard } from "./components/CarbonPointsCard";
-import { TransactionHistory } from "./components/TransactionHistory";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CreatedRideHistory from "./components/CreatedRideHistory";
@@ -26,7 +25,6 @@ export default function DashboardPage() {
           <CarbonPointsCard />
         </div>
         <div className="w-full space-y-6">
-          <TransactionHistory />
           <Card className="bg-gradient-to-br from-[#1A3C34] to-[#2C5046] text-white border-none shadow-xl">
             <CardHeader className="pb-2">
               <CardTitle className="text-xl font-bold tracking-tight">
@@ -38,13 +36,13 @@ export default function DashboardPage() {
                 <TabsList className="grid w-[calc(100%-2rem)] grid-cols-2 bg-black/20 rounded-md p-1 mx-4 mb-4">
                   <TabsTrigger
                     value="created"
-                    className="data-[state=active]:bg-[#2E7D32] data-[state=active]:text-white text-gray-300"
+                    className="data-[state=active]:bg-[#2E7D32] data-[state=active]:text-white text-gray-300 cursor-pointer"
                   >
                     Created
                   </TabsTrigger>
                   <TabsTrigger
                     value="booked"
-                    className="data-[state=active]:bg-[#2E7D32] data-[state=active]:text-white text-gray-300"
+                    className="data-[state=active]:bg-[#2E7D32] data-[state=active]:text-white text-gray-300 cursor-pointer"
                   >
                     Booked
                   </TabsTrigger>

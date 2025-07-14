@@ -16,17 +16,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async createUser(data) {
       // Create user and wallet in one transection
       return await prisma.$transaction(async (tx) => {
-        const user = await tx.user.create({data: {
-          email        : data.email,
-          emailVerified: data.emailVerified,
-          name         : data?.name,
-          image        : data?.image,
-        }});
+        const user = await tx.user.create({
+          data: {
+            email: data.email,
+            emailVerified: data.emailVerified,
+            name: data?.name,
+            image: data?.image,
+          },
+        });
 
         await tx.wallet.create({
           data: { userId: user.id },
         });
-        
+
         return user;
       });
     },
@@ -47,14 +49,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   // —————————————
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60,  // 30 days
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
 
   // —————————————
   // CALLBACKS
   // —————————————
   callbacks: {
-
     // Persist user.id into the token on first sign-in
     async jwt({ token, user }) {
       if (user) {
@@ -65,9 +66,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
     // Make token.id available on session.user.id
     async session({ session, token }) {
-
       if (process.env.NEXT_PUBLIC_DEBUG_MODE) {
-        console.info("Session callback:", { sessionData: session, tokenData: token });
+        console.info("Session callback:", {
+          sessionData: session,
+          tokenData: token,
+        });
       }
 
       if (session?.user && token?.sub) {
@@ -76,7 +79,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         // Fetch user from database to get isAdmin status
         const dbUser = await prisma.user.findUnique({
-          where: { id: token.sub }
+          where: { id: token.sub },
         });
 
         // Update user id, name, eamil
@@ -87,7 +90,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
 
         // Add isAdmin flag tologger session with proper typing
-        if (dbUser && 'isAdmin' in dbUser) {
+        if (dbUser && "isAdmin" in dbUser) {
           (session.user as { isAdmin?: boolean }).isAdmin = dbUser.isAdmin;
         } else {
           (session.user as { isAdmin?: boolean }).isAdmin = false;
@@ -109,7 +112,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       // For safety, if external URL, go to base URL
       return `${baseUrl}/dashboard`;
-    }
+    },
   },
 
   // —————————————

@@ -395,7 +395,7 @@ export default function CreateRideForm({
           {/* Submit button */}
           <Button
             type="submit"
-            className="w-full bg-[#2E7D32] hover:bg-[#388E3C] mt-6"
+            className="w-full bg-[#2E7D32] hover:bg-[#388E3C] mt-6 cursor-pointer"
             disabled={isCreating}
           >
             {isCreating ? (

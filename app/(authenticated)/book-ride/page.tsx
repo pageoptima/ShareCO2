@@ -34,18 +34,21 @@ export default function BookRidePage() {
 
   return (
     <div className="p-4 pb-20 max-w-5xl mx-auto">
-
-      <h1 className="text-2xl font-bold tracking-tight text-white mb-6">Book a Ride</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-white mb-6">
+        Book a Ride
+      </h1>
 
       {/* Carbon point container */}
       <div className="mb-4 bg-gradient-to-br from-[#1A3C34] to-[#2C5046] p-3 rounded-lg flex items-center">
         <Coins className="h-5 w-5 text-amber-400 mr-3" />
-        {
-          isCarbonPointFetching ?
-            <Skeleton className="h-5 w-60 bg-white/10 rounded-md mb-6" />
-            :
-            <p className="text-white">Your Carbon Points: <span className="font-bold text-amber-400">{carbonPoint}</span></p>
-        }
+        {isCarbonPointFetching ? (
+          <Skeleton className="h-5 w-60 bg-white/10 rounded-md mb-6" />
+        ) : (
+          <p className="text-white">
+            Your Carbon Points:{" "}
+            <span className="font-bold text-amber-400">{carbonPoint}</span>
+          </p>
+        )}
       </div>
 
       {errorMessage && (
@@ -64,10 +67,16 @@ export default function BookRidePage() {
 
       <Tabs defaultValue="available-rides" className="mb-6">
         <TabsList className="bg-[#1A3C34] border-white/10 border w-full mb-4">
-          <TabsTrigger value="available-rides" className="data-[state=active]:bg-[#2E7D32]  text-white flex-1">
+          <TabsTrigger
+            value="available-rides"
+            className="data-[state=active]:bg-[#2E7D32]  text-white flex-1 cursor-pointer"
+          >
             Available Rides
           </TabsTrigger>
-          <TabsTrigger value="ride-requests" className="data-[state=active]:bg-[#2E7D32] text-white flex-1">
+          <TabsTrigger
+            value="ride-requests"
+            className="data-[state=active]:bg-[#2E7D32] text-white flex-1 cursor-pointer"
+          >
             My Ride Requests
           </TabsTrigger>
           {/* 
@@ -80,11 +89,11 @@ export default function BookRidePage() {
         {/* Available ride container */}
         <TabsContent value="available-rides" className="mt-0">
           <AvilableRides
-            onSuccess={ message => {
+            onSuccess={(message) => {
               setSuccessMessage(message);
               refechCarbonPoints();
             }}
-            onError={message => {
+            onError={(message) => {
               setErrorMessage(message);
               refechCarbonPoints();
             }}

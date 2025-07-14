@@ -22,6 +22,7 @@ import {
 import { PlusCircle, Pencil, Trash2, Car } from "lucide-react";
 import { toast } from "sonner";
 import { PublicVehicle, vehicleTypeLabels } from "./types";
+import Loading from "./components/Loading";
 
 const DeleteConfirmationDialog = ({
   isOpen,
@@ -144,7 +145,7 @@ export default function VehicleManagement() {
           <DialogTrigger asChild>
             <Button
               size="sm"
-              className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700"
+              className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
             >
               <PlusCircle className="h-4 w-4" />
               Add Vehicle
@@ -162,7 +163,7 @@ export default function VehicleManagement() {
       <CardContent>
         {isLoading ? (
           <div className="py-8 text-center text-gray-400">
-            Loading your vehicles...
+            <Loading />
           </div>
         ) : isError ? (
           <div className="py-8 text-center text-red-500">

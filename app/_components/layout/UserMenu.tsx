@@ -10,18 +10,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage
-} from "@/components/ui/avatar";
-import {
-  LogOut,
-  User,
-  History,
-  Wallet,
-  CreditCard
-} from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LogOut, User, History, Wallet, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -38,30 +28,35 @@ export function UserMenu() {
   const router = useRouter();
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
-  
+
   if (!session?.user) return null;
 
   // Type assertion for session user
   const user = session.user as ExtendedUser;
-  
+
   const handleNavigate = (path: string) => {
     setIsOpen(false);
     router.push(path);
   };
-  
+
   const handleSignOut = async () => {
     try {
       await signOut({ redirect: false });
       toast.success("Logged out successfully");
-      router.push("/");
+
+      // Add a small delay before redirecting
+      setTimeout(() => {
+        router.push("/");
+      }, 100);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to log out";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to log out";
       toast.error("Error", {
         description: errorMessage,
       });
     }
   };
-  
+
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
@@ -79,7 +74,7 @@ export function UserMenu() {
           </Avatar>
         </Button>
       </SheetTrigger>
-      <SheetContent className="bg-[#1A3C34] text-white border-none">
+      <SheetContent className="bg-[#1A3C34] text-white border-none [&>button]:cursor-pointer">
         <SheetHeader>
           <SheetTitle className="text-white flex items-center gap-2">
             <Avatar className="h-10 w-10">
@@ -106,7 +101,7 @@ export function UserMenu() {
         <div className="mt-8 space-y-2">
           <Button
             variant="ghost"
-            className="w-full justify-start text-white hover:bg-white/10"
+            className="w-full justify-start text-white hover:bg-white/10 cursor-pointer"
             onClick={() => handleNavigate("/profile")}
           >
             <User className="mr-2 h-5 w-5" />
@@ -114,7 +109,7 @@ export function UserMenu() {
           </Button>
           <Button
             variant="ghost"
-            className="w-full justify-start text-white hover:bg-white/10"
+            className="w-full justify-start text-white hover:bg-white/10 cursor-pointer"
             onClick={() => handleNavigate("/ride-history")}
           >
             <History className="mr-2 h-5 w-5" />
@@ -122,7 +117,7 @@ export function UserMenu() {
           </Button>
           <Button
             variant="ghost"
-            className="w-full justify-start text-white hover:bg-white/10"
+            className="w-full justify-start text-white hover:bg-white/10 cursor-pointer"
             onClick={() => handleNavigate("/wallet")}
           >
             <Wallet className="mr-2 h-5 w-5" /> Wallet
@@ -143,7 +138,7 @@ export function UserMenu() {
           <hr className="border-white/10 my-4" />
           <Button
             variant="ghost"
-            className="w-full justify-start text-white hover:bg-white/10 hover:text-red-400"
+            className="w-full justify-start text-white hover:bg-white/10 hover:text-red-400 cursor-pointer"
             onClick={handleSignOut}
           >
             <LogOut className="mr-2 h-5 w-5" />
