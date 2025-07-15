@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { addMinutes, format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -323,22 +324,29 @@ export default function CreateRideForm({
             <FormField
               control={form.control}
               name="startingTime"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white mb-1">
-                    Starting Time
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="datetime-local"
-                      {...field}
-                      disabled={form.formState.isSubmitting}
-                      className="bg-black/30 text-white border-gray-700"
-                    />
-                  </FormControl>
-                  <FormMessage className="text-red-300" />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                const minStartingTime = format(
+                  addMinutes(new Date(), 30),
+                  "yyyy-MM-dd'T'HH:mm"
+                );
+                return (
+                  <FormItem>
+                    <FormLabel className="text-white mb-1">
+                      Starting Time
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="datetime-local"
+                        {...field}
+                        min={minStartingTime}
+                        disabled={form.formState.isSubmitting}
+                        className="bg-black/30 text-white border-gray-700"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-300" />
+                  </FormItem>
+                );
+              }}
             />
 
             {/* Max Passenger input */}

@@ -4,7 +4,16 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Clock, Coins, MapPin, User, Users } from "lucide-react";
+import {
+  AlertCircle,
+  Car,
+  Clock,
+  Coins,
+  MapPin,
+  Phone,
+  User,
+  Users,
+} from "lucide-react";
 import { bookRide, getAvialableRides } from "./actions";
 import { PublicAvialableRides } from "./types";
 import { utcIsoToLocalTime12 } from "@/utils/time";
@@ -169,12 +178,37 @@ const AvilableRides = ({
                       <span>{utcIsoToLocalTime12(ride.startingTime)}</span>
                     </div>
                     <div className="flex items-center text-sm">
-                      <User className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
-                      <span>Driver: {ride.driverName || ride.driverEmail}</span>
+                      <Users className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
+                      <span>
+                        <strong>Seats:</strong> {ride.availableSets} available
+                      </span>
                     </div>
                     <div className="flex items-center text-sm">
-                      <Users className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
-                      <span>Seats: {ride.availableSets} available</span>
+                      <User className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
+                      <span>
+                        <strong> Champion: </strong>
+                        {ride.driverName || ride.driverEmail}
+                      </span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <Phone className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />{" "}
+                      {/* Added */}
+                      <span>
+                        <strong> Phone: </strong>
+                        {ride.driverPhone || "Not provided"}
+                      </span>{" "}
+                      {/* Added */}
+                    </div>
+
+                    <div className="flex items-center text-sm">
+                      <Car className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
+                      <span>
+                        <strong>Vehicle:</strong> {ride.vehicleNumber} (
+                        {ride.vehicleName
+                          ? `${ride.vehicleName}, ${ride.vehicleType}`
+                          : ride.vehicleType}
+                        )
+                      </span>
                     </div>
                     <div className="flex items-center text-sm">
                       <Coins className="h-4 w-4 text-amber-400 mr-2 flex-shrink-0" />
@@ -193,7 +227,7 @@ const AvilableRides = ({
                     disabled={!hasSeats || mutation.isPending}
                     variant="default"
                     size="sm"
-                    className={`w-full justify-center ${
+                    className={`w-full justify-center cursor-pointer ${
                       !hasSeats
                         ? "bg-red-700/50 hover:bg-red-700/60"
                         : "bg-[#2E7D32]"

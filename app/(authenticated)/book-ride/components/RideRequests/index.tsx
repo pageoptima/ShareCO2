@@ -60,7 +60,7 @@ const RideRequest = () => {
             {/* Refresh Requests Button */}
             <Button
                 onClick={() => refechRideRequests()}
-                className="mb-2 bg-[#2E7D32] hover:bg-emerald-800"
+                className="mb-2 bg-[#2E7D32] hover:bg-emerald-800 cursor-pointer"
             >
                 Refresh Requests
             </Button>

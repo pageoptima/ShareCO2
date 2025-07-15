@@ -59,11 +59,35 @@ export async function createRide({
       throw error;
     }
 
+    // Check if user profile is complete
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, email: true, phone: true, gender: true, age: true },
+    });
+
+    if (
+      !user ||
+      !user.name ||
+      !user.email ||
+      !user.phone ||
+      !user.gender ||
+      user.age === null
+    ) {
+      throw new Error("Please complete your profile before creating a ride.");
+    }
+
+    // Check if startingTime is at least 30 minutes from now
+    const requestTime = new Date(startingTime).getTime();
+    const thirtyMinutesLater = Date.now() + 30 * 60 * 1000;
+    if (requestTime < thirtyMinutesLater) {
+      throw new Error("Ride start time must be at least 30 minutes from now");
+    }
+
     // Check the user has insufficient balance in wallet before create the ride
     const wallet = await getWalletByUserId(userId);
 
     if (wallet.spendableBalance < 0) {
-      throw new Error("Insufficient carbon coin for craete ride");
+      throw new Error("Insufficient carbon coin for creating ride");
     }
 
     // Check if user has an active ride
@@ -385,7 +409,13 @@ export async function getAvailableRidesForUser(userId: string) {
       startingLocation: true,
       destinationLocation: true,
       vehicle: true,
-      driver: { select: { name: true, email: true } },
+      driver: { 
+        select: { 
+          name: true, 
+          email: true, 
+          phone: true 
+        } 
+      },
       bookings: {
         where: {
           status: {
@@ -429,10 +459,12 @@ export async function getAvailableRidesForUser(userId: string) {
         availableSets: ride.maxPassengers - confirmedBookings,
         driverName: ride.driver.name,
         driverEmail: ride.driver.email,
+        driverPhone: ride.driver.phone, 
         startingTime: ride.startingTime,
         vehicleId: ride.vehicle?.id,
         vehicleName: ride.vehicle?.model,
         vehicleType: ride.vehicle?.type,
+        vehicleNumber: ride.vehicle?.vehicleNumber,
       };
     });
 }

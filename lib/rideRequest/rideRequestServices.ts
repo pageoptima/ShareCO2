@@ -18,12 +18,30 @@ export async function createRideRequest({
   startingTime: string;
 }) {
   try {
-    // Create date object for requestest time
+    // Check if user profile is complete
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, email: true, phone: true, gender: true, age: true },
+    });
+
+    if (
+      !user ||
+      !user.name ||
+      !user.email ||
+      !user.phone ||
+      !user.gender ||
+      user.age === null
+    ) {
+      throw new Error(
+        "Please complete your profile before creating a ride request."
+      );
+    }
+
+    // Check if startingTime is at least 30 minutes from now
     const requestTime = new Date(startingTime).getTime();
     const thirtyMinutesLater = Date.now() + 30 * 60 * 1000;
-
     if (requestTime < thirtyMinutesLater) {
-      throw new Error("Ride request time must be at least 30 minutes from now");
+      throw new Error("Ride start time must be at least 30 minutes from now");
     }
 
     // Check for duplicate ride request with same start, destination and time from the SAME user

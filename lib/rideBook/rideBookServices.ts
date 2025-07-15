@@ -7,134 +7,136 @@ import { hasPassedNMinutes, isMoreThanNMinutesLeft } from "@/utils/time";
 /**
  * Book a ride for a user
  */
-export async function bookRide(
-    {
+export async function bookRide({
+  userId,
+  rideId,
+}: {
+  userId: string;
+  rideId: string;
+}) {
+  try {
+    // Check if user profile is complete
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, email: true, phone: true, gender: true, age: true },
+    });
+
+    if (!user || !user.name || !user.email || !user.phone || !user.gender || user.age === null) {
+      throw new Error("Please complete your profile before booking a ride.");
+    }
+
+    // Check if the ride exists and is available
+    const ride = await prisma.ride.findUnique({
+      where: { id: rideId },
+      include: { bookings: true },
+    });
+
+    if (!ride) {
+      throw new Error("Ride not found");
+    }
+
+    const now = new Date();
+    if (ride.status !== RideStatus.Pending || ride.startingTime <= now) {
+      throw new Error("Ride is not available for booking");
+    }
+
+    // Check confirmed bookings for seat availability (first-come-first-serve)
+    const confirmedBookings = ride.bookings.filter(
+      (booking) => booking.status === RideBookingStatus.Confirmed
+    ).length;
+    if (confirmedBookings >= ride.maxPassengers) {
+      throw new Error("Ride has reached maximum passenger capacity");
+    }
+
+    // Check if the user has already booked this ride
+    const existingBooking = await prisma.rideBooking.findUnique({
+      where: { rideId_userId: { rideId, userId } },
+    });
+
+    if (existingBooking) {
+      throw new Error("You have already booked this ride");
+    }
+
+    // Check if the user has an active ride - can only book a new ride if previous rides are completed
+    const activeBookings = await prisma.rideBooking.findMany({
+      where: {
         userId,
-        rideId,
-    } : {
-        userId: string,
-        rideId: string
+        status: {
+          in: [RideBookingStatus.Confirmed, RideBookingStatus.Active],
+        },
+        ride: {
+          status: RideStatus.Active,
+        },
+      },
+    });
+
+    if (activeBookings.length > 0) {
+      throw new Error("You have an active ride. Please complete it before booking a new one.");
     }
-) {
-    try {
 
-        // Check if the ride exists and is available
-        const ride = await prisma.ride.findUnique({
-            where: { id: rideId },
-            include: { bookings: true },
-        });
-
-        if ( ! ride ) {
-            throw new Error( 'Ride not found' );
-        }
-
-        const now = new Date();
-        if ( ride.status !== RideStatus.Pending || ride.startingTime <= now ) {
-            throw new Error( 'Ride is not available for booking' );
-        }
-
-        // Check confirmed bookings for seat availability (first-come-first-serve)
-        const confirmedBookings = ride.bookings.filter(booking => booking.status === RideBookingStatus.Confirmed).length;
-        if (confirmedBookings >= ride.maxPassengers) {
-            throw new Error( 'Ride has reached maximum passenger capacity' );
-        }
-
-        // Check if the user has already booked this ride
-        const existingBooking = await prisma.rideBooking.findUnique({
-            where: { rideId_userId: { rideId, userId } },
-        });
-
-        if (existingBooking) {
-            throw new Error( 'You have already booked this ride' );
-        }
-
-        // Check if the user has an active ride - can only book a new ride if previous rides are completed
-        const activeBookings = await prisma.rideBooking.findMany({
+    // Create a new booking in a transaction (no carbon points deduction at booking time)
+    await prisma.$transaction(async (tx) => {
+      // Double-check seat availability within transaction to prevent race conditions
+      const currentRide = await tx.ride.findUnique({
+        where: { id: rideId },
+        include: {
+          bookings: {
             where: {
-                userId,
-                status: {
-                    in: [
-                        RideBookingStatus.Confirmed,
-                        RideBookingStatus.Active,
-                    ],
-                },
-                ride: {
-                    status: RideStatus.Active
-                }
+              status: {
+                in: [RideBookingStatus.Confirmed, RideBookingStatus.Active],
+              },
             },
-        });
+          },
+          vehicle: true,
+        },
+      });
 
-        if (activeBookings.length > 0) {
-            throw new Error( 'You have an active ride. Please complete it before booking a new one.' );
-        }
+      // Check ride existence
+      if (!currentRide) {
+        throw new Error("Ride not found");
+      }
 
-        // Create a new booking in a transaction (no carbon points deduction at booking time)
-        await prisma.$transaction(async (tx) => {
+      // Check for passenger capacity
+      if (currentRide.bookings.length >= currentRide.maxPassengers) {
+        throw new Error("Ride has reached maximum passenger capacity");
+      }
 
-            // Double-check seat availability within transaction to prevent race conditions
-            const currentRide = await tx.ride.findUnique({
-                where: { id: rideId },
-                include: {
-                    bookings: {
-                        where: {
-                            status: {
-                                in: [
-                                    RideBookingStatus.Confirmed,
-                                    RideBookingStatus.Active,
-                                ]
-                            }
-                        }
-                    },
-                    vehicle: true,
-                },
-            });
+      // Calculate riding cost amount
+      const amount =
+        currentRide.vehicle?.type === VehicleType.Wheeler2
+          ? Number(process.env.NEXT_PUBLIC_CARBON_COST_TWO_WHEELER)
+          : Number(process.env.NEXT_PUBLIC_CARBON_COST_FOUR_WHEELER);
 
-            // Check ride existence,
-            if ( ! currentRide ) {
-                throw new Error( 'Ride not found' );
-            }
+      // Check user has sufficient balance before creating ride
+      if (!(await hasSufficientSpendableBalance({ tx, userId, amount }))) {
+        throw new Error("Wallet has not sufficient spendable balance");
+      }
 
-            // Check for passenger capacity
-            if ( currentRide.bookings.length >= currentRide.maxPassengers) {
-                throw new Error( 'Ride has reached maximum passenger capacity' );
-            }
+      // Create the booking
+      const rideBook = await tx.rideBooking.create({
+        data: {
+          rideId,
+          userId,
+          status: RideBookingStatus.Confirmed,
+          carbonCost: amount,
+        },
+      });
 
-            // Calculate riding cost amount
-            const amount = currentRide.vehicle?.type == VehicleType.Wheeler2 ?
-                Number( process.env.NEXT_PUBLIC_CARBON_COST_TWO_WHEELER ): 
-                Number( process.env.NEXT_PUBLIC_CARBON_COST_FOUR_WHEELER )
+      // Hold the ride cost
+      await holdRideCost({
+        tx,
+        userId,
+        rideId: rideBook.rideId,
+        rideBookId: rideBook.id,
+        amount,
+      });
+    });
 
-            // Check user has sufficient balance before create ride
-            if ( ! await hasSufficientSpendableBalance({ tx, userId, amount })) {
-                throw new Error( 'Wallet has not sufficient spandable balance' )
-            }
-
-            // Create the booking
-            const rideBook = await tx.rideBooking.create({
-                data: {
-                    rideId,
-                    userId,
-                    status: RideBookingStatus.Confirmed,
-                    carbonCost: amount,
-                },
-            });
-
-            // Hold the ride cost
-            await holdRideCost({
-                tx,
-                userId,
-                rideId: rideBook.rideId,
-                rideBookId: rideBook.id,
-                amount
-            })
-        });
-
-        return true;
-
-    } catch ( error ) {
-        logger.error( `Error booking ride: ${error}` );
-        throw error;
-    }
+    return true;
+  } catch (error) {
+    logger.error(`Error booking ride: ${error}`);
+    throw error;
+  }
 }
 
 /**
