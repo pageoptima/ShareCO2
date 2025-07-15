@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { addMinutes, format } from "date-fns";
+import { addDays, addMinutes, endOfDay, format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -263,10 +263,17 @@ export default function RideRequestForm({
                 control={form.control}
                 name="startingTime"
                 render={({ field }) => {
+                  const now = new Date();
                   const minStartingTime = format(
-                    addMinutes(new Date(), 30),
+                    addMinutes(now, 30), //after 30 minutes
                     "yyyy-MM-dd'T'HH:mm"
                   );
+
+                  const maxStartingTime = format(
+                    endOfDay(addDays(now, 1)), // end of tomorrow
+                    "yyyy-MM-dd'T'HH:mm"
+                  );
+
                   return (
                     <FormItem>
                       <FormLabel className="text-white mb-1">
@@ -277,6 +284,7 @@ export default function RideRequestForm({
                           type="datetime-local"
                           {...field}
                           min={minStartingTime}
+                          max={maxStartingTime}
                           disabled={form.formState.isSubmitting}
                           className="bg-black/30 text-white border-gray-700"
                         />

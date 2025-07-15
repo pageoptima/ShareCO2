@@ -1,7 +1,7 @@
 import logger from "@/config/logger";
 import { prisma } from "@/config/prisma";
 import { RideRequestStatus } from "@prisma/client";
-import { endOfDay, startOfDay } from "date-fns";
+import { addDays, endOfDay, startOfDay } from "date-fns";
 
 /**
  * Create a new ride request for user
@@ -37,13 +37,23 @@ export async function createRideRequest({
       );
     }
 
-    // Check if startingTime is at least 30 minutes from now
+    // Validate startingTime
     const requestTime = new Date(startingTime).getTime();
     const thirtyMinutesLater = Date.now() + 30 * 60 * 1000;
-    if (requestTime < thirtyMinutesLater) {
-      throw new Error("Ride start time must be at least 30 minutes from now");
+    const endOfTomorrow = endOfDay(addDays(new Date(), 1)).getTime();
+
+    if (isNaN(requestTime)) {
+      throw new Error("Invalid starting time format");
     }
 
+    if (requestTime < thirtyMinutesLater) {
+      throw new Error("Ride request time must be at least 30 minutes from now");
+    }
+
+    if (requestTime > endOfTomorrow) {
+      throw new Error("Ride request time must be within today or tomorrow");
+    }
+    
     // Check for duplicate ride request with same start, destination and time from the SAME user
     const duplicateRequest = await prisma.rideRequest.findFirst({
       where: {

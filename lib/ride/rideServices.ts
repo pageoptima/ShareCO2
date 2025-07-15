@@ -11,6 +11,7 @@ import {
   getWalletByUserId,
 } from "../wallet/walletServices";
 import { isMoreThanNMinutesLeft } from "@/utils/time";
+import { addDays, endOfDay } from "date-fns";
 
 // Validate the inputs
 const createRideSchema = z.object({
@@ -76,13 +77,22 @@ export async function createRide({
       throw new Error("Please complete your profile before creating a ride.");
     }
 
-    // Check if startingTime is at least 30 minutes from now
+    // Validate startingTime
     const requestTime = new Date(startingTime).getTime();
     const thirtyMinutesLater = Date.now() + 30 * 60 * 1000;
+    const endOfTomorrow = endOfDay(addDays(new Date(), 1)).getTime();
+
+    if (isNaN(requestTime)) {
+      throw new Error("Invalid starting time format");
+    }
+
     if (requestTime < thirtyMinutesLater) {
       throw new Error("Ride start time must be at least 30 minutes from now");
     }
 
+    if (requestTime > endOfTomorrow) {
+      throw new Error("Ride start time must be within today or tomorrow");
+    }
     // Check the user has insufficient balance in wallet before create the ride
     const wallet = await getWalletByUserId(userId);
 
@@ -409,12 +419,12 @@ export async function getAvailableRidesForUser(userId: string) {
       startingLocation: true,
       destinationLocation: true,
       vehicle: true,
-      driver: { 
-        select: { 
-          name: true, 
-          email: true, 
-          phone: true 
-        } 
+      driver: {
+        select: {
+          name: true,
+          email: true,
+          phone: true,
+        },
       },
       bookings: {
         where: {
@@ -459,7 +469,7 @@ export async function getAvailableRidesForUser(userId: string) {
         availableSets: ride.maxPassengers - confirmedBookings,
         driverName: ride.driver.name,
         driverEmail: ride.driver.email,
-        driverPhone: ride.driver.phone, 
+        driverPhone: ride.driver.phone,
         startingTime: ride.startingTime,
         vehicleId: ride.vehicle?.id,
         vehicleName: ride.vehicle?.model,

@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { addMinutes, format } from "date-fns";
+import { addDays, addMinutes, endOfDay, format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -238,7 +238,6 @@ export default function CreateRideForm({
                 </FormItem>
               )}
             />
-
             {/* Destination input */}
             <FormField
               control={form.control}
@@ -281,7 +280,6 @@ export default function CreateRideForm({
                 </FormItem>
               )}
             />
-
             {/* Vehicle type input */}
             <FormField
               control={form.control}
@@ -319,16 +317,23 @@ export default function CreateRideForm({
                 </FormItem>
               )}
             />
-
             {/* Ride Starting time input */}
             <FormField
               control={form.control}
               name="startingTime"
               render={({ field }) => {
+                const now = new Date();
+
                 const minStartingTime = format(
-                  addMinutes(new Date(), 30),
+                  addMinutes(now, 30),
                   "yyyy-MM-dd'T'HH:mm"
                 );
+
+                const maxStartingTime = format(
+                  endOfDay(addDays(now, 1)), // end of tomorrow
+                  "yyyy-MM-dd'T'HH:mm"
+                );
+
                 return (
                   <FormItem>
                     <FormLabel className="text-white mb-1">
@@ -339,6 +344,7 @@ export default function CreateRideForm({
                         type="datetime-local"
                         {...field}
                         min={minStartingTime}
+                        max={maxStartingTime}
                         disabled={form.formState.isSubmitting}
                         className="bg-black/30 text-white border-gray-700"
                       />
@@ -348,7 +354,6 @@ export default function CreateRideForm({
                 );
               }}
             />
-
             {/* Max Passenger input */}
             <FormField
               control={form.control}
