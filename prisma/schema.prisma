@@ -19,6 +19,7 @@ model User {
   phone              String?
   isAdmin            Boolean   @default(false)
   emailVerified      DateTime?
+  isProfileCompleted Boolean   @default(false)
   disclaimerAccepted Boolean   @default(false)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt

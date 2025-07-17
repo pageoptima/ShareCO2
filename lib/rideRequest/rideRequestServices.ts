@@ -21,17 +21,10 @@ export async function createRideRequest({
     // Check if user profile is complete
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { name: true, email: true, phone: true, gender: true, age: true },
+      select: { isProfileCompleted: true },
     });
 
-    if (
-      !user ||
-      !user.name ||
-      !user.email ||
-      !user.phone ||
-      !user.gender ||
-      user.age === null
-    ) {
+    if (!user || !user.isProfileCompleted) {
       throw new Error(
         "Please complete your profile before creating a ride request."
       );
@@ -53,7 +46,7 @@ export async function createRideRequest({
     if (requestTime > endOfTomorrow) {
       throw new Error("Ride request time must be within today or tomorrow");
     }
-    
+
     // Check for duplicate ride request with same start, destination and time from the SAME user
     const duplicateRequest = await prisma.rideRequest.findFirst({
       where: {

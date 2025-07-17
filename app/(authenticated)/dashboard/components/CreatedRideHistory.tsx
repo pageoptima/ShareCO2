@@ -357,7 +357,7 @@ const CreatedRideHistory = () => {
                   {ride.status === "Pending" && (
                     <Button
                       onClick={() => handleStartRide(ride.id)}
-                      className="px-3 py-1 h-8 text-xs bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/40 border border-emerald-500/30"
+                      className="px-3 py-1 h-8 text-xs bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/40 border border-emerald-500/30 cursor-pointer"
                     >
                       <CheckCircle className="h-3 w-3 mr-1" />
                       Start Ride
@@ -367,7 +367,7 @@ const CreatedRideHistory = () => {
                   {ride.status === "Active" && (
                     <Button
                       onClick={() => handleCompleteRide(ride.id)}
-                      className="px-3 py-1 h-8 text-xs bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/40 border border-emerald-500/30"
+                      className="px-3 py-1 h-8 text-xs bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/40 border border-emerald-500/30 cursor-pointer"
                     >
                       <CheckCircle className="h-3 w-3 mr-1" />
                       Complete Ride
@@ -378,7 +378,7 @@ const CreatedRideHistory = () => {
                     <Button
                       variant="destructive"
                       onClick={() => handleCancelRide(ride.id)}
-                      className="px-3 py-1 h-8 text-xs bg-red-500/20 text-red-300 hover:bg-red-500/40 border border-red-500/30"
+                      className="px-3 py-1 h-8 text-xs bg-red-500/20 text-red-300 hover:bg-red-500/40 border border-red-500/30 cursor-pointer"
                     >
                       Cancel Ride
                     </Button>
@@ -387,7 +387,7 @@ const CreatedRideHistory = () => {
                   {(ride.status === "Pending" || ride.status === "Active") && (
                     <Button
                       onClick={() => handleOpenChat(ride.id)}
-                      className="px-3 py-1 h-8 text-xs bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 border border-blue-500/30"
+                      className="px-3 py-1 h-8 text-xs bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 border border-blue-500/30 cursor-pointer"
                     >
                       <MessageCircle className="h-3 w-3 mr-1" />
                       Chat
@@ -439,7 +439,7 @@ const CreatedRideHistory = () => {
                                 onClick={() =>
                                   handleDenyRideBooking(booking.id)
                                 }
-                                className="bg-red-500/20 hover:bg-red-500/40 text-xs border border-red-500/30 text-red-300 flex-1 sm:flex-initial"
+                                className="bg-red-500/20 hover:bg-red-500/40 text-xs border border-red-500/30 text-red-300 flex-1 sm:flex-initial cursor-pointer"
                                 size="sm"
                               >
                                 <ShieldX className="h-3.5 w-3.5 mr-1.5" />

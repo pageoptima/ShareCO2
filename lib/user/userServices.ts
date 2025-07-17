@@ -46,6 +46,9 @@ export async function updateProfile({
       age,
       phone,
     });
+    
+    // Determine if profile is completed
+    const isProfileCompleted = Boolean(name && gender && age && phone);
 
     // Update the user profile
     await prisma.user.update({
@@ -55,6 +58,7 @@ export async function updateProfile({
         gender: gender,
         age: age,
         phone: phone,
+        isProfileCompleted,
       },
     });
 

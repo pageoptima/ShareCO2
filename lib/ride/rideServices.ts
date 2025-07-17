@@ -63,18 +63,13 @@ export async function createRide({
     // Check if user profile is complete
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { name: true, email: true, phone: true, gender: true, age: true },
+      select: { isProfileCompleted: true }, // Only fetch isProfileCompleted
     });
 
-    if (
-      !user ||
-      !user.name ||
-      !user.email ||
-      !user.phone ||
-      !user.gender ||
-      user.age === null
-    ) {
-      throw new Error("Please complete your profile before creating a ride.");
+    if (!user || !user.isProfileCompleted) {
+      throw new Error(
+        "Please complete your profile before creating a ride request."
+      );
     }
 
     // Validate startingTime
@@ -388,7 +383,7 @@ export async function getUserRides(userId: string, limit: number = 20) {
         },
       },
       orderBy: {
-        startingTime: "asc",
+        startingTime: "desc",
       },
       take: limit,
     });

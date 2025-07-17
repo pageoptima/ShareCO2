@@ -247,17 +247,17 @@ const RideBookedHistory = () => {
                   {rideBooking.status === "Confirmed" && (
                     <Button
                       onClick={() => handleConfirmReach(rideBooking.id)}
-                      className="px-3 py-1 h-8 text-xs bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/40 border border-emerald-500/30"
+                      className="px-3 py-1 h-8 text-xs bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/40 border border-emerald-500/30 cursor-pointer"
                     >
                       <CheckCircle className="h-3 w-3 mr-1" />
-                      Confirm Reach
+                      Found Car?
                     </Button>
                   )}
 
                   {rideBooking.status === "Confirmed" && (
                     <Button
                       onClick={() => handleCancelBooking(rideBooking.id)}
-                      className="px-3 py-1 h-8 text-xs bg-red-500/20 text-red-300 hover:bg-red-500/40 border border-red-500/30"
+                      className="px-3 py-1 h-8 text-xs bg-red-500/20 text-red-300 hover:bg-red-500/40 border border-red-500/30 cursor-pointer"
                     >
                       Cancel Booking
                     </Button>
@@ -267,7 +267,7 @@ const RideBookedHistory = () => {
                     rideBooking.status === "Active") && (
                     <Button
                       onClick={() => handleOpenChat(rideBooking.id)}
-                      className="px-3 py-1 h-8 text-xs bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 border border-blue-500/30"
+                      className="px-3 py-1 h-8 text-xs bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 border border-blue-500/30 cursor-pointer"
                     >
                       <MessageCircle className="h-3 w-3 mr-1" />
                       Chat

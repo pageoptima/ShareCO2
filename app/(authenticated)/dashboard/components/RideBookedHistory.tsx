@@ -10,7 +10,11 @@ import {
   MessageCircle,
 } from "lucide-react";
 import React from "react";
-import { activateRideBooking, cancleRideBooking, getUserRideBookings } from "../actions";
+import {
+  activateRideBooking,
+  cancleRideBooking,
+  getUserRideBookings,
+} from "../actions";
 import { PublicRideBookingStatus, PublicRideStatus } from "../types";
 import { utcIsoToLocalDate, utcIsoToLocalTime12 } from "@/utils/time";
 import { toast } from "sonner";
@@ -189,12 +193,16 @@ const RideBookedHistory = () => {
                   <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                     <div className="flex items-center">
                       <MapPin className="h-4 w-4 text-emerald-400 mr-1" />
-                      <p className="font-medium">{rideBooking.ride.startingLocation?.name}</p>
+                      <p className="font-medium">
+                        {rideBooking.ride.startingLocation?.name}
+                      </p>
                     </div>
                     <span className="hidden sm:inline mx-1">→</span>
                     <div className="flex items-center">
                       <MapPin className="h-4 w-4 text-red-400 mr-1" />
-                      <p className="font-medium">{rideBooking.ride.destinationLocation?.name}</p>
+                      <p className="font-medium">
+                        {rideBooking.ride.destinationLocation?.name}
+                      </p>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-3 text-xs text-gray-300">
@@ -206,12 +214,20 @@ const RideBookedHistory = () => {
                       <Clock className="h-3 w-3 mr-1 opacity-70" />
                       {utcIsoToLocalTime12(rideBooking.ride.startingTime)}
                     </div>
-                    <div className={`flex items-center bg-white/10 rounded-3xl px-2 py-1 ${getBookingStatusColor(rideBooking.status)}`}>
+                    <div
+                      className={`flex items-center bg-white/10 rounded-3xl px-2 py-1 ${getBookingStatusColor(
+                        rideBooking.status
+                      )}`}
+                    >
                       <AlertCircle className="h-3 w-3 mr-1" />
                       {rideBooking.status}
                     </div>
                     {rideBooking.ride.status && (
-                      <div className={`flex items-center bg-white/10 rounded-3xl px-2 py-1 ${getStatusColor(rideBooking.ride.status)}`}>
+                      <div
+                        className={`flex items-center bg-white/10 rounded-3xl px-2 py-1 ${getStatusColor(
+                          rideBooking.ride.status
+                        )}`}
+                      >
                         <AlertCircle className="h-3 w-3 mr-1" />
                         Ride: {rideBooking.ride.status}
                       </div>
@@ -222,24 +238,25 @@ const RideBookedHistory = () => {
                   {rideBooking.status === "Confirmed" && (
                     <Button
                       onClick={() => handleConfirmReach(rideBooking.id)}
-                      className="px-3 py-1 h-8 text-xs bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/40 border border-emerald-500/30"
+                      className="px-3 py-1 h-8 text-xs bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/40 border border-emerald-500/30 cursor-pointer"
                     >
                       <CheckCircle className="h-3 w-3 mr-1" />
-                      Confirm Reach
+                      Found Car?
                     </Button>
                   )}
                   {rideBooking.status === "Confirmed" && (
                     <Button
                       onClick={() => handleCancelBooking(rideBooking.id)}
-                      className="px-3 py-1 h-8 text-xs bg-red-500/20 text-red-300 hover:bg-red-500/40 border border-red-500/30"
+                      className="px-3 py-1 h-8 text-xs bg-red-500/20 text-red-300 hover:bg-red-500/40 border border-red-500/30 cursor-pointer"
                     >
                       Cancel Booking
                     </Button>
                   )}
-                  {(rideBooking.status === "Confirmed" || rideBooking.status === "Active") && (
+                  {(rideBooking.status === "Confirmed" ||
+                    rideBooking.status === "Active") && (
                     <Button
                       onClick={() => handleOpenChat(rideBooking.id)}
-                      className="px-3 py-1 h-8 text-xs bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 border border-blue-500/30"
+                      className="px-3 py-1 h-8 text-xs bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 border border-blue-500/30 cursor-pointer"
                     >
                       <MessageCircle className="h-3 w-3 mr-1" />
                       Chat
@@ -251,8 +268,12 @@ const RideBookedHistory = () => {
           ))
         ) : (
           <div className="flex flex-col items-center justify-center py-10 text-center">
-            <p className="text-gray-400 mt-2">No booked rides in the past 7 days</p>
-            <p className="text-xs text-gray-500">Your recent booked rides will appear here</p>
+            <p className="text-gray-400 mt-2">
+              No booked rides in the past 7 days
+            </p>
+            <p className="text-xs text-gray-500">
+              Your recent booked rides will appear here
+            </p>
           </div>
         )}
       </div>
