@@ -396,6 +396,49 @@ export async function getUserRides(userId: string, limit: number = 20) {
 }
 
 /**
+ * Get ride details by ride ID
+ */
+export async function getRideById(rideId: string) {
+  try {
+    const ride = await prisma.ride.findUnique({
+      where: {
+        id: rideId,
+      },
+      include: {
+        startingLocation: {
+          select: { id: true, name: true },
+        },
+        destinationLocation: {
+          select: { id: true, name: true },
+        },
+        vehicle: {
+          select: { id: true, type: true, model: true, vehicleNumber: true },
+        },
+        driver: {
+          select: { id: true, name: true, email: true, phone: true },
+        },
+        bookings: {
+          include: {
+            user: {
+              select: { id: true, name: true, email: true, phone: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!ride) {
+      throw new Error("Ride not found");
+    }
+
+    return ride;
+  } catch (error) {
+    logger.error(`Error fetching ride by ID ${rideId}: ${error}`);
+    throw error;
+  }
+}
+
+/**
  * Get avialable ride for a user
  */
 export async function getAvailableRidesForUser(userId: string) {

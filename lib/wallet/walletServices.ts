@@ -16,7 +16,6 @@ export async function getWalletByUserId(userId: string) {
   const wallet = await prisma.wallet.findUnique({
     where: { userId },
   });
-
   if (!wallet) {
     throw new Error(`Wallet not found for user ${userId}`);
   }
@@ -64,11 +63,53 @@ export async function getWalletTransactions({
     }),
   ]);
 
-  //console.log("transactions", transactions)
+  // console.log("transactions", transactions)
   return {
     transactions,
     total,
   };
+}
+
+/**
+ * Get a single wallet transaction by its ID
+ */
+export async function singleTransactionDetails(
+  transactionId: string,
+  userId: string
+) {
+  try {
+    // Find wallet ID from userId
+    const wallet = await prisma.wallet.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!wallet) {
+      throw new Error(`Wallet not found for user ${userId}`);
+    }
+
+    // Fetch the transaction with related data
+    const transaction = await prisma.walletTransaction.findFirst({
+      where: {
+        id: transactionId,
+        walletId: wallet.id, // Ensure the transaction belongs to the user's wallet
+      },
+      include: {
+        ride: { select: { id: true } },
+        rideBook: { select: { id: true } },
+        transaction: { select: { id: true } },
+      },
+    });
+
+    if (!transaction) {
+      throw new Error("Transaction not found");
+    }
+
+    return transaction;
+  } catch (error) {
+    console.error("Error fetching transaction details:", error);
+    throw new Error("Failed to fetch transaction details");
+  }
 }
 
 /**

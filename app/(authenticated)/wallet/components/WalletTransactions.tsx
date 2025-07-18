@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +11,7 @@ import { getTransactions } from "../actions";
 import { PublicWalletTransaction } from "../types";
 import { utcIsoToLocalDate, utcIsoToLocalTime12 } from "@/utils/time";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 // Shimmer Component for Loading State
 const ShimmerTransactionCard = () => (
@@ -82,6 +85,7 @@ const getPurposeLabel = (purpose: PublicWalletTransaction["purpose"]) => {
 };
 
 const WalletTransactions = () => {
+  const router = useRouter();
   const {
     data: { transactions = [] } = {},
     isLoading,
@@ -182,19 +186,33 @@ const WalletTransactions = () => {
                         </div>
                       </div>
                     </div>
-                    <Badge
-                      className={`text-xs ${
-                        getTransactionStyle(txn.direction).color
-                      }`}
-                      variant="outline"
-                    >
-                      {txn.direction === "CREDIT"
-                        ? "+"
-                        : txn.direction === "DEBIT"
-                        ? "-"
-                        : ""}
-                      {txn.amount.toFixed(2)} CP
-                    </Badge>
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge
+                        className={`text-sm ${
+                          getTransactionStyle(txn.direction).color
+                        }`}
+                        variant="outline"
+                      >
+                        {txn.direction === "CREDIT"
+                          ? "+"
+                          : txn.direction === "DEBIT"
+                          ? "-"
+                          : ""}
+                        {txn.amount.toFixed(2)} CP
+                      </Badge>
+                      {txn.rideId && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            router.push(`/rideDetails/${txn.rideId}`)
+                          }
+                          className="text-white hover:bg-white/10 cursor-pointer text-xs px-2 py-0 h-6"
+                        >
+                          Ride Details
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
