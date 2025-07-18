@@ -1,5 +1,3 @@
-// app/(authenticated)/rideDetails/[rideId]/page.tsx
-
 "use client";
 
 import React from "react";
@@ -15,17 +13,74 @@ import { toast } from "sonner";
 import { PublicRideBookingStatus, PublicRideStatus } from "../types";
 
 // Shimmer Component for Loading State
-const ShimmerRideDetails = () => (
-  <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+const Loading = () => (
+  <Card className="bg-white/5 backdrop-blur-sm border-white/10 max-w-2xl mx-auto">
     <CardHeader>
-      <div className="h-5 w-32 bg-gray-600/50 rounded" />
+      <div className="h-5 w-32 bg-gray-600/50 rounded animate-pulse" />
     </CardHeader>
     <CardContent>
-      <div className="space-y-4">
-        <div className="h-4 w-48 bg-gray-600/50 rounded" />
-        <div className="h-4 w-64 bg-gray-600/50 rounded" />
-        <div className="h-4 w-32 bg-gray-600/50 rounded" />
-        <div className="h-4 w-40 bg-gray-600/50 rounded" />
+      <div className="space-y-6">
+        {/* Overview Section */}
+        <div>
+          <div className="h-4 w-24 bg-gray-600/50 rounded animate-pulse mb-2" />
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-4 bg-gray-600/50 rounded-full animate-pulse" />
+              <div className="h-4 w-48 bg-gray-600/50 rounded animate-pulse" />
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-4 bg-gray-600/50 rounded-full animate-pulse" />
+              <div className="h-4 w-64 bg-gray-600/50 rounded animate-pulse" />
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-4 bg-gray-600/50 rounded-full animate-pulse" />
+              <div className="h-4 w-56 bg-gray-600/50 rounded animate-pulse" />
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-16 bg-gray-600/50 rounded animate-pulse" />
+              <div className="h-4 w-24 bg-gray-600/50 rounded animate-pulse" />
+            </div>
+            <div className="h-4 w-32 bg-gray-600/50 rounded animate-pulse" />
+            <div className="h-4 w-28 bg-gray-600/50 rounded animate-pulse" />
+          </div>
+        </div>
+
+        {/* Driver Section */}
+        <div>
+          <div className="h-4 w-24 bg-gray-600/50 rounded animate-pulse mb-2" />
+          <div className="space-y-2">
+            <div className="h-4 w-40 bg-gray-600/50 rounded animate-pulse" />
+            <div className="h-4 w-48 bg-gray-600/50 rounded animate-pulse" />
+            <div className="h-4 w-36 bg-gray-600/50 rounded animate-pulse" />
+          </div>
+        </div>
+
+        {/* Passengers Section */}
+        <div>
+          <div className="h-4 w-24 bg-gray-600/50 rounded animate-pulse mb-2" />
+          <ScrollArea className="h-[150px]">
+            <div className="space-y-2">
+              {Array.from({ length: 2 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="p-2 bg-white/5 rounded border border-white/10"
+                >
+                  <div className="flex justify-between">
+                    <div className="space-y-2">
+                      <div className="h-4 w-32 bg-gray-600/50 rounded animate-pulse" />
+                      <div className="h-3 w-40 bg-gray-600/50 rounded animate-pulse" />
+                      <div className="h-3 w-28 bg-gray-600/50 rounded animate-pulse" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-4 w-20 bg-gray-600/50 rounded animate-pulse" />
+                      <div className="h-3 w-24 bg-gray-600/50 rounded animate-pulse" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
       </div>
     </CardContent>
   </Card>
@@ -86,7 +141,7 @@ const RideDetailsPage = () => {
   });
 
   if (isLoading) {
-    return <ShimmerRideDetails />;
+    return <Loading />;
   }
 
   if (isError) {

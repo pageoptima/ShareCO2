@@ -76,6 +76,7 @@ export default function ProfileManager() {
     mutationFn: (data: Partial<UserProfileValues>) => updateUserProfile(data),
     onSuccess: async (result) => {
       if (result.success) {
+        localStorage.setItem("isProfileCompleted", "true");
         toast.success("Profile updated successfully");
         await refetchUserData();
         form.reset(form.getValues());
