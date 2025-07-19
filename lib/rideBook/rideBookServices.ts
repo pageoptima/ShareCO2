@@ -481,50 +481,62 @@ export async function cancleRideBookingByUser({
 }
 
 /**
- * Get all ride booking of a user
+ * Get all ride bookings of a user from the database
  */
-export async function getUserRideBookings(userId: string, limit: number = 20) {
+export async function getUserRideBookingsDb(
+  userId: string,
+  limit: number = 20
+) {
   try {
     const rideBookings = await prisma.rideBooking.findMany({
-      where: {
-        userId: userId,
-      },
+      where: { userId: userId },
       select: {
         id: true,
         status: true,
+        userId: true, 
         ride: {
           select: {
             id: true,
             status: true,
             startingTime: true,
             startingLocation: {
-              select: {
-                id: true,
-                name: true,
-              },
+              select: { id: true, name: true },
             },
             destinationLocation: {
-              select: {
-                id: true,
-                name: true,
-              },
+              select: { id: true, name: true },
             },
             driver: {
               select: {
                 id: true,
                 name: true,
-                email: true,
+                phone: true,
+              },
+            },
+            vehicle: {
+              select: {
+                id: true,
+                vehicleNumber: true, 
+                model: true, 
+              },
+            },
+            bookings: {
+              select: {
+                id: true,
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
               },
             },
           },
         },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { createdAt: "desc" },
       take: limit,
     });
-    console.log(rideBookings);
+
     return rideBookings;
   } catch (error) {
     logger.error(`Error on fetching user rides: ${error}`);

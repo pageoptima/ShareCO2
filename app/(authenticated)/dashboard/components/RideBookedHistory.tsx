@@ -8,8 +8,10 @@ import {
   Clock,
   MapPin,
   MessageCircle,
+  Users,
+  Car,
 } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 import {
   activateRideBooking,
   cancleRideBooking,
@@ -19,9 +21,6 @@ import { PublicRideBookingStatus, PublicRideStatus } from "../types";
 import { utcIsoToLocalDate, utcIsoToLocalTime12 } from "@/utils/time";
 import { toast } from "sonner";
 
-/**
- * Get the color of the ride status
- */
 const getStatusColor = (status: PublicRideStatus) => {
   switch (status) {
     case "Active":
@@ -37,9 +36,6 @@ const getStatusColor = (status: PublicRideStatus) => {
   }
 };
 
-/**
- * Get the color of the booking status
- */
 const getBookingStatusColor = (status: PublicRideBookingStatus) => {
   switch (status) {
     case "Confirmed":
@@ -54,7 +50,8 @@ const getBookingStatusColor = (status: PublicRideBookingStatus) => {
 };
 
 const RideBookedHistory = () => {
-  // Fetch user's ride bookings via react-query
+  const [expandedRideId, setExpandedRideId] = useState<string | null>(null);
+
   const {
     data: rideBookings = [],
     isLoading: isRideBookingsFetching,
@@ -72,12 +69,9 @@ const RideBookedHistory = () => {
     console.error(rideBookingsFetchingError);
   }
 
-  // Hook for confirm reach
   const { mutateAsync: mutateConfirmReach, isPending: isConfirmReachPending } =
     useMutation({
-      mutationFn: (bookingId: string) => {
-        return activateRideBooking(bookingId);
-      },
+      mutationFn: (bookingId: string) => activateRideBooking(bookingId),
       onSuccess: async (result) => {
         if (result.success) {
           toast.success("Ride booking activated");
@@ -91,14 +85,11 @@ const RideBookedHistory = () => {
       },
     });
 
-  // Hook for cancel booking
   const {
     mutateAsync: mutateCancleBooking,
     isPending: isCancleBookingPending,
   } = useMutation({
-    mutationFn: (bookingId: string) => {
-      return cancleRideBooking(bookingId);
-    },
+    mutationFn: (bookingId: string) => cancleRideBooking(bookingId),
     onSuccess: async (result) => {
       if (result.success) {
         toast.success("Ride booking canceled successfully");
@@ -112,23 +103,13 @@ const RideBookedHistory = () => {
     },
   });
 
-  /**
-   * Confirm Reach handler
-   */
   const handleConfirmReach = async (bookingId: string) => {
-    if (isConfirmReachPending) {
-      return true;
-    }
+    if (isConfirmReachPending) return true;
     await mutateConfirmReach(bookingId);
   };
 
-  /**
-   * Cancel Ride booking
-   */
   const handleCancelBooking = async (bookingId: string) => {
-    if (isCancleBookingPending) {
-      return true;
-    }
+    if (isCancleBookingPending) return true;
     await mutateCancleBooking(bookingId);
   };
 
@@ -136,11 +117,14 @@ const RideBookedHistory = () => {
     console.log(bookingId);
   };
 
+  const toggleDetails = (rideId: string) => {
+    setExpandedRideId(expandedRideId === rideId ? null : rideId);
+  };
+
   if (isRideBookingsFetching || isRideBookingsRefetching) {
     return (
       <ScrollArea className="h-[500px] w-full px-4 pb-4">
         <div className="space-y-3">
-          {/* Render 3 skeleton cards to mimic ride booking cards */}
           {[...Array(3)].map((_, index) => (
             <div
               key={index}
@@ -194,25 +178,29 @@ const RideBookedHistory = () => {
                     <div className="flex items-center">
                       <MapPin className="h-4 w-4 text-emerald-400 mr-1" />
                       <p className="font-medium">
-                        {rideBooking.ride.startingLocation?.name}
+                        {rideBooking.ride.startingLocation?.name || "N/A"}
                       </p>
                     </div>
                     <span className="hidden sm:inline mx-1">→</span>
                     <div className="flex items-center">
                       <MapPin className="h-4 w-4 text-red-400 mr-1" />
                       <p className="font-medium">
-                        {rideBooking.ride.destinationLocation?.name}
+                        {rideBooking.ride.destinationLocation?.name || "N/A"}
                       </p>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-3 text-xs text-gray-300">
                     <div className="flex items-center bg-white/10 rounded-3xl px-2 py-1">
                       <Calendar className="h-3 w-3 mr-1 opacity-70" />
-                      {utcIsoToLocalDate(rideBooking.ride.startingTime)}
+                      {utcIsoToLocalDate(
+                        rideBooking.ride.startingTime.toISOString()
+                      )}
                     </div>
                     <div className="flex items-center bg-white/10 rounded-3xl px-2 py-1">
                       <Clock className="h-3 w-3 mr-1 opacity-70" />
-                      {utcIsoToLocalTime12(rideBooking.ride.startingTime)}
+                      {utcIsoToLocalTime12(
+                        rideBooking.ride.startingTime.toISOString()
+                      )}
                     </div>
                     <div
                       className={`flex items-center bg-white/10 rounded-3xl px-2 py-1 ${getBookingStatusColor(
@@ -233,6 +221,57 @@ const RideBookedHistory = () => {
                       </div>
                     )}
                   </div>
+                </div>
+                <div className="mt-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-emerald-300 hover:text-emerald-100 hover:bg-emerald-500/20 border border-emerald-500/30 px-3 py-1 rounded-md cursor-pointer transition-all duration-200"
+                    onClick={() => toggleDetails(rideBooking.id)}
+                  >
+                    {expandedRideId === rideBooking.id
+                      ? "Hide Details"
+                      : "Show Details"}
+                  </Button>
+                  {expandedRideId === rideBooking.id && (
+                    <div className="mt-2 text-sm text-gray-300 space-y-2">
+                      <div className="border-t border-white/10 pt-2">
+                        <h4 className="text-xs font-semibold text-white flex items-center">
+                          <Car className="h-4 w-4 mr-1" />
+                          Champion Details
+                        </h4>
+                        <p>Name: {rideBooking.ride.driver.name || "N/A"}</p>
+                        <p>Phone: {rideBooking.ride.driver.phone || "N/A"}</p>
+                        <p>
+                          Car details:{" "}
+                          {rideBooking.ride.vehicle
+                            ? `${rideBooking.ride.vehicle.model} (${
+                                rideBooking.ride.vehicle.vehicleNumber || "N/A"
+                              })`
+                            : "N/A"}
+                        </p>
+                      </div>
+                      <div className="border-t border-white/10 pt-2">
+                        <h4 className="text-xs font-semibold text-white flex items-center">
+                          <Users className="h-4 w-4 mr-1" />
+                          Co-Passengers
+                        </h4>
+                        {rideBooking.ride.bookings.length > 0 ? (
+                          <ul className="list-disc list-inside">
+                            {rideBooking.ride.bookings
+                              .filter((b) => b.user.id !== rideBooking.userId)
+                              .map((b) => (
+                                <li key={b.id}>
+                                  {b.user.name || "Unnamed User"}
+                                </li>
+                              ))}
+                          </ul>
+                        ) : (
+                          <p>No other passengers</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   {rideBooking.status === "Confirmed" && (

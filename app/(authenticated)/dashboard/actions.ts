@@ -8,22 +8,16 @@ import {
   getUserRides as getUserRidesDb,
 } from "@/lib/ride/rideServices";
 import {
-  getUserRideBookings as getUserRideBookingsDb,
   cancleRideBookingByDriverOnPurpose,
   activateRideBooking as activateRideBookingDb,
   cancleRideBookingByUser,
+  getUserRideBookingsDb,
 } from "@/lib/rideBook/rideBookServices";
 import { cancelRide as cancelRideDb } from "@/lib/ride/rideServices";
 import { completeRide as completeRideDb } from "@/lib/ride/rideServices";
-import {
-  PublicUserRides,
-  PublicUserRideBookings,
-  PublicTransactions,
-} from "./types";
-
+import { PublicUserRides, PublicTransactions } from "./types";
 
 import { getWalletByUserId } from "@/lib/wallet/walletServices";
-
 
 /**
  * Submit a top-up request for carbon points
@@ -84,9 +78,9 @@ export async function getUserRides(): Promise<PublicUserRides[]> {
 }
 
 /**
- * Get user ride booking
+ * Get user ride bookings
  */
-export async function getUserRideBookings(): Promise<PublicUserRideBookings[]> {
+export async function getUserRideBookings() {
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -266,12 +260,6 @@ export async function cancleRideBooking(bookingId: string) {
     };
   }
 }
-
-
-
-
-
-
 
 /**
  * Get the carbon point of the user
