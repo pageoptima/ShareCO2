@@ -18,7 +18,7 @@ import { completeRide as completeRideDb } from "@/lib/ride/rideServices";
 import { PublicUserRides, PublicTransactions } from "./types";
 
 import { getWalletByUserId } from "@/lib/wallet/walletServices";
-import { updateFcmTokenDb } from "@/lib/user/userServices";
+import { getUserById, updateFcmTokenDb } from "@/lib/user/userServices";
 
 /**
  * Submit a top-up request for carbon points
@@ -308,5 +308,22 @@ export async function updateFcmToken(fcmToken: string) {
       success: false,
       error: (error as Error).message,
     };
+  }
+}
+
+
+export async function getUserProfileStatus() {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    const user = await getUserById(session.user.id);
+    return { isProfileCompleted: user.isProfileCompleted };
+  } catch (error) {
+    console.error("Error fetching user profile status:", error);
+    throw new Error("Failed to fetch user profile status");
   }
 }

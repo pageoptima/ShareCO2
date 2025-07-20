@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -73,23 +73,13 @@ export default function CreateRideForm({
   const [vehicleType, setVehicleType] = useState<PublicVehicleType>();
 
   // Fetch vehicles via react-query
-  const {
-    data: vehicles = [],
-    isLoading: isVehicleFetching,
-    isError: isVehicleFetchingError,
-    error: vehicleFetchingError,
-  } = useQuery({
+  const { data: vehicles = [], isLoading: isVehicleFetching } = useQuery({
     queryKey: ["vehicles"],
     queryFn: getUserVehicles,
   });
 
   // Fetch location via react-query
-  const {
-    data: locations = [],
-    isLoading: isLocationFetching,
-    isError: isLocationFetchingError,
-    error: locationFetchingError,
-  } = useQuery({
+  const { data: locations = [], isLoading: isLocationFetching } = useQuery({
     queryKey: ["location"],
     queryFn: getLocations,
   });
@@ -122,14 +112,6 @@ export default function CreateRideForm({
     },
   });
 
-  // Handle error
-  if (isVehicleFetchingError) {
-    console.error(vehicleFetchingError);
-  }
-  if (isLocationFetchingError) {
-    console.error(locationFetchingError);
-  }
-
   // Initialize form
   const form = useForm<CreateRideFormValues>({
     resolver: zodResolver(createRideSchema),
@@ -141,6 +123,19 @@ export default function CreateRideForm({
       maxPassengers: "",
     },
   });
+
+  // Sync form fields with prop changes
+  useEffect(() => {
+    if (startingLocation) {
+      form.setValue("startingLocationId", startingLocation);
+    }
+    if (destinationLocation) {
+      form.setValue("destinationLocationId", destinationLocation);
+    }
+    if (startingTime) {
+      form.setValue("startingTime", startingTime);
+    }
+  }, [startingLocation, destinationLocation, startingTime, form]);
 
   // Watch form values for filtering and dynamic updates
   const watchedStartingPoint = form.watch("startingLocationId");
@@ -218,7 +213,7 @@ export default function CreateRideForm({
                       field.onChange(value);
                       // If destination is the same as selected starting point, clear destination
                       if (watchedDestination === value) {
-                        form.setValue("startingLocationId", "");
+                        form.setValue("destinationLocationId", "");
                       }
                     }}
                     value={field.value}
@@ -421,7 +416,7 @@ export default function CreateRideForm({
                   className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
-                  viewBox="0 0 24 24"
+                  viewBox="0 24 24"
                 >
                   <circle
                     className="opacity-25"
