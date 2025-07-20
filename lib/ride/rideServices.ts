@@ -2,8 +2,14 @@ import { z } from "zod";
 import logger from "@/config/logger";
 import { prisma } from "@/config/prisma";
 import { RideBookingStatus, RideStatus } from "@prisma/client";
-import { cancleRideBookingByDriverOnRideCancle, completeRideBooking } from "../rideBook/rideBookServices";
-import { applyFineChargeRide, getWalletByUserId } from "../wallet/walletServices";
+import {
+  cancleRideBookingByDriverOnRideCancle,
+  completeRideBooking,
+} from "../rideBook/rideBookServices";
+import {
+  applyFineChargeRide,
+  getWalletByUserId,
+} from "../wallet/walletServices";
 import { isMoreThanNMinutesLeft } from "@/utils/time";
 
 // Validate the inputs
@@ -18,24 +24,21 @@ const createRideSchema = z.object({
 /**
  * Create a new ride
  */
-export async function createRide(
-  {
-    userId,
-    startingLocationId,
-    destinationLocationId,
-    startingTime,
-    maxPassengers,
-    vehicleId,
-  }:
-    {
-      userId: string,
-      startingLocationId: string,
-      destinationLocationId: string,
-      startingTime: string,
-      maxPassengers: number,
-      vehicleId: string
-    }
-) {
+export async function createRide({
+  userId,
+  startingLocationId,
+  destinationLocationId,
+  startingTime,
+  maxPassengers,
+  vehicleId,
+}: {
+  userId: string;
+  startingLocationId: string;
+  destinationLocationId: string;
+  startingTime: string;
+  maxPassengers: number;
+  vehicleId: string;
+}) {
   try {
     // Validate inputs before insert
     try {
@@ -46,12 +49,11 @@ export async function createRide(
         maxPassengers,
         vehicleId,
       });
-
     } catch (error) {
       if (error instanceof z.ZodError) {
         return {
           success: false,
-          message: error.errors[0].message
+          message: error.errors[0].message,
         };
       }
       throw error;
@@ -61,7 +63,7 @@ export async function createRide(
     const wallet = await getWalletByUserId(userId);
 
     if (wallet.spendableBalance < 0) {
-      throw new Error('Insufficient carbon coin for craete ride');
+      throw new Error("Insufficient carbon coin for craete ride");
     }
 
     // Check if user has an active ride
@@ -75,7 +77,7 @@ export async function createRide(
     });
 
     if (existingRide) {
-      throw new Error('Please complete active ride before creating a new one.');
+      throw new Error("Please complete active ride before creating a new one.");
     }
 
     // Check if vehicle exists if vehicleId is provided
@@ -87,14 +89,14 @@ export async function createRide(
     });
 
     if (!vehicle) {
-      throw new Error('Selected vehicle not found')
+      throw new Error("Selected vehicle not found");
     }
 
     // Calculate carbon cost (distance-based cost)
-    const carbonCost = parseFloat(process.env.NEXT_PUBLIC_CARBON_COST || '5');
+    const carbonCost = parseFloat(process.env.NEXT_PUBLIC_CARBON_COST || "5");
 
     // Create the ride
-    const ride = await prisma.ride.create({
+    await prisma.ride.create({
       data: {
         driverId: userId,
         startingLocationId: startingLocationId,
@@ -107,8 +109,7 @@ export async function createRide(
       },
     });
 
-    return ride;
-
+    return true;
   } catch (error) {
     logger.error(`Error creating ride: ${error}`);
     throw error;
@@ -118,17 +119,14 @@ export async function createRide(
 /**
  * Cancle the ride
  */
-export async function cancelRide(
-  {
-    userId,
-    rideId,
-  }: {
-    userId: string,
-    rideId: string,
-  }
-) {
+export async function cancelRide({
+  userId,
+  rideId,
+}: {
+  userId: string;
+  rideId: string;
+}) {
   try {
-
     // Get the ride for authentication
     const ride = await prisma.ride.findUnique({
       where: { id: rideId, driverId: userId },
@@ -136,18 +134,15 @@ export async function cancelRide(
         bookings: {
           where: {
             status: {
-              in: [
-                RideBookingStatus.Confirmed,
-                RideBookingStatus.Active,
-              ]
-            }
-          }
-        }
-      }
+              in: [RideBookingStatus.Confirmed, RideBookingStatus.Active],
+            },
+          },
+        },
+      },
     });
 
     if (!ride) {
-      throw new Error('Ride not found or you are not the creater.');
+      throw new Error("Ride not found or you are not the creater.");
     }
 
     // Handle ride bookings
@@ -156,9 +151,11 @@ export async function cancelRide(
     let hasAnyConfirmOrActiveRideBooking = false;
 
     for (const rideBooking of rideBookings) {
-
       // Check for any confirmed of active ride booking
-      if (rideBooking.status === 'Confirmed' || rideBooking.status === 'Active') {
+      if (
+        rideBooking.status === "Confirmed" ||
+        rideBooking.status === "Active"
+      ) {
         hasAnyConfirmOrActiveRideBooking = true;
       }
 
@@ -166,24 +163,28 @@ export async function cancelRide(
       try {
         await cancleRideBookingByDriverOnRideCancle({
           driverId: userId,
-          bookingId: rideBooking.id
-        })
+          bookingId: rideBooking.id,
+        });
       } catch (error) {
-        logger.error(`Unable to cancle the ride booking: ${rideBooking.id}: ${error}`);
+        logger.error(
+          `Unable to cancle the ride booking: ${rideBooking.id}: ${error}`
+        );
       }
     }
 
     await prisma.$transaction(async (tx) => {
-
       // Check ride booking is getting cancled before ride threshold time
-      const rideThresHoldMinuts = Number(process.env.NEXT_PUBLIC_RIDE_THRESHOLD_TIME);
+      const rideThresHoldMinuts = Number(
+        process.env.NEXT_PUBLIC_RIDE_THRESHOLD_TIME
+      );
       if (
         hasAnyConfirmOrActiveRideBooking &&
-        ! isMoreThanNMinutesLeft( ride.startingTime, rideThresHoldMinuts )
+        !isMoreThanNMinutesLeft(ride.startingTime, rideThresHoldMinuts)
       ) {
-
         // Charge fine for late cancellation to champion
-        const rideCancellationCharge = Number( process.env.NEXT_PUBLIC_RIDE_CANCELLATION_CHARGE_CHAMPION );
+        const rideCancellationCharge = Number(
+          process.env.NEXT_PUBLIC_RIDE_CANCELLATION_CHARGE_CHAMPION
+        );
 
         await applyFineChargeRide({
           tx,
@@ -200,7 +201,6 @@ export async function cancelRide(
     });
 
     return true;
-
   } catch (error) {
     logger.error(`Error cancelling ride: ${error}`);
     throw error;
@@ -210,17 +210,14 @@ export async function cancelRide(
 /**
  * Activate ( Start ) the ride
  */
-export async function activateRide(
-  {
-    userId,
-    rideId,
-  }: {
-    userId: string,
-    rideId: string,
-  }
-) {
+export async function activateRide({
+  userId,
+  rideId,
+}: {
+  userId: string;
+  rideId: string;
+}) {
   try {
-
     // Get the ride for authentication
     const ride = await prisma.ride.findUnique({
       where: { id: rideId, driverId: userId },
@@ -228,23 +225,20 @@ export async function activateRide(
         bookings: {
           where: {
             status: {
-              in: [
-                RideBookingStatus.Confirmed,
-                RideBookingStatus.Active,
-              ]
-            }
+              in: [RideBookingStatus.Confirmed, RideBookingStatus.Active],
+            },
           },
-          include: { user: true }
-        }
-      }
+          include: { user: true },
+        },
+      },
     });
 
     if (!ride) {
-      throw new Error('Ride not found or you are not the creater.');
+      throw new Error("Ride not found or you are not the creater.");
     }
 
     if (ride.status != RideStatus.Pending) {
-      throw new Error('Ride is not Pending and cannot be activate');
+      throw new Error("Ride is not Pending and cannot be activate");
     }
 
     // Handle ride bookings
@@ -255,7 +249,9 @@ export async function activateRide(
       if (rideBooking.status == RideBookingStatus.Confirmed) {
         throw new Error(
           `
-            Rider ${rideBooking.user.name || rideBooking.user.email} is not reached yet.
+            Rider ${
+              rideBooking.user.name || rideBooking.user.email
+            } is not reached yet.
           `
         );
       }
@@ -268,7 +264,6 @@ export async function activateRide(
     });
 
     return true;
-
   } catch (error) {
     logger.error(`Error activating ride: ${error}`);
     throw error;
@@ -278,16 +273,13 @@ export async function activateRide(
 /**
  * Complete a ride
  */
-export async function completeRide(
-  {
-    userId,
-    rideId,
-  }: {
-    userId: string,
-    rideId: string,
-  }
-) {
-
+export async function completeRide({
+  userId,
+  rideId,
+}: {
+  userId: string;
+  rideId: string;
+}) {
   // Fetch the ride with bookings and location details
   const ride = await prisma.ride.findUnique({
     where: { id: rideId, driverId: userId },
@@ -301,11 +293,13 @@ export async function completeRide(
   });
 
   if (!ride) {
-    throw new Error(`Ride not found or You're not authorized to complete this ride`);
+    throw new Error(
+      `Ride not found or You're not authorized to complete this ride`
+    );
   }
 
   if (ride.status != RideStatus.Active) {
-    throw new Error('The ride is not active and cannot be completed.');
+    throw new Error("The ride is not active and cannot be completed.");
   }
 
   // Handle ride bookings
@@ -315,9 +309,14 @@ export async function completeRide(
     // Complete all active ride booking
     if (rideBooking.status == RideBookingStatus.Active) {
       try {
-        await completeRideBooking({ driverId: userId, bookingId: rideBooking.id });
+        await completeRideBooking({
+          driverId: userId,
+          bookingId: rideBooking.id,
+        });
       } catch (error) {
-        logger.error(`Unable to complete the ride booking: ${rideBooking.id}: ${error}`);
+        logger.error(
+          `Unable to complete the ride booking: ${rideBooking.id}: ${error}`
+        );
       }
     }
   }
@@ -342,27 +341,27 @@ export async function getUserRides(userId: string, limit: number = 20) {
       },
       include: {
         startingLocation: {
-          select: { id: true, name: true }
+          select: { id: true, name: true },
         },
         destinationLocation: {
-          select: { id: true, name: true }
+          select: { id: true, name: true },
         },
         vehicle: {
-          select: { id: true, type: true, model: true }
+          select: { id: true, type: true, model: true },
         },
         bookings: {
-          include: { user: true }
-        }
+          include: { user: true },
+        },
       },
       orderBy: {
-        startingTime: "asc"
+        startingTime: "asc",
       },
       take: limit,
     });
 
     return rides;
   } catch (error) {
-    logger.error(`Error on fetching user rides: ${error}`)
+    logger.error(`Error on fetching user rides: ${error}`);
     throw error;
   }
 }
@@ -371,7 +370,6 @@ export async function getUserRides(userId: string, limit: number = 20) {
  * Get avialable ride for a user
  */
 export async function getAvailableRidesForUser(userId: string) {
-
   // Get current time in UTC (database stores in UTC)
   const nowUTC = new Date();
 
@@ -379,7 +377,7 @@ export async function getAvailableRidesForUser(userId: string) {
     where: {
       status: RideStatus.Pending,
       startingTime: {
-        gt: nowUTC // Only future rides (not past current time)
+        gt: nowUTC, // Only future rides (not past current time)
       },
       NOT: { driverId: userId },
     },
@@ -391,35 +389,36 @@ export async function getAvailableRidesForUser(userId: string) {
       bookings: {
         where: {
           status: {
-            in: [
-              RideBookingStatus.Active,
-              RideBookingStatus.Confirmed,
-            ]
-          } // Only count pending and confirmed bookings
-        }
+            in: [RideBookingStatus.Active, RideBookingStatus.Confirmed],
+          }, // Only count pending and confirmed bookings
+        },
       },
     },
     orderBy: {
-      startingTime: "asc" // Order by time ascending (earliest first)
-    }
+      startingTime: "asc", // Order by time ascending (earliest first)
+    },
   });
 
   return rides
-    .filter(ride => {
-
+    .filter((ride) => {
       // Check if user has already booked this ride (any status)
-      const userHasBooked = ride.bookings.some(booking => booking.userId === userId);
+      const userHasBooked = ride.bookings.some(
+        (booking) => booking.userId === userId
+      );
       if (userHasBooked) {
         return false; // Exclude rides already booked by user
       }
 
       // Additional filter to ensure seats are available
-      const confirmedBookings = ride.bookings.filter(booking => booking.status === RideBookingStatus.Confirmed).length;
+      const confirmedBookings = ride.bookings.filter(
+        (booking) => booking.status === RideBookingStatus.Confirmed
+      ).length;
       return ride.maxPassengers > confirmedBookings; // Only show rides with available seats
     })
     .map((ride) => {
-
-      const confirmedBookings = ride.bookings.filter(booking => booking.status === RideBookingStatus.Confirmed).length;
+      const confirmedBookings = ride.bookings.filter(
+        (booking) => booking.status === RideBookingStatus.Confirmed
+      ).length;
 
       return {
         id: ride.id,

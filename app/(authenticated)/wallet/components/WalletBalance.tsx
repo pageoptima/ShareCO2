@@ -5,6 +5,30 @@ import { WalletIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getWallet } from "../actions";
 
+// Shimmer Component for Loading State
+const ShimmerWalletCard = () => (
+  <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg animate-pulse">
+    <div className="p-6">
+      <div className="flex items-center">
+        <div className="h-5 w-5 bg-gray-600/50 rounded-full mr-2" />
+        <div className="h-5 w-32 bg-gray-600/50 rounded" />
+      </div>
+      <div className="space-y-4 mt-6">
+        <div className="text-center">
+          <div className="h-8 w-24 mx-auto bg-gray-600/50 rounded" />
+          <div className="flex justify-center gap-4 mt-2">
+            <div className="h-4 w-20 bg-gray-600/50 rounded" />
+            <div className="h-4 w-20 bg-gray-600/50 rounded" />
+          </div>
+        </div>
+        <div className="flex justify-center">
+          <div className="h-10 w-24 bg-gray-600/50 rounded" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 const WalletBalance = () => {
   // Fetch wallet data
   const {
@@ -18,7 +42,7 @@ const WalletBalance = () => {
   });
 
   if (isLoading) {
-    return <div>Loading wallet...</div>;
+    return <ShimmerWalletCard />;
   }
 
   if (isError) {
