@@ -28,20 +28,20 @@ export default function RideHistory() {
         <TabsList className="grid w-full grid-cols-2 bg-[#1A3C34]">
           <TabsTrigger
             value="created"
-            className="data-[state=active]:bg-emerald-600"
+            className="data-[state=active]:bg-emerald-600 cursor-pointer"
           >
             Created Rides
           </TabsTrigger>
           <TabsTrigger
             value="booked"
-            className="data-[state=active]:bg-emerald-600"
+            className="data-[state=active]:bg-emerald-600 cursor-pointer"
           >
             Booked Rides
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="created" className="mt-4">
-          <CreatedRideHistory/>
+          <CreatedRideHistory />
         </TabsContent>
 
         <TabsContent value="booked" className="mt-4">

@@ -1,8 +1,8 @@
 import logger from "@/config/logger";
 import { prisma } from "@/config/prisma";
 import { RideRequestStatus } from "@prisma/client";
-import { endOfDay, startOfDay } from "date-fns";
-
+import { addDays, endOfDay, startOfDay } from "date-fns";
+import { startOfHour, addHours } from "date-fns";
 /**
  * Create a new ride request for user
  */
@@ -18,12 +18,33 @@ export async function createRideRequest({
   startingTime: string;
 }) {
   try {
-    // Create date object for requestest time
+    // Check if user profile is complete
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { isProfileCompleted: true },
+    });
+
+    if (!user || !user.isProfileCompleted) {
+      throw new Error(
+        "Please complete your profile before creating a ride request."
+      );
+    }
+
+    // Validate startingTime
     const requestTime = new Date(startingTime).getTime();
     const thirtyMinutesLater = Date.now() + 30 * 60 * 1000;
+    const endOfTomorrow = endOfDay(addDays(new Date(), 1)).getTime();
+
+    if (isNaN(requestTime)) {
+      throw new Error("Invalid starting time format");
+    }
 
     if (requestTime < thirtyMinutesLater) {
       throw new Error("Ride request time must be at least 30 minutes from now");
+    }
+
+    if (requestTime > endOfTomorrow) {
+      throw new Error("Ride request time must be within today or tomorrow");
     }
 
     // Check for duplicate ride request with same start, destination and time from the SAME user
@@ -190,15 +211,16 @@ export const getUserRideRequests = async (userId: string) => {
   }
 };
 
+
 /**
- * Get aggregated ride requests for today and future
+ * Get aggregated ride requests by 1-hour time windows for today and future
  */
 export const getAggregatedRideRequests = async (userId: string) => {
   try {
     // Get current date and time
     const now = new Date();
 
-    // Fetch ALL pending ride requests (including future dates, not just today)
+    // Fetch ALL pending ride requests
     const rideRequests = await prisma.rideRequest.findMany({
       where: {
         userId: {
@@ -214,48 +236,67 @@ export const getAggregatedRideRequests = async (userId: string) => {
         destinationLocation: { select: { id: true, name: true } },
       },
       orderBy: {
-        startingTime: "asc",
+        startingTime: 'asc',
       },
     });
 
-    // Group by starting point, destination, and time
-    const groupedRequests: Record<
+    // Group by 1-hour time windows
+    const timeWindowRequests: Record<
       string,
       {
-        key: string;
-        startingLocationId: string | null;
-        destinationLocationId: string | null;
-        startingLocation: { id: string; name: string } | null;
-        destinationLocation: { id: string; name: string } | null;
-        startingTime: Date;
-        requestIds: string[];
+        timeWindowStart: Date;
+        timeWindowEnd: Date;
+        requests: {
+          key: string;
+          startingLocationId: string | null;
+          destinationLocationId: string | null;
+          startingLocation: { id: string; name: string } | null;
+          destinationLocation: { id: string; name: string } | null;
+          startingTime: Date;
+          requestIds: string[];
+        }[];
       }
     > = {};
 
     rideRequests.forEach((request) => {
       const requestTime = new Date(request.startingTime);
+      const windowStart = startOfHour(requestTime);
+      const windowEnd = addHours(windowStart, 1);
+      const windowKey = windowStart.toISOString();
 
-      // Prepare key for gorup request
-      const key = `${request.startingLocationId}|${request.destinationLocationId}|${requestTime}`;
+      const requestKey = `${request.startingLocationId}|${request.destinationLocationId}|${requestTime}`;
 
-      if (!groupedRequests[key]) {
-        groupedRequests[key] = {
-          key,
+      if (!timeWindowRequests[windowKey]) {
+        timeWindowRequests[windowKey] = {
+          timeWindowStart: windowStart,
+          timeWindowEnd: windowEnd,
+          requests: [],
+        };
+      }
+
+      const existingRequest = timeWindowRequests[windowKey].requests.find(
+        (r) => r.key === requestKey
+      );
+
+      if (existingRequest) {
+        existingRequest.requestIds.push(request.id);
+      } else {
+        timeWindowRequests[windowKey].requests.push({
+          key: requestKey,
           startingLocationId: request.startingLocationId,
           destinationLocationId: request.destinationLocationId,
           startingLocation: request.startingLocation,
           destinationLocation: request.destinationLocation,
           startingTime: request.startingTime,
           requestIds: [request.id],
-        };
-      } else {
-        groupedRequests[key].requestIds.push(request.id);
+        });
       }
     });
 
-    const groupedRequestsList = Object.values(groupedRequests).sort((a, b) => {
-      const tA = new Date(a.startingTime).getTime();
-      const tB = new Date(b.startingTime).getTime();
+    // Convert to array and sort by time window
+    const groupedRequestsList = Object.values(timeWindowRequests).sort((a, b) => {
+      const tA = new Date(a.timeWindowStart).getTime();
+      const tB = new Date(b.timeWindowStart).getTime();
       return tA - tB; // ascending: earliest first
     });
 

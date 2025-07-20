@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { addDays, addMinutes, endOfDay, format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -261,28 +262,43 @@ export default function RideRequestForm({
               <FormField
                 control={form.control}
                 name="startingTime"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-white mb-1">
-                      Starting Time
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="datetime-local"
-                        {...field}
-                        disabled={form.formState.isSubmitting}
-                        className="bg-black/30 text-white border-gray-700"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-300" />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const now = new Date();
+                  const minStartingTime = format(
+                    addMinutes(now, 30), //after 30 minutes
+                    "yyyy-MM-dd'T'HH:mm"
+                  );
+
+                  const maxStartingTime = format(
+                    endOfDay(addDays(now, 1)), // end of tomorrow
+                    "yyyy-MM-dd'T'HH:mm"
+                  );
+
+                  return (
+                    <FormItem>
+                      <FormLabel className="text-white mb-1">
+                        Starting Time
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="datetime-local"
+                          {...field}
+                          min={minStartingTime}
+                          max={maxStartingTime}
+                          disabled={form.formState.isSubmitting}
+                          className="bg-black/30 text-white border-gray-700"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-red-300" />
+                    </FormItem>
+                  );
+                }}
               />
             </div>
 
             <Button
               type="submit"
-              className="w-full bg-[#2E7D32] hover:bg-[#388E3C] mt-6"
+              className="w-full bg-[#2E7D32] hover:bg-[#388E3C] mt-6 cursor-pointer"
               disabled={isRideReqestPending}
             >
               {isRideReqestPending ? (

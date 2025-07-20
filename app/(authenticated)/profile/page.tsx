@@ -19,13 +19,15 @@ export default function ProfilePage() {
         <Button
           variant="ghost"
           size="sm"
-          className="text-white hover:bg-white/10 -ml-2 hover:cursor-pointer"
+          className="text-white hover:bg-[#1a3c34] -ml-2 cursor-pointer"
           onClick={() => router.push("/dashboard")}
         >
           <HomeIcon className="h-5 w-5 mr-1" />
           Home
         </Button>
-        <h1 className="text-2xl font-semibold text-white">My Profile</h1>
+        <h1 className="text-2xl font-semibold text-white cursor-pointer">
+          My Profile
+        </h1>
         <div className="w-20"></div> {/* Empty div for centering */}
       </div>
 
@@ -45,14 +47,14 @@ export default function ProfilePage() {
         <TabsList className="grid w-full grid-cols-2 bg-[#1A3C34]">
           <TabsTrigger
             value="personal"
-            className="data-[state=active]:bg-emerald-600"
+            className="data-[state=active]:bg-emerald-600 cursor-pointer"
           >
             <UserIcon className="h-4 w-4 mr-2" />
             Personal Info
           </TabsTrigger>
           <TabsTrigger
             value="vehicles"
-            className="data-[state=active]:bg-emerald-600"
+            className="data-[state=active]:bg-emerald-600 cursor-pointer"
           >
             <Car className="h-4 w-4 mr-2" />
             My Vehicles

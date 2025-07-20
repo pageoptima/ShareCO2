@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { addDays, addMinutes, endOfDay, format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +28,7 @@ import { MapPin, Users } from "lucide-react";
 import { createRide, getUserVehicles, getLocations } from "./actions";
 import { PublicVehicleType } from "./types";
 import { localToUtcIso } from "@/utils/time";
+import { useRouter } from "next/navigation";
 
 interface CreateRideFormProps {
   startingLocation?: string;
@@ -65,27 +67,19 @@ export default function CreateRideForm({
   startingTime,
   onSuccess,
 }: CreateRideFormProps) {
+  const router = useRouter();
+
   // State variable for vehicle type
   const [vehicleType, setVehicleType] = useState<PublicVehicleType>();
 
   // Fetch vehicles via react-query
-  const {
-    data: vehicles = [],
-    isLoading: isVehicleFetching,
-    isError: isVehicleFetchingError,
-    error: vehicleFetchingError,
-  } = useQuery({
+  const { data: vehicles = [], isLoading: isVehicleFetching } = useQuery({
     queryKey: ["vehicles"],
     queryFn: getUserVehicles,
   });
 
   // Fetch location via react-query
-  const {
-    data: locations = [],
-    isLoading: isLocationFetching,
-    isError: isLocationFetchingError,
-    error: locationFetchingError,
-  } = useQuery({
+  const { data: locations = [], isLoading: isLocationFetching } = useQuery({
     queryKey: ["location"],
     queryFn: getLocations,
   });
@@ -107,6 +101,7 @@ export default function CreateRideForm({
     onSuccess: (result) => {
       if (result.success) {
         toast.success("Ride created successfully!");
+        router.push("/dashboard?tab=created");
         onSuccess?.();
       } else {
         toast.error(result.error);
@@ -116,14 +111,6 @@ export default function CreateRideForm({
       console.error(error.message);
     },
   });
-
-  // Handle error
-  if (isVehicleFetchingError) {
-    console.error(vehicleFetchingError);
-  }
-  if (isLocationFetchingError) {
-    console.error(locationFetchingError);
-  }
 
   // Initialize form
   const form = useForm<CreateRideFormValues>({
@@ -136,6 +123,19 @@ export default function CreateRideForm({
       maxPassengers: "",
     },
   });
+
+  // Sync form fields with prop changes
+  useEffect(() => {
+    if (startingLocation) {
+      form.setValue("startingLocationId", startingLocation);
+    }
+    if (destinationLocation) {
+      form.setValue("destinationLocationId", destinationLocation);
+    }
+    if (startingTime) {
+      form.setValue("startingTime", startingTime);
+    }
+  }, [startingLocation, destinationLocation, startingTime, form]);
 
   // Watch form values for filtering and dynamic updates
   const watchedStartingPoint = form.watch("startingLocationId");
@@ -213,7 +213,7 @@ export default function CreateRideForm({
                       field.onChange(value);
                       // If destination is the same as selected starting point, clear destination
                       if (watchedDestination === value) {
-                        form.setValue("startingLocationId", "");
+                        form.setValue("destinationLocationId", "");
                       }
                     }}
                     value={field.value}
@@ -237,7 +237,6 @@ export default function CreateRideForm({
                 </FormItem>
               )}
             />
-
             {/* Destination input */}
             <FormField
               control={form.control}
@@ -280,7 +279,6 @@ export default function CreateRideForm({
                 </FormItem>
               )}
             />
-
             {/* Vehicle type input */}
             <FormField
               control={form.control}
@@ -318,29 +316,43 @@ export default function CreateRideForm({
                 </FormItem>
               )}
             />
-
             {/* Ride Starting time input */}
             <FormField
               control={form.control}
               name="startingTime"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white mb-1">
-                    Starting Time
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="datetime-local"
-                      {...field}
-                      disabled={form.formState.isSubmitting}
-                      className="bg-black/30 text-white border-gray-700"
-                    />
-                  </FormControl>
-                  <FormMessage className="text-red-300" />
-                </FormItem>
-              )}
-            />
+              render={({ field }) => {
+                const now = new Date();
 
+                const minStartingTime = format(
+                  addMinutes(now, 30),
+                  "yyyy-MM-dd'T'HH:mm"
+                );
+
+                const maxStartingTime = format(
+                  endOfDay(addDays(now, 1)), // end of tomorrow
+                  "yyyy-MM-dd'T'HH:mm"
+                );
+
+                return (
+                  <FormItem>
+                    <FormLabel className="text-white mb-1">
+                      Starting Time
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="datetime-local"
+                        {...field}
+                        min={minStartingTime}
+                        max={maxStartingTime}
+                        disabled={form.formState.isSubmitting}
+                        className="bg-black/30 text-white border-gray-700"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-300" />
+                  </FormItem>
+                );
+              }}
+            />
             {/* Max Passenger input */}
             <FormField
               control={form.control}
@@ -395,7 +407,7 @@ export default function CreateRideForm({
           {/* Submit button */}
           <Button
             type="submit"
-            className="w-full bg-[#2E7D32] hover:bg-[#388E3C] mt-6"
+            className="w-full bg-[#2E7D32] hover:bg-[#388E3C] mt-6 cursor-pointer"
             disabled={isCreating}
           >
             {isCreating ? (
@@ -404,7 +416,7 @@ export default function CreateRideForm({
                   className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
-                  viewBox="0 0 24 24"
+                  viewBox="0 24 24"
                 >
                   <circle
                     className="opacity-25"

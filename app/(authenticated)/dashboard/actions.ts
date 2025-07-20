@@ -8,22 +8,17 @@ import {
   getUserRides as getUserRidesDb,
 } from "@/lib/ride/rideServices";
 import {
-  getUserRideBookings as getUserRideBookingsDb,
   cancleRideBookingByDriverOnPurpose,
   activateRideBooking as activateRideBookingDb,
   cancleRideBookingByUser,
+  getUserRideBookings as getUserRideBookingsDb,
 } from "@/lib/rideBook/rideBookServices";
 import { cancelRide as cancelRideDb } from "@/lib/ride/rideServices";
 import { completeRide as completeRideDb } from "@/lib/ride/rideServices";
-import {
-  PublicUserRides,
-  PublicUserRideBookings,
-  PublicTransactions,
-} from "./types";
-
+import { PublicUserRides, PublicTransactions } from "./types";
 
 import { getWalletByUserId } from "@/lib/wallet/walletServices";
-
+import { getUserById, updateFcmTokenDb } from "@/lib/user/userServices";
 
 /**
  * Submit a top-up request for carbon points
@@ -84,9 +79,9 @@ export async function getUserRides(): Promise<PublicUserRides[]> {
 }
 
 /**
- * Get user ride booking
+ * Get user ride bookings
  */
-export async function getUserRideBookings(): Promise<PublicUserRideBookings[]> {
+export async function getUserRideBookings() {
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -267,12 +262,6 @@ export async function cancleRideBooking(bookingId: string) {
   }
 }
 
-
-
-
-
-
-
 /**
  * Get the carbon point of the user
  * @returns
@@ -291,4 +280,50 @@ export async function getCarbonPoint(): Promise<number> {
   //console.log(user)
 
   return wallet.spendableBalance + wallet.reservedBalance;
+}
+
+
+
+
+
+/**
+ * Update Fcm Token in user Schema
+ */
+
+export async function updateFcmToken(fcmToken: string) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      throw new Error("Not authenticated");
+    }
+
+    await updateFcmTokenDb(session.user.id, fcmToken);
+
+    return {
+      success: true,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
+  }
+}
+
+
+export async function getUserProfileStatus() {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    const user = await getUserById(session.user.id);
+    return { isProfileCompleted: user.isProfileCompleted };
+  } catch (error) {
+    console.error("Error fetching user profile status:", error);
+    throw new Error("Failed to fetch user profile status");
+  }
 }

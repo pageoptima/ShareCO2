@@ -11,6 +11,7 @@ import {
   getWalletByUserId,
 } from "../wallet/walletServices";
 import { isMoreThanNMinutesLeft } from "@/utils/time";
+import { addDays, endOfDay } from "date-fns";
 
 // Validate the inputs
 const createRideSchema = z.object({
@@ -59,11 +60,39 @@ export async function createRide({
       throw error;
     }
 
+    // Check if user profile is complete
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { isProfileCompleted: true }, // Only fetch isProfileCompleted
+    });
+
+    if (!user || !user.isProfileCompleted) {
+      throw new Error(
+        "Please complete your profile before creating a ride request."
+      );
+    }
+
+    // Validate startingTime
+    const requestTime = new Date(startingTime).getTime();
+    const thirtyMinutesLater = Date.now() + 30 * 60 * 1000;
+    const endOfTomorrow = endOfDay(addDays(new Date(), 1)).getTime();
+
+    if (isNaN(requestTime)) {
+      throw new Error("Invalid starting time format");
+    }
+
+    if (requestTime < thirtyMinutesLater) {
+      throw new Error("Ride start time must be at least 30 minutes from now");
+    }
+
+    if (requestTime > endOfTomorrow) {
+      throw new Error("Ride start time must be within today or tomorrow");
+    }
     // Check the user has insufficient balance in wallet before create the ride
     const wallet = await getWalletByUserId(userId);
 
     if (wallet.spendableBalance < 0) {
-      throw new Error("Insufficient carbon coin for craete ride");
+      throw new Error("Insufficient carbon coin for creating ride");
     }
 
     // Check if user has an active ride
@@ -354,7 +383,7 @@ export async function getUserRides(userId: string, limit: number = 20) {
         },
       },
       orderBy: {
-        startingTime: "asc",
+        startingTime: "desc",
       },
       take: limit,
     });
@@ -362,6 +391,49 @@ export async function getUserRides(userId: string, limit: number = 20) {
     return rides;
   } catch (error) {
     logger.error(`Error on fetching user rides: ${error}`);
+    throw error;
+  }
+}
+
+/**
+ * Get ride details by ride ID
+ */
+export async function getRideById(rideId: string) {
+  try {
+    const ride = await prisma.ride.findUnique({
+      where: {
+        id: rideId,
+      },
+      include: {
+        startingLocation: {
+          select: { id: true, name: true },
+        },
+        destinationLocation: {
+          select: { id: true, name: true },
+        },
+        vehicle: {
+          select: { id: true, type: true, model: true, vehicleNumber: true },
+        },
+        driver: {
+          select: { id: true, name: true, email: true, phone: true },
+        },
+        bookings: {
+          include: {
+            user: {
+              select: { id: true, name: true, email: true, phone: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!ride) {
+      throw new Error("Ride not found");
+    }
+
+    return ride;
+  } catch (error) {
+    logger.error(`Error fetching ride by ID ${rideId}: ${error}`);
     throw error;
   }
 }
@@ -385,7 +457,13 @@ export async function getAvailableRidesForUser(userId: string) {
       startingLocation: true,
       destinationLocation: true,
       vehicle: true,
-      driver: { select: { name: true, email: true } },
+      driver: {
+        select: {
+          name: true,
+          email: true,
+          phone: true,
+        },
+      },
       bookings: {
         where: {
           status: {
@@ -429,10 +507,12 @@ export async function getAvailableRidesForUser(userId: string) {
         availableSets: ride.maxPassengers - confirmedBookings,
         driverName: ride.driver.name,
         driverEmail: ride.driver.email,
+        driverPhone: ride.driver.phone,
         startingTime: ride.startingTime,
         vehicleId: ride.vehicle?.id,
         vehicleName: ride.vehicle?.model,
         vehicleType: ride.vehicle?.type,
+        vehicleNumber: ride.vehicle?.vehicleNumber,
       };
     });
 }

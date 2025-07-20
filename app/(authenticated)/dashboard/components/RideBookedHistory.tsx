@@ -18,9 +18,6 @@ import { utcIsoToLocalDate, utcIsoToLocalTime12 } from '@/utils/time';
 import { toast } from 'sonner';
 import { RideChatModal } from '@/app/_components/modals/RideChatModal/RideChatModal';
 
-/**
- * Get the color of the ride status
- */
 const getStatusColor = (status: PublicRideStatus) => {
     switch (status) {
         case 'Active':
@@ -36,9 +33,6 @@ const getStatusColor = (status: PublicRideStatus) => {
     }
 };
 
-/**
- * Get the color of the booking status
- */
 const getBookingStatusColor = (status: PublicRideBookingStatus) => {
     switch (status) {
         case "Confirmed":

@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import type { NextRequest } from 'next/server';
-
 /**
  * Next js middleware function
  */
@@ -48,6 +47,8 @@ export async function middleware(req: NextRequest) {
 
   return NextResponse.next();
 }
+
+
 
 /**
  * Define the config matchers

@@ -26,9 +26,10 @@ interface AuthenticatedContentProps {
   children: ReactNode;
 }
 
-function AuthenticatedContent({ children }: AuthenticatedContentProps): JSX.Element {
+function AuthenticatedContent({
+  children,
+}: AuthenticatedContentProps): JSX.Element {
   const { data: session, status } = useSession();
-
   if (status === "loading") {
     return <LoadingScreen />;
   }

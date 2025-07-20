@@ -100,7 +100,7 @@ export function CarbonPointsCard() {
             </p>
           </div>
           <Button
-            className="w-full bg-[#2E7D32] hover:bg-[#388E3C]"
+            className="w-full bg-[#2E7D32] hover:bg-[#388E3C] cursor-pointer"
             onClick={() => setIsModalOpen(true)}
           >
             Top Up

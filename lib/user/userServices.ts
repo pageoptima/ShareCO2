@@ -5,21 +5,19 @@ import { z } from "zod";
 
 // Validate the inputs
 const userProfileSchema = z.object({
-  name: z
-    .string()
-    .min(2, { message: "Name must be at least 2 characters" })
-    .optional(),
-  gender: z.enum(["Male", "Female", "Other", ""]).optional(),
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  gender: z.enum(["Male", "Female", "Other", ""], {
+    required_error: "Gender is required",
+  }),
   age: z
     .number()
-    .int()
     .min(18, { message: "You must be at least 18 years old" })
-    .max(100)
-    .optional(),
+    .max(100),
   phone: z
     .string()
-    .min(10, { message: "Phone must be at least 10 number" })
-    .optional(),
+    .regex(/^\+?1?\s?\(?[2-9][0-9]{2}\)?[-. ]?[2-9][0-9]{2}[-. ]?[0-9]{4}$/, {
+      message: "Invalid phone number format",
+    }),
 });
 
 /**
@@ -48,6 +46,9 @@ export async function updateProfile({
       age,
       phone,
     });
+    
+    // Determine if profile is completed
+    const isProfileCompleted = Boolean(name && gender && age && phone);
 
     // Update the user profile
     await prisma.user.update({
@@ -57,6 +58,7 @@ export async function updateProfile({
         gender: gender,
         age: age,
         phone: phone,
+        isProfileCompleted,
       },
     });
 
@@ -70,6 +72,33 @@ export async function updateProfile({
     throw error;
   }
 }
+
+
+/**
+ * Update FCM Token in user schema
+ * @param userId 
+ * @param fcmToken 
+ * @returns 
+ */
+
+export async function updateFcmTokenDb(userId: string, fcmToken: string) {
+  try {
+    // Update only the FCM token field
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        fcmToken: fcmToken,
+      },
+    });
+
+    logger.info(`FCM token updated successfully for user ${userId}`);
+    return true;
+  } catch (error) {
+    logger.error(`Error updating FCM token for user ${userId}: ${error}`);
+    throw new Error("Failed to update FCM token");
+  }
+}
+
 
 /**
  * Get a user by id

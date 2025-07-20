@@ -14,7 +14,8 @@ export async function getUserProfile() {
     throw new Error("You must be logged in to update your profile");
   }
 
-  return await getUserById(session.user.id);
+  const user = await getUserById(session.user.id);
+  return user;
 }
 
 /**

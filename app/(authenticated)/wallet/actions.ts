@@ -58,6 +58,7 @@ export async function getTransactions({
       purpose: txn.purpose,
       description: txn.description || "",
       createdAt: txn.createdAt,
+      rideId: txn.rideId,
     })),
     total,
   };

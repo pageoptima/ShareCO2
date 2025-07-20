@@ -24,4 +24,5 @@ export interface PublicWalletTransaction {
   purpose: WalletTransactionPurpose;
   description: string;
   createdAt: Date;
+  rideId: string | null;
 }

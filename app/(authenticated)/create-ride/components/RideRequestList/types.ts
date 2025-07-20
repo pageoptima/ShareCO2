@@ -17,12 +17,16 @@ export interface PublicRideRequest {
     }
 }
 
-export interface PublicAggregatedRideRequests {
-    key                  : string;
-    startingLocationId   : string | null;
+export type PublicAggregatedRideRequests = {
+  timeWindowStart: Date;
+  timeWindowEnd: Date;
+  requests: {
+    key: string;
+    startingLocationId: string | null;
     destinationLocationId: string | null;
-    startingLocation     : { id: string, name: string } | null,
-    destinationLocation  : { id: string, name: string } | null,
-    startingTime         : Date;
-    requestIds           : string[];
-}
+    startingLocation: { id: string; name: string } | null;
+    destinationLocation: { id: string; name: string } | null;
+    startingTime: Date;
+    requestIds: string[];
+  }[];
+};
