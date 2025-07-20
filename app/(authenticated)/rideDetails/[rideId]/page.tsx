@@ -6,13 +6,13 @@ import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Clock, MapPin, Car } from "lucide-react";
+import { Clock, MapPin, Car, Copy } from "lucide-react";
 import { getRideDetails } from "../actions";
 import { utcIsoToLocalDate, utcIsoToLocalTime12 } from "@/utils/time";
 import { toast } from "sonner";
 import { PublicRideBookingStatus, PublicRideStatus } from "../types";
 
-// Shimmer Component for Loading State
+// Shimmer Component for Loading State (unchanged)
 const Loading = () => (
   <Card className="bg-white/5 backdrop-blur-sm border-white/10 max-w-2xl mx-auto">
     <CardHeader>
@@ -140,6 +140,11 @@ const RideDetailsPage = () => {
     queryFn: () => getRideDetails(rideId),
   });
 
+  const handleCopyRideId = () => {
+    navigator.clipboard.writeText(rideId);
+    toast.success("Ride ID copied to clipboard");
+  };
+
   if (isLoading) {
     return <Loading />;
   }
@@ -157,28 +162,43 @@ const RideDetailsPage = () => {
   return (
     <Card className="bg-white/5 backdrop-blur-sm border-white/10 max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle className="text-lg font-semibold text-white">
+        <CardTitle className="text-2xl font-semibold text-white ">
           Ride Details
         </CardTitle>
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-gray-400" />
+            <span className="text-xl">
+              <span className="text-blue-400">
+                From: {ride.startingLocation?.name || "N/A"}
+              </span>{" "}
+              <span className="text-yellow-400">→</span>{" "}
+              <span className="text-green-400">
+                To: {ride.destinationLocation?.name || "N/A"}
+              </span>
+            </span>
+          </div>
+          <button
+            onClick={handleCopyRideId}
+            className="flex items-center gap-2 text-gray-400 hover:text-gray-200 transition-colors cursor-pointer"
+            title="Copy Ride ID"
+          >
+            <span className="text-sm">{rideId}</span>
+            <Copy className="h-4 w-4" />
+          </button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
           {/* Ride Overview */}
           <div>
-            <h3 className="text-sm font-medium text-gray-300">Overview</h3>
+            <h3 className="text-md font-medium text-emerald-300">Overview</h3>
             <div className="mt-2 space-y-2 text-gray-200">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-gray-400" />
                 <span>
                   {utcIsoToLocalDate(ride.startingTime)}{" "}
                   {utcIsoToLocalTime12(ride.startingTime)}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-gray-400" />
-                <span>
-                  From: {ride.startingLocation?.name || "N/A"} → To:{" "}
-                  {ride.destinationLocation?.name || "N/A"}
                 </span>
               </div>
               <div className="flex items-center gap-2">
