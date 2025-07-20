@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense, ReactNode, JSX } from "react";
+import { AblyClientProvider } from "@/app/_components/providers/AblyClientProvider";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,7 +42,7 @@ function AuthenticatedContent({ children }: AuthenticatedContentProps): JSX.Elem
       <header className="fixed top-0 right-0 z-50 p-4">
         <UserMenu />
       </header>
-      <DisclaimerModal/>
+      <DisclaimerModal />
       {children}
       {session && <BottomNav />}
     </div>
@@ -53,9 +54,12 @@ interface AuthenticatedLayoutProps {
 }
 
 export default function AuthenticatedLayout({ children }: AuthenticatedLayoutProps): JSX.Element {
+
   return (
     <Suspense fallback={<LoadingScreen />}>
-      <AuthenticatedContent>{children}</AuthenticatedContent>
+      <AblyClientProvider>
+        <AuthenticatedContent>{children}</AuthenticatedContent>
+      </AblyClientProvider>
     </Suspense>
   );
 }

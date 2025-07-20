@@ -11,11 +11,12 @@ import {
     MapPin,
     MessageCircle
 } from 'lucide-react';
-import React from 'react'
+import React, { useState } from 'react'
 import { activateRideBooking, cancleRideBooking, getUserRideBookings } from '../actions';
 import { PublicRideBookingStatus, PublicRideStatus } from '../types';
 import { utcIsoToLocalDate, utcIsoToLocalTime12 } from '@/utils/time';
 import { toast } from 'sonner';
+import { RideChatModal } from '@/app/_components/modals/RideChatModal/RideChatModal';
 
 /**
  * Get the color of the ride status
@@ -53,6 +54,9 @@ const getBookingStatusColor = (status: PublicRideBookingStatus) => {
 
 const RideBookedHistory = () => {
 
+    const [selectedRideId, setSelectedRideId] = useState<string | null>(null);
+    const [isChatOpen, setIsChatOpen] = useState(false);
+
     // Fetch user's ride bookings via react-query
     const {
         data: rideBookings = [],
@@ -67,8 +71,8 @@ const RideBookedHistory = () => {
         queryFn: getUserRideBookings,
     });
 
-    if ( isRideBookingsFetchingError || isRideBookingsRefetchingError ) {
-        console.error( rideBookingsFetchingError );
+    if (isRideBookingsFetchingError || isRideBookingsRefetchingError) {
+        console.error(rideBookingsFetchingError);
     }
 
     // Hook for confirm reach
@@ -77,11 +81,11 @@ const RideBookedHistory = () => {
         isPending: isConfirmReachPending
     } = useMutation(
         {
-            mutationFn: ( bookingId: string ) => {
-                return activateRideBooking( bookingId )
+            mutationFn: (bookingId: string) => {
+                return activateRideBooking(bookingId)
             },
             onSuccess: async () => {
-                toast.success( 'Ride booking activated' );
+                toast.success('Ride booking activated');
                 refetchRideBookings();
             },
             onError: (error) => {
@@ -96,11 +100,11 @@ const RideBookedHistory = () => {
         isPending: isCancleBookingPending
     } = useMutation(
         {
-            mutationFn: ( bookingId: string ) => {
-                return cancleRideBooking( bookingId )
+            mutationFn: (bookingId: string) => {
+                return cancleRideBooking(bookingId)
             },
             onSuccess: async () => {
-                toast.success( 'Ride booking cancled successfully' );
+                toast.success('Ride booking cancled successfully');
                 refetchRideBookings();
             },
             onError: (error) => {
@@ -112,8 +116,8 @@ const RideBookedHistory = () => {
     /**
      * Confirm Reach handler
      */
-    const handleConfirmReach = async ( bookingId: string ) => {
-        if ( isConfirmReachPending ) {
+    const handleConfirmReach = async (bookingId: string) => {
+        if (isConfirmReachPending) {
             return true;
         }
         await mutateConfirmReach(bookingId);
@@ -122,109 +126,133 @@ const RideBookedHistory = () => {
     /**
      * Cancle Ride booking
      */
-    const handleCancelBooking = async ( bookingId: string ) => {
-        if( isCancleBookingPending ) {
+    const handleCancelBooking = async (bookingId: string) => {
+        if (isCancleBookingPending) {
             return true;
         }
 
         await mutateCancleBooking(bookingId);
     }
 
-    const handleOpenChat = ( bookingId: string ) => {
-        console.log(bookingId);
-    }
+    /**
+     * Handle open chat
+     */
+    const handleOpenChat = (bookingId: string) => {
+        setSelectedRideId(bookingId);
+        setIsChatOpen(true);
+    };
 
-    if ( isRideBookingsFetching || isRideBookingsRefetching ) {
-        return ( <div>Loading should be implemented</div> );
+    /**
+     * Handle close chat
+     */
+    const handleCloseChat = () => {
+        setSelectedRideId(null);
+        setIsChatOpen(false);
+    };
+
+    if (isRideBookingsFetching || isRideBookingsRefetching) {
+        return (<div>Loading should be implemented</div>);
     }
 
     return (
-        <ScrollArea className="h-[500px] w-full px-4 pb-4">
-            <div className="space-y-3">
-                {rideBookings.length > 0 ? (
-                    rideBookings.map((rideBooking) => (
-                        <div
-                            key={rideBooking.id}
-                            className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 hover:border-white/20 transition-all"
-                        >
-                            <div className="flex flex-col gap-3">
-                                <div className="space-y-2">
-                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                                        <div className="flex items-center">
-                                            <MapPin className="h-4 w-4 text-emerald-400 mr-1" />
-                                            <p className="font-medium">{rideBooking.ride.startingLocation?.name}</p>
+        <>
+            <ScrollArea className="h-[500px] w-full px-4 pb-4">
+                <div className="space-y-3">
+                    {rideBookings.length > 0 ? (
+                        rideBookings.map((rideBooking) => (
+                            <div
+                                key={rideBooking.id}
+                                className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 hover:border-white/20 transition-all"
+                            >
+                                <div className="flex flex-col gap-3">
+                                    <div className="space-y-2">
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                            <div className="flex items-center">
+                                                <MapPin className="h-4 w-4 text-emerald-400 mr-1" />
+                                                <p className="font-medium">{rideBooking.ride.startingLocation?.name}</p>
+                                            </div>
+                                            <span className="hidden sm:inline mx-1">→</span>
+                                            <div className="flex items-center">
+                                                <MapPin className="h-4 w-4 text-red-400 mr-1" />
+                                                <p className="font-medium">{rideBooking.ride.destinationLocation?.name}</p>
+                                            </div>
                                         </div>
-                                        <span className="hidden sm:inline mx-1">→</span>
-                                        <div className="flex items-center">
-                                            <MapPin className="h-4 w-4 text-red-400 mr-1" />
-                                            <p className="font-medium">{rideBooking.ride.destinationLocation?.name}</p>
+
+                                        <div className="flex flex-wrap gap-3 text-xs text-gray-300">
+                                            <div className="flex items-center bg-white/10 rounded-3xl px-2 py-1">
+                                                <Calendar className="h-3 w-3 mr-1 opacity-70" />
+                                                {utcIsoToLocalDate(rideBooking.ride.startingTime)}
+                                            </div>
+                                            <div className="flex items-center bg-white/10 rounded-3xl px-2 py-1">
+                                                <Clock className="h-3 w-3 mr-1 opacity-70" />
+                                                {utcIsoToLocalTime12(rideBooking.ride.startingTime)}
+                                            </div>
+                                            <div className={`flex items-center bg-white/10 rounded-3xl px-2 py-1 ${getBookingStatusColor(rideBooking.status)}`}>
+                                                <AlertCircle className="h-3 w-3 mr-1" />
+                                                {rideBooking.status}
+                                            </div>
+                                            {rideBooking.ride.status && (
+                                                <div className={`flex items-center bg-white/10 rounded-3xl px-2 py-1 ${getStatusColor(rideBooking.ride.status)}`}>
+                                                    <AlertCircle className="h-3 w-3 mr-1" />
+                                                    Ride: {rideBooking.ride.status}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
-                                    <div className="flex flex-wrap gap-3 text-xs text-gray-300">
-                                        <div className="flex items-center bg-white/10 rounded-3xl px-2 py-1">
-                                            <Calendar className="h-3 w-3 mr-1 opacity-70" />
-                                            { utcIsoToLocalDate(rideBooking.ride.startingTime) }
-                                        </div>
-                                        <div className="flex items-center bg-white/10 rounded-3xl px-2 py-1">
-                                            <Clock className="h-3 w-3 mr-1 opacity-70" />
-                                            { utcIsoToLocalTime12(rideBooking.ride.startingTime) }
-                                        </div>
-                                        <div className={`flex items-center bg-white/10 rounded-3xl px-2 py-1 ${getBookingStatusColor(rideBooking.status)}`}>
-                                            <AlertCircle className="h-3 w-3 mr-1" />
-                                            {rideBooking.status}
-                                        </div>
-                                        {rideBooking.ride.status && (
-                                            <div className={`flex items-center bg-white/10 rounded-3xl px-2 py-1 ${getStatusColor(rideBooking.ride.status)}`}>
-                                                <AlertCircle className="h-3 w-3 mr-1" />
-                                                Ride: {rideBooking.ride.status}
-                                            </div>
+                                    <div className="flex items-center gap-2">
+                                        {(rideBooking.status === "Confirmed") && (
+                                            <Button
+                                                onClick={() => handleConfirmReach(rideBooking.id)}
+                                                className="px-3 py-1 h-8 text-xs bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/40 border border-emerald-500/30"
+                                            >
+
+                                                <CheckCircle className="h-3 w-3 mr-1" />
+                                                Confirm Reach
+                                            </Button>
+                                        )}
+
+                                        {rideBooking.status === "Confirmed" && (
+                                            <Button
+                                                onClick={() => handleCancelBooking(rideBooking.id)}
+                                                className="px-3 py-1 h-8 text-xs bg-red-500/20 text-red-300 hover:bg-red-500/40 border border-red-500/30"
+                                            >
+                                                Cancel Booking
+                                            </Button>
+                                        )}
+
+                                        {(rideBooking.status === "Active" || rideBooking.status === "Completed" || rideBooking.status === "Confirmed" ) && (
+                                            <Button
+                                                onClick={() => handleOpenChat(rideBooking.ride.id)}
+                                                className="px-3 py-1 h-8 text-xs bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 border border-blue-500/30"
+                                            >
+                                                <MessageCircle className="h-3 w-3 mr-1" />
+                                                Chat
+                                            </Button>
                                         )}
                                     </div>
                                 </div>
-
-                                <div className="flex items-center gap-2">
-                                    {(rideBooking.status === "Confirmed") && (
-                                        <Button
-                                            onClick={() => handleConfirmReach(rideBooking.id)}
-                                            className="px-3 py-1 h-8 text-xs bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/40 border border-emerald-500/30"
-                                        >
-                                            
-                                            <CheckCircle className="h-3 w-3 mr-1" />
-                                            Confirm Reach
-                                        </Button>
-                                    )}
-
-                                    { rideBooking.status === "Confirmed" && (
-                                        <Button
-                                            onClick={() => handleCancelBooking(rideBooking.id)}
-                                            className="px-3 py-1 h-8 text-xs bg-red-500/20 text-red-300 hover:bg-red-500/40 border border-red-500/30"
-                                        >
-                                            Cancel Booking
-                                        </Button>
-                                    )}
-
-                                    {( rideBooking.status === "Confirmed" || rideBooking.status === "Active" ) && (
-                                        <Button
-                                            onClick={() => handleOpenChat(rideBooking.id)}
-                                            className="px-3 py-1 h-8 text-xs bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 border border-blue-500/30"
-                                        >
-                                            <MessageCircle className="h-3 w-3 mr-1" />
-                                            Chat
-                                        </Button>
-                                    )}
-                                </div>
                             </div>
+                        ))
+                    ) : (
+                        <div className="flex flex-col items-center justify-center py-10 text-center">
+                            <p className="text-gray-400 mt-2">No booked rides in the past 7 days</p>
+                            <p className="text-xs text-gray-500">Your recent booked rides will appear here</p>
                         </div>
-                    ))
-                ) : (
-                    <div className="flex flex-col items-center justify-center py-10 text-center">
-                        <p className="text-gray-400 mt-2">No booked rides in the past 7 days</p>
-                        <p className="text-xs text-gray-500">Your recent booked rides will appear here</p>
-                    </div>
-                )}
-            </div>
-        </ScrollArea>
+                    )}
+                </div>
+            </ScrollArea>
+            
+            {
+                isChatOpen &&
+                <RideChatModal
+                    isOpen={isChatOpen}
+                    onClose={handleCloseChat}
+                    rideId={selectedRideId as string}
+                    isActive={true}
+                />
+            }
+        </>
     )
 }
 
