@@ -20,6 +20,7 @@ model User {
   isAdmin            Boolean   @default(false)
   emailVerified      DateTime?
   isProfileCompleted Boolean   @default(false)
+  fcmToken           String?   @map("fcm_token")
   disclaimerAccepted Boolean   @default(false)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt

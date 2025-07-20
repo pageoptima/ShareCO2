@@ -1,3 +1,4 @@
+// app/(authinticated)/dashboard/page.tsx
 "use client";
 
 import { useSession } from "next-auth/react";
@@ -5,16 +6,27 @@ import { CarbonPointsCard } from "./components/CarbonPointsCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CreatedRideHistory from "./components/CreatedRideHistory";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import RideBookedHistory from "./components/RideBookedHistory";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState("created");
 
   // Extract user display name from session
   const userEmail = session?.user?.email || "Guest";
   const displayName = userEmail.split("@")[0];
 
-  // Show dashboard with data
+  // Set active tab based on query parameter
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "booked" || tab === "created") {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
   return (
     <div className="p-4 pb-20">
       <h1 className="text-xl font-semibold text-white mb-6">
@@ -32,7 +44,7 @@ export default function DashboardPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0 overflow-hidden">
-              <Tabs defaultValue="created" className="w-full">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-[calc(100%-2rem)] grid-cols-2 bg-black/20 rounded-md p-1 mx-4 mb-4">
                   <TabsTrigger
                     value="created"
@@ -47,11 +59,9 @@ export default function DashboardPage() {
                     Booked
                   </TabsTrigger>
                 </TabsList>
-
                 <TabsContent value="created">
                   <CreatedRideHistory />
                 </TabsContent>
-
                 <TabsContent value="booked">
                   <RideBookedHistory />
                 </TabsContent>

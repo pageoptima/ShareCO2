@@ -28,6 +28,7 @@ import { MapPin, Users } from "lucide-react";
 import { createRide, getUserVehicles, getLocations } from "./actions";
 import { PublicVehicleType } from "./types";
 import { localToUtcIso } from "@/utils/time";
+import { useRouter } from "next/navigation";
 
 interface CreateRideFormProps {
   startingLocation?: string;
@@ -66,6 +67,8 @@ export default function CreateRideForm({
   startingTime,
   onSuccess,
 }: CreateRideFormProps) {
+  const router = useRouter();
+
   // State variable for vehicle type
   const [vehicleType, setVehicleType] = useState<PublicVehicleType>();
 
@@ -108,6 +111,7 @@ export default function CreateRideForm({
     onSuccess: (result) => {
       if (result.success) {
         toast.success("Ride created successfully!");
+        router.push("/dashboard?tab=created");
         onSuccess?.();
       } else {
         toast.error(result.error);

@@ -18,12 +18,15 @@ import { bookRide, getAvialableRides } from "./actions";
 import { PublicAvialableRides } from "./types";
 import { utcIsoToLocalTime12 } from "@/utils/time";
 
-const AvilableRides = ({
+import { useRouter } from "next/navigation";
+
+const AvailableRides = ({
   onSuccess,
 }: {
   onSuccess: (message: string) => void;
   onError: (message: string) => void;
 }) => {
+  const router = useRouter();
   // Hook for fetching avilalable rides
   const {
     data: availableRides = [],
@@ -50,6 +53,8 @@ const AvilableRides = ({
       if (result.success) {
         toast.success("Ride booked and confirmed successfully");
         onSuccess?.("Ride booked and confirmed successfully");
+        router.push("/dashboard?tab=booked");
+        refechAvailableRides();
       } else {
         toast.error(result.error);
       }
@@ -287,4 +292,4 @@ const AvilableRides = ({
   );
 };
 
-export default AvilableRides;
+export default AvailableRides;

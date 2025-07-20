@@ -3,12 +3,11 @@
 import { auth } from "@/lib/auth/auth";
 import { getAvailableRidesForUser } from "@/lib/ride/rideServices";
 import { bookRide as bookRideDb } from "@/lib/rideBook/rideBookServices";
-import { PublicAvialableRides } from "./types";
 
 /**
  * Get all avialable ride for the authenticated user
  */
-export async function getAvialableRides(): Promise<PublicAvialableRides[]> {
+export async function getAvialableRides() {
   // Get authenticated user
   const session = await auth();
 
@@ -25,7 +24,6 @@ export async function getAvialableRides(): Promise<PublicAvialableRides[]> {
 /**
  * Book ride for the user
  */
-// Refactored function
 export async function bookRide(rideId: string) {
   try {
     const session = await auth();

@@ -12,7 +12,7 @@ export interface PublicAvialableRides {
   driverPhone: string | null;
   startingTime: Date;
   vehicleId: string | undefined;
-  vehicleNumber: string | null;
+  vehicleNumber: string | null | undefined;
   vehicleName: string | null | undefined;
   vehicleType: VehicleType | undefined;
 }

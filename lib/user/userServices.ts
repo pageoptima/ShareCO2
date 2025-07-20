@@ -73,6 +73,33 @@ export async function updateProfile({
   }
 }
 
+
+/**
+ * Update FCM Token in user schema
+ * @param userId 
+ * @param fcmToken 
+ * @returns 
+ */
+
+export async function updateFcmTokenDb(userId: string, fcmToken: string) {
+  try {
+    // Update only the FCM token field
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        fcmToken: fcmToken,
+      },
+    });
+
+    logger.info(`FCM token updated successfully for user ${userId}`);
+    return true;
+  } catch (error) {
+    logger.error(`Error updating FCM token for user ${userId}: ${error}`);
+    throw new Error("Failed to update FCM token");
+  }
+}
+
+
 /**
  * Get a user by id
  * @param email

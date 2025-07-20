@@ -29,7 +29,6 @@ export function UserMenu() {
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
 
-  console.log(session)
   if (!session?.user) return null;
 
   // Type assertion for session user
@@ -44,6 +43,7 @@ export function UserMenu() {
     try {
       await signOut({ redirect: false });
       localStorage.removeItem("isProfileCompleted");
+      localStorage.removeItem("fcmToken");
       toast.success("Logged out successfully");
 
       // Add a small delay before redirecting
