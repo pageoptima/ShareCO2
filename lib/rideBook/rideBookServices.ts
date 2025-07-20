@@ -483,7 +483,7 @@ export async function cancleRideBookingByUser({
 /**
  * Get all ride bookings of a user from the database
  */
-export async function getUserRideBookingsDb(
+export async function getUserRideBookings(
   userId: string,
   limit: number = 20
 ) {

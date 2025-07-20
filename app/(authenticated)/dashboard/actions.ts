@@ -11,7 +11,7 @@ import {
   cancleRideBookingByDriverOnPurpose,
   activateRideBooking as activateRideBookingDb,
   cancleRideBookingByUser,
-  getUserRideBookingsDb,
+  getUserRideBookings as getUserRideBookingsDb,
 } from "@/lib/rideBook/rideBookServices";
 import { cancelRide as cancelRideDb } from "@/lib/ride/rideServices";
 import { completeRide as completeRideDb } from "@/lib/ride/rideServices";

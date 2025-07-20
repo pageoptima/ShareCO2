@@ -54,14 +54,8 @@ interface AuthenticatedLayoutProps {
   children: ReactNode;
 }
 
-<<<<<<< HEAD
-export default function AuthenticatedLayout({
-  children,
-}: AuthenticatedLayoutProps): JSX.Element {
-=======
 export default function AuthenticatedLayout({ children }: AuthenticatedLayoutProps): JSX.Element {
 
->>>>>>> origin/master
   return (
     <Suspense fallback={<LoadingScreen />}>
       <AblyClientProvider>
