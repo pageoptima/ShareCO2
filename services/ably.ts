@@ -1,24 +1,6 @@
-import { configureAbly } from "@ably-labs/react-hooks";
+import * as Ably from 'ably';
 
-export function getAblyClient() {
-  return configureAbly({
-    key: process.env.NEXT_PUBLIC_ABLY_API_KEY || '',
-    clientId: Math.random().toString(36).substring(2, 15),
-  });
-}
+// Initialize Ably Realtime client with your API key
+const ably = new Ably.Rest( process.env.ABLY_SERVER_API_KEY as string );
 
-// Check if a chat should be available
-export function isChatAvailable(startingTime: string): boolean {
-  if (!startingTime) return false;
-  
-  const rideStartTime = new Date(startingTime);
-  const thirtyMinsBefore = new Date(rideStartTime.getTime() - 30 * 60 * 1000);
-  const now = new Date();
-  
-  return now >= thirtyMinsBefore;
-}
-
-// Get channel name for a ride
-export function getRideChannelName(rideId: string): string {
-  return `ride-chat-${rideId}`;
-} 
+export default ably;
