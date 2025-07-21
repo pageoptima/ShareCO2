@@ -43,7 +43,6 @@ export function UserMenu() {
     try {
       await signOut({ redirect: false });
       localStorage.removeItem("isProfileCompleted");
-      localStorage.removeItem("fcmToken");
       toast.success("Logged out successfully");
 
       // Add a small delay before redirecting

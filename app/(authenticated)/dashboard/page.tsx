@@ -17,9 +17,13 @@ export default function DashboardPage() {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("created");
 
+  const isProfileCompleted =
+    localStorage.getItem("isProfileCompleted") == "true";
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ["profile-status"],
     queryFn: getUserProfileStatus,
+    enabled: !isProfileCompleted,
   });
 
   // Redirect to /profile if profile is not completed
