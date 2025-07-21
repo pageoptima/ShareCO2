@@ -18,7 +18,7 @@ import { completeRide as completeRideDb } from "@/lib/ride/rideServices";
 import { PublicUserRides, PublicTransactions } from "./types";
 
 import { getWalletByUserId } from "@/lib/wallet/walletServices";
-import { getUserById, updateFcmTokenDb } from "@/lib/user/userServices";
+import { getUserById } from "@/lib/user/userServices";
 
 /**
  * Submit a top-up request for carbon points
@@ -281,36 +281,6 @@ export async function getCarbonPoint(): Promise<number> {
 
   return wallet.spendableBalance + wallet.reservedBalance;
 }
-
-
-
-
-
-/**
- * Update Fcm Token in user Schema
- */
-
-export async function updateFcmToken(fcmToken: string) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      throw new Error("Not authenticated");
-    }
-
-    await updateFcmTokenDb(session.user.id, fcmToken);
-
-    return {
-      success: true,
-      error: null,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: (error as Error).message,
-    };
-  }
-}
-
 
 export async function getUserProfileStatus() {
   const session = await auth();
