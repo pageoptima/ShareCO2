@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, Dispatch, SetStateAction } from "react";
 import {
   AlertCircle,
@@ -22,7 +24,11 @@ const RideRequestList = ({
 }: {
   highlightedRequestId: string | null;
   setHighlightedRequestId: Dispatch<SetStateAction<string | null>>;
-  onSelectRoute: (a: string, b: string, c: string) => void;
+  onSelectRoute: (
+    startingLocationId: string,
+    destinationLocationId: string,
+    startingTime: string
+  ) => void;
 }) => {
   const [expandedWindow, setExpandedWindow] = useState<string | null>(null);
 
@@ -210,8 +216,8 @@ const RideRequestList = ({
                                 "yyyy-MM-dd'T'HH:mm"
                               );
                               onSelectRoute(
-                                rideRequest.startingLocation?.name as string,
-                                rideRequest.destinationLocation?.name as string,
+                                rideRequest.startingLocation?.id as string, // Pass ID instead of name
+                                rideRequest.destinationLocation?.id as string, // Pass ID instead of name
                                 formattedTime
                               );
                             }}

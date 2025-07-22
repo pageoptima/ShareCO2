@@ -11,7 +11,14 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User, History, Wallet, CreditCard } from "lucide-react";
+import {
+  LogOut,
+  User,
+  History,
+  Wallet,
+  CreditCard,
+  HelpCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -122,6 +129,14 @@ export function UserMenu() {
             onClick={() => handleNavigate("/wallet")}
           >
             <Wallet className="mr-2 h-5 w-5" /> Wallet
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-white hover:bg-white/10 cursor-pointer"
+            onClick={() => handleNavigate("/support")}
+          >
+            <HelpCircle className="mr-2 h-5 w-5" /> Support
           </Button>
 
           {/* Admin-only menu item for Recharge Requests */}

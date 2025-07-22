@@ -31,8 +31,8 @@ import { localToUtcIso } from "@/utils/time";
 import { useRouter } from "next/navigation";
 
 interface CreateRideFormProps {
-  startingLocation?: string;
-  destinationLocation?: string;
+  startingLocationId?: string;
+  destinationLocationId?: string;
   startingTime?: string;
   onSuccess?: () => void;
 }
@@ -55,15 +55,15 @@ const createRideSchema = z
     },
     {
       message: "Starting point and destination must be different",
-      path: ["destination"],
+      path: ["destinationLocationId"],
     }
   );
 
 type CreateRideFormValues = z.infer<typeof createRideSchema>;
 
 export default function CreateRideForm({
-  startingLocation,
-  destinationLocation,
+  startingLocationId,
+  destinationLocationId,
   startingTime,
   onSuccess,
 }: CreateRideFormProps) {
@@ -78,7 +78,7 @@ export default function CreateRideForm({
     queryFn: getUserVehicles,
   });
 
-  // Fetch location via react-query
+  // Fetch locations via react-query
   const { data: locations = [], isLoading: isLocationFetching } = useQuery({
     queryKey: ["location"],
     queryFn: getLocations,
@@ -116,8 +116,8 @@ export default function CreateRideForm({
   const form = useForm<CreateRideFormValues>({
     resolver: zodResolver(createRideSchema),
     defaultValues: {
-      startingLocationId: startingLocation || "",
-      destinationLocationId: destinationLocation || "",
+      startingLocationId: startingLocationId || "",
+      destinationLocationId: destinationLocationId || "",
       startingTime: startingTime || "",
       vehicleId: "",
       maxPassengers: "",
@@ -126,16 +126,16 @@ export default function CreateRideForm({
 
   // Sync form fields with prop changes
   useEffect(() => {
-    if (startingLocation) {
-      form.setValue("startingLocationId", startingLocation);
+    if (startingLocationId) {
+      form.setValue("startingLocationId", startingLocationId);
     }
-    if (destinationLocation) {
-      form.setValue("destinationLocationId", destinationLocation);
+    if (destinationLocationId) {
+      form.setValue("destinationLocationId", destinationLocationId);
     }
     if (startingTime) {
       form.setValue("startingTime", startingTime);
     }
-  }, [startingLocation, destinationLocation, startingTime, form]);
+  }, [startingLocationId, destinationLocationId, startingTime, form]);
 
   // Watch form values for filtering and dynamic updates
   const watchedStartingPoint = form.watch("startingLocationId");
@@ -416,7 +416,7 @@ export default function CreateRideForm({
                   className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
-                  viewBox="0 24 24"
+                  viewBox="0 0 24 24"
                 >
                   <circle
                     className="opacity-25"
