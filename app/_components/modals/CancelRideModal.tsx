@@ -52,26 +52,32 @@ export const CancelRideModal: React.FC<CancelRideModalProps> = ({
           </DialogTitle>
           <DialogDescription>
             {showFinalConfirmation ? (
-              "Are you sure you want to cancel this ride? undo can't be done thereafter!"
+              "Are you sure you want to cancel this ride? You won't be able to undo this action."
             ) : isThresholdPassed ? (
               <>
                 The threshold time for canceling this ride has passed. A charge
-                of <span className="font-bold">₹{amount}</span> will be deducted
-                from your wallet if you proceed.
+                of <span className="font-bold text-red-500">{amount} CP</span>{" "}
+                will be deducted from your wallet if you proceed.
               </>
             ) : (
-              "Are you sure you want to cancel this ride? undo can't be done thereafter!"
+              "Are you sure you want to cancel this ride? You won't be able to undo this action."
             )}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isPending}>
+          <Button
+            variant="outline"
+            onClick={handleClose}
+            disabled={isPending}
+            className="cursor-pointer"
+          >
             Cancel
           </Button>
           <Button
             variant="destructive"
             onClick={handleConfirm}
             disabled={isPending}
+            className="cursor-pointer"
           >
             {isPending ? (
               <>
