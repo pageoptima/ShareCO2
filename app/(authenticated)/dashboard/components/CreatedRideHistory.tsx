@@ -26,7 +26,7 @@ import { PublicRideBookingStatus, PublicRideStatus } from "../types";
 import { toast } from "sonner";
 import { utcIsoToLocalDate, utcIsoToLocalTime12 } from "@/utils/time";
 import { RideChatModal } from "@/app/_components/modals/RideChatModal/RideChatModal";
-
+import { CancelRideModal } from "@/app/_components/modals/CancelRideModal";
 /**
  * Get the color of the ride status
  */
@@ -75,11 +75,30 @@ const getBookingStatusIcon = (status: PublicRideBookingStatus) => {
   }
 };
 
-const CreatedRideHistory = () => {
+/**
+ * Check if threshold time for cancellation has passed
+ */
+const isThresholdTimePassed = (startTime: string): boolean => {
+  const rideThresholdMinutes = Number(
+    process.env.NEXT_PUBLIC_RIDE_THRESHOLD_TIME
+  );
+  const startDate = new Date(startTime);
+  const currentDate = new Date();
+  const diffInMinutes =
+    (startDate.getTime() - currentDate.getTime()) / (1000 * 60);
+  return diffInMinutes <= rideThresholdMinutes;
+};
 
+const CreatedRideHistory = () => {
   const [selectedRideId, setSelectedRideId] = useState<string | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [rideToCancel, setRideToCancel] = useState<string | null>(null);
 
+  // Cancellation charge constant
+  const CANCELLATION_CHARGE = Number(
+    process.env.NEXT_PUBLIC_RIDE_CANCELLATION_CHARGE_CHAMPION
+  );
   // Fetch user's created rides via react-query
   const {
     data: createdRides = [],
@@ -179,13 +198,21 @@ const CreatedRideHistory = () => {
   /**
    * Handle cancel ride
    */
-  const handleCancelRide = async (rideId: string) => {
-    if (isCancellRidePending) {
-      return true;
-    }
+  const handleCancelRide = (rideId: string) => {
+    setRideToCancel(rideId);
+    setIsCancelModalOpen(true);
+  };
 
-    await mutateCancellRide(rideId);
+  /**
+   * Confirm cancel ride
+   */
+  const confirmCancelRide = async () => {
+    if (!rideToCancel) return;
+
+    await mutateCancellRide(rideToCancel);
     refetchCreatedRides();
+    setIsCancelModalOpen(false);
+    setRideToCancel(null);
   };
 
   /**
@@ -225,20 +252,20 @@ const CreatedRideHistory = () => {
   };
 
   /**
-     * Handle open chat
-     */
-    const handleOpenChat = (bookingId: string) => {
-        setSelectedRideId(bookingId);
-        setIsChatOpen(true);
-    };
+   * Handle open chat
+   */
+  const handleOpenChat = (bookingId: string) => {
+    setSelectedRideId(bookingId);
+    setIsChatOpen(true);
+  };
 
-    /**
-     * Handle close chat
-     */
-    const handleCloseChat = () => {
-        setSelectedRideId(null);
-        setIsChatOpen(false);
-    };
+  /**
+   * Handle close chat
+   */
+  const handleCloseChat = () => {
+    setSelectedRideId(null);
+    setIsChatOpen(false);
+  };
 
   if (
     isCreatedRidesFetching ||
@@ -389,7 +416,8 @@ const CreatedRideHistory = () => {
                       </Button>
                     )}
 
-                    {(ride.status === "Pending" || ride.status === "Active") && (
+                    {(ride.status === "Pending" ||
+                      ride.status === "Active") && (
                       <Button
                         variant="destructive"
                         onClick={() => handleCancelRide(ride.id)}
@@ -399,7 +427,9 @@ const CreatedRideHistory = () => {
                       </Button>
                     )}
 
-                    {(ride.status === "Pending" || ride.status === "Active" || ride.status === 'Completed') && (
+                    {(ride.status === "Pending" ||
+                      ride.status === "Active" ||
+                      ride.status === "Completed") && (
                       <Button
                         onClick={() => handleOpenChat(ride.id)}
                         className="px-3 py-1 h-8 text-xs bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 border border-blue-500/30"
@@ -483,15 +513,36 @@ const CreatedRideHistory = () => {
         </div>
       </ScrollArea>
 
-      {
-        isChatOpen &&
+      {isChatOpen && (
         <RideChatModal
           isOpen={isChatOpen}
           onClose={handleCloseChat}
           rideId={selectedRideId as string}
           isActive={true}
         />
-      }
+      )}
+
+      {isCancelModalOpen && (
+        <CancelRideModal
+          isOpen={isCancelModalOpen}
+          onClose={() => {
+            setIsCancelModalOpen(false);
+            setRideToCancel(null);
+          }}
+          onConfirm={confirmCancelRide}
+          isPending={isCancellRidePending}
+          amount={CANCELLATION_CHARGE}
+          isThresholdPassed={
+            rideToCancel
+              ? isThresholdTimePassed(
+                  createdRides
+                    .find((ride) => ride.id === rideToCancel)
+                    ?.startingTime?.toISOString() || new Date().toISOString()
+                )
+              : false
+          }
+        />
+      )}
     </>
   );
 };

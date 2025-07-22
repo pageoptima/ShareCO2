@@ -21,6 +21,7 @@ import { PublicRideBookingStatus, PublicRideStatus } from "../types";
 import { utcIsoToLocalDate, utcIsoToLocalTime12 } from "@/utils/time";
 import { toast } from "sonner";
 import { RideChatModal } from "@/app/_components/modals/RideChatModal/RideChatModal";
+import { CancelRideModal } from "@/app/_components/modals/CancelRideModal";
 
 const getStatusColor = (status: PublicRideStatus) => {
   switch (status) {
@@ -50,10 +51,30 @@ const getBookingStatusColor = (status: PublicRideBookingStatus) => {
   }
 };
 
+/**
+ * Check if threshold time for cancellation has passed
+ */
+const isThresholdTimePassed = (startTime: string): boolean => {
+  const rideThresholdMinutes =
+    Number(process.env.NEXT_PUBLIC_RIDE_THRESHOLD_TIME) || 30;
+  const startDate = new Date(startTime);
+  const currentDate = new Date();
+  const diffInMinutes =
+    (startDate.getTime() - currentDate.getTime()) / (1000 * 60);
+  return diffInMinutes <= rideThresholdMinutes;
+};
+
 const RideBookedHistory = () => {
   const [selectedRideId, setSelectedRideId] = useState<string | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [expandedRideId, setExpandedRideId] = useState<string | null>(null);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
+
+  // Cancellation charge constant
+  const CANCELLATION_CHARGE = Number(
+    process.env.NEXT_PUBLIC_RIDE_CANCELLATION_CHARGE_RIDER
+  );
 
   // Fetch user's ride bookings
   const {
@@ -106,9 +127,23 @@ const RideBookedHistory = () => {
     await mutateConfirmReach(bookingId);
   };
 
-  const handleCancelBooking = async (bookingId: string) => {
-    if (isCancleBookingPending) return true;
-    await mutateCancleBooking(bookingId);
+  /**
+   * Handle cancel booking
+   */
+  const handleCancelBooking = (bookingId: string) => {
+    setBookingToCancel(bookingId);
+    setIsCancelModalOpen(true);
+  };
+
+  /**
+   * Confirm cancel booking
+   */
+  const confirmCancelBooking = async () => {
+    if (!bookingToCancel) return;
+
+    await mutateCancleBooking(bookingToCancel);
+    setIsCancelModalOpen(false);
+    setBookingToCancel(null);
   };
 
   const handleOpenChat = (rideId: string) => {
@@ -330,6 +365,29 @@ const RideBookedHistory = () => {
           onClose={handleCloseChat}
           rideId={selectedRideId as string}
           isActive={true}
+        />
+      )}
+
+      {isCancelModalOpen && (
+        <CancelRideModal
+          isOpen={isCancelModalOpen}
+          onClose={() => {
+            setIsCancelModalOpen(false);
+            setBookingToCancel(null);
+          }}
+          onConfirm={confirmCancelBooking}
+          isPending={isCancleBookingPending}
+          amount={CANCELLATION_CHARGE}
+          isThresholdPassed={
+            bookingToCancel
+              ? isThresholdTimePassed(
+                  rideBookings
+                    .find((booking) => booking.id === bookingToCancel)
+                    ?.ride.startingTime?.toISOString() ||
+                    new Date().toISOString()
+                )
+              : false
+          }
         />
       )}
     </>
