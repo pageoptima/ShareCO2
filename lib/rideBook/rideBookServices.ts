@@ -420,7 +420,7 @@ export async function cancleRideBookingByDriverOnRideCancle({
 }
 
 /**
- * Deny the ride booking by user
+ * cancel the ride booking by user
  */
 export async function cancleRideBookingByUser({
   userId,
