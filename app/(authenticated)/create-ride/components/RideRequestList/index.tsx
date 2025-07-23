@@ -119,8 +119,8 @@ const RideRequestList = ({
               >
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base sm:text-lg font-medium">
-                    {format(new Date(window.timeWindowStart), "h:00 a")} -{" "}
-                    {format(new Date(window.timeWindowEnd), "h:00 a")} (
+                    {format(new Date(window.timeWindowStart), "h:mm a")} -{" "}
+                    {format(new Date(window.timeWindowEnd), "h:mm a")} (
                     {format(new Date(window.timeWindowStart), "MMM d, yyyy")})
                   </CardTitle>
                   <div className="flex items-center gap-2">

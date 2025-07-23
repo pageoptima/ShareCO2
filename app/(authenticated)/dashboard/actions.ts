@@ -124,7 +124,10 @@ export async function cancelRide(rideId: string) {
 /**
  * Start a ride
  */
-export async function startRide(rideId: string) {
+/**
+ * Start a ride
+ */
+export async function startRide(rideId: string, confirmedRiderIds: string[] = [], rejectedRiderIds: string[] = []) {
   try {
     const session = await auth();
 
@@ -135,6 +138,8 @@ export async function startRide(rideId: string) {
     const success = await activateRide({
       userId: session.user.id,
       rideId: rideId,
+      confirmedRiderIds,
+      rejectedRiderIds,
     });
 
     return {

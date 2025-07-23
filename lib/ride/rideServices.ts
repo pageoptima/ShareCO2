@@ -4,6 +4,7 @@ import { prisma } from "@/config/prisma";
 import { RideBookingStatus, RideStatus } from "@prisma/client";
 import {
   cancleRideBookingByDriverOnRideCancle,
+  cancleRideBookingByUser,
   completeRideBooking,
 } from "../rideBook/rideBookServices";
 import {
@@ -242,9 +243,13 @@ export async function cancelRide({
 export async function activateRide({
   userId,
   rideId,
+  confirmedRiderIds = [],
+  rejectedRiderIds = [],
 }: {
   userId: string;
   rideId: string;
+  confirmedRiderIds?: string[];
+  rejectedRiderIds?: string[];
 }) {
   try {
     // Get the ride for authentication
@@ -263,26 +268,52 @@ export async function activateRide({
     });
 
     if (!ride) {
-      throw new Error("Ride not found or you are not the creater.");
+      throw new Error("Ride not found or you are not the creator.");
     }
 
-    if (ride.status != RideStatus.Pending) {
-      throw new Error("Ride is not Pending and cannot be activate");
+    if (ride.status !== RideStatus.Pending) {
+      throw new Error("Ride is not Pending and cannot be activated.");
     }
+
+    const currentTime = new Date();
+    const rideStartTime = new Date(ride.startingTime);
+    const isAfterStartTime = currentTime >= rideStartTime;
 
     // Handle ride bookings
     const rideBookings = ride.bookings;
 
-    // Check for any confirm ridebooking status
-    for (const rideBooking of rideBookings) {
-      if (rideBooking.status == RideBookingStatus.Confirmed) {
-        throw new Error(
-          `
-            Rider ${
-              rideBooking.user.name || rideBooking.user.email
-            } is not reached yet.
-          `
-        );
+    if (!isAfterStartTime) {
+      // Before start time, all riders must have confirmed (Active status)
+      for (const rideBooking of rideBookings) {
+        if (rideBooking.status === RideBookingStatus.Confirmed) {
+          throw new Error(
+            `Rider ${
+              rideBooking.user.name || rideBooking.user.email || "Unknown User"
+            } has not reached yet.`
+          );
+        }
+      }
+    } else {
+      // After start time, process confirmed and rejected riders
+      for (const rideBooking of rideBookings) {
+        if (confirmedRiderIds.includes(rideBooking.id)) {
+          await prisma.rideBooking.update({
+            where: { id: rideBooking.id },
+            data: { status: RideBookingStatus.Active },
+          });
+        } else if (rejectedRiderIds.includes(rideBooking.id)) {
+          // Call cancleRideBookingByUser to cancel the booking and apply fine if applicable
+          await cancleRideBookingByUser({
+            userId: rideBooking.userId,
+            bookingId: rideBooking.id,
+          });
+        } else if (rideBooking.status === RideBookingStatus.Confirmed) {
+          throw new Error(
+            `Rider ${
+              rideBooking.user.name || rideBooking.user.email || "Unknown User"
+            } status not specified.`
+          );
+        }
       }
     }
 
@@ -437,7 +468,6 @@ export async function getRideById(rideId: string) {
     throw error;
   }
 }
-
 /**
  * Get avialable ride for a user
  */

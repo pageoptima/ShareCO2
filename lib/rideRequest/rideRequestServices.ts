@@ -1,8 +1,14 @@
 import logger from "@/config/logger";
 import { prisma } from "@/config/prisma";
 import { RideRequestStatus } from "@prisma/client";
-import { addDays, endOfDay, startOfDay } from "date-fns";
-import { startOfHour, addHours } from "date-fns";
+import {
+  addDays,
+  addMinutes,
+  endOfDay,
+  startOfDay,
+  startOfMinute,
+} from "date-fns";
+
 /**
  * Create a new ride request for user
  */
@@ -211,9 +217,8 @@ export const getUserRideRequests = async (userId: string) => {
   }
 };
 
-
 /**
- * Get aggregated ride requests by 1-hour time windows for today and future
+ * Get aggregated ride requests by 30-minute time windows for today and future
  */
 export const getAggregatedRideRequests = async (userId: string) => {
   try {
@@ -236,11 +241,11 @@ export const getAggregatedRideRequests = async (userId: string) => {
         destinationLocation: { select: { id: true, name: true } },
       },
       orderBy: {
-        startingTime: 'asc',
+        startingTime: "asc",
       },
     });
 
-    // Group by 1-hour time windows
+    // Group by 30-minute time windows
     const timeWindowRequests: Record<
       string,
       {
@@ -260,8 +265,12 @@ export const getAggregatedRideRequests = async (userId: string) => {
 
     rideRequests.forEach((request) => {
       const requestTime = new Date(request.startingTime);
-      const windowStart = startOfHour(requestTime);
-      const windowEnd = addHours(windowStart, 1);
+      // Round down to the nearest 30-minute interval
+      const minutes = requestTime.getMinutes();
+      const windowStart = startOfMinute(
+        new Date(requestTime.setMinutes(minutes >= 30 ? 30 : 0))
+      );
+      const windowEnd = addMinutes(windowStart, 30);
       const windowKey = windowStart.toISOString();
 
       const requestKey = `${request.startingLocationId}|${request.destinationLocationId}|${requestTime}`;
@@ -294,11 +303,13 @@ export const getAggregatedRideRequests = async (userId: string) => {
     });
 
     // Convert to array and sort by time window
-    const groupedRequestsList = Object.values(timeWindowRequests).sort((a, b) => {
-      const tA = new Date(a.timeWindowStart).getTime();
-      const tB = new Date(b.timeWindowStart).getTime();
-      return tA - tB; // ascending: earliest first
-    });
+    const groupedRequestsList = Object.values(timeWindowRequests).sort(
+      (a, b) => {
+        const tA = new Date(a.timeWindowStart).getTime();
+        const tB = new Date(b.timeWindowStart).getTime();
+        return tA - tB; // ascending: earliest first
+      }
+    );
 
     return groupedRequestsList;
   } catch (error) {

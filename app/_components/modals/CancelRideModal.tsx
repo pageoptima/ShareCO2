@@ -66,11 +66,17 @@ export const CancelRideModal: React.FC<CancelRideModalProps> = ({
               : "Cancel Ride"}
           </DialogTitle>
           <DialogDescription className="text-gray-400">
-            {phase === "final"
-              ? "Are you sure you want to cancel this ride? You won't be able to undo this action."
-              : phase === "reason"
-              ? "Please select a reason for cancelling the ride:"
-              : `The threshold time for canceling this ride has passed. A charge of <span className="font-bold text-red-500">${amount} CP</span> will be deducted from your wallet if you proceed.`}
+            {phase === "final" ? (
+              "Are you sure you want to cancel this ride? You won't be able to undo this action."
+            ) : phase === "reason" ? (
+              "Please select a reason for cancelling the ride:"
+            ) : (
+              <>
+                The threshold time for canceling this ride has passed. A charge
+                of <span className="font-bold text-red-500">{amount} CP</span>{" "}
+                will be deducted from your wallet if you proceed.
+              </>
+            )}
           </DialogDescription>
         </DialogHeader>
         {phase === "reason" && (
