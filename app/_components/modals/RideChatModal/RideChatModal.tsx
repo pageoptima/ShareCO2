@@ -134,7 +134,7 @@ function RideChatModal_({
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-blue-300 hover:text-blue-200 hover:bg-blue-900/20"
+                className="text-blue-300 hover:text-blue-200 hover:bg-blue-900/20 cursor-pointer"
                 onClick={() => setShowParticipants(!showParticipants)}
               >
                 <Users className="h-4 w-4 mr-1" />
@@ -251,7 +251,7 @@ function RideChatModal_({
             />
             <Button
               onClick={() => handleSendMessage()}
-              className="bg-emerald-600 hover:bg-emerald-700"
+              className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
               disabled={isMessageSending}
             >
               {isMessageSending ? (

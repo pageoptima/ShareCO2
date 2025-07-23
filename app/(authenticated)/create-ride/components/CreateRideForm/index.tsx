@@ -178,6 +178,23 @@ export default function CreateRideForm({
   // Submit handler
   const submitRide = async (data: CreateRideFormValues) => {
     if (isCreating) return;
+
+    // Additional validation for office requirement
+    const startingLocationName = locations.find(
+      (location) => location.id === data.startingLocationId
+    )?.name;
+    const destinationLocationName = locations.find(
+      (location) => location.id === data.destinationLocationId
+    )?.name;
+
+    if (
+      startingLocationName?.toLowerCase() !== "office" &&
+      destinationLocationName?.toLowerCase() !== "office"
+    ) {
+      toast.error("Either starting point or destination must be Office");
+      return;
+    }
+
     mutateRide(data);
   };
 
