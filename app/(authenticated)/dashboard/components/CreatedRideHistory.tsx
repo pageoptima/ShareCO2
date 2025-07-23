@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +16,7 @@ import {
   ShieldX,
   UserCircle,
 } from "lucide-react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   cancelRide,
   completeRide,
@@ -95,6 +97,8 @@ const CreatedRideHistory = () => {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [rideToCancel, setRideToCancel] = useState<string | null>(null);
 
+  const queryClient = useQueryClient();
+
   // Cancellation charge constant
   const CANCELLATION_CHARGE = Number(
     process.env.NEXT_PUBLIC_RIDE_CANCELLATION_CHARGE_CHAMPION
@@ -122,6 +126,7 @@ const CreatedRideHistory = () => {
       onSuccess: async (result) => {
         if (result.success) {
           toast.success("Ride cancelled successfully");
+          await queryClient.invalidateQueries({ queryKey: ["carbonpoint"] });
         } else {
           toast.error(result.error);
         }
@@ -158,6 +163,7 @@ const CreatedRideHistory = () => {
       onSuccess: async (result) => {
         if (result.success) {
           toast.success("Ride complete successfully");
+          await queryClient.invalidateQueries({ queryKey: ["carbonpoint"] });
         } else {
           toast.error(result.error);
         }

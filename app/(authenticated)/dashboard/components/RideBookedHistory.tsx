@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
 import {
   AlertCircle,
   Calendar,
@@ -71,6 +72,8 @@ const RideBookedHistory = () => {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
 
+  const queryClient = useQueryClient();
+
   // Cancellation charge constant
   const CANCELLATION_CHARGE = Number(
     process.env.NEXT_PUBLIC_RIDE_CANCELLATION_CHARGE_RIDER
@@ -116,6 +119,7 @@ const RideBookedHistory = () => {
     onSuccess: async () => {
       toast.success("Ride booking canceled successfully");
       await refetchRideBookings();
+      await queryClient.invalidateQueries({ queryKey: ["carbonpoint"] });
     },
     onError: (error) => {
       toast.error(error.message);
