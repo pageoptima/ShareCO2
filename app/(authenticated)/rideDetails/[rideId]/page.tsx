@@ -265,9 +265,6 @@ const RideDetailsPage = () => {
                           >
                             {booking.status}
                           </Badge>
-                          <p className="text-xs text-gray-400 mt-1">
-                            Carbon Cost: {booking.carbonCost.toFixed(2)} CP
-                          </p>
                         </div>
                       </div>
                     </div>

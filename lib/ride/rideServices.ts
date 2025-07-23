@@ -468,7 +468,6 @@ export async function getRideById(rideId: string) {
     throw error;
   }
 }
-
 /**
  * Get avialable ride for a user
  */

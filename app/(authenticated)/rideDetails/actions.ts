@@ -50,7 +50,6 @@ export async function getRideDetails(rideId: string) {
         email: booking.user.email,
         phone: booking.user.phone || null,
       },
-      carbonCost: booking.carbonCost,
       status: booking.status,
       createdAt: booking.createdAt,
     })),
