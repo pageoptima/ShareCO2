@@ -1,3 +1,4 @@
+// championsider/CreatedRideHistory.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -24,11 +25,17 @@ import {
   getUserRides,
   startRide,
 } from "../actions";
-import { PublicRideBookingStatus, PublicRideStatus } from "../types";
+import {
+  PublicRideBookingStatus,
+  PublicRideStatus,
+  PublicUserRides,
+} from "../types";
 import { toast } from "sonner";
 import { utcIsoToLocalDate, utcIsoToLocalTime12 } from "@/utils/time";
 import { RideChatModal } from "@/app/_components/modals/RideChatModal/RideChatModal";
 import { CancelRideModal } from "@/app/_components/modals/CancelRideModal";
+import { StartRideModal } from "@/app/_components/modals/StartRideModal";
+
 /**
  * Get the color of the ride status
  */
@@ -96,6 +103,11 @@ const CreatedRideHistory = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [rideToCancel, setRideToCancel] = useState<string | null>(null);
+  const [isStartRideModalOpen, setIsStartRideModalOpen] = useState(false);
+  const [rideToStart, setRideToStart] = useState<{
+    id: string;
+    bookings: PublicUserRides["bookings"];
+  } | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -103,6 +115,7 @@ const CreatedRideHistory = () => {
   const CANCELLATION_CHARGE = Number(
     process.env.NEXT_PUBLIC_RIDE_CANCELLATION_CHARGE_CHAMPION
   );
+
   // Fetch user's created rides via react-query
   const {
     data: createdRides = [],
@@ -120,9 +133,7 @@ const CreatedRideHistory = () => {
   // Hook for cancelled ride
   const { mutateAsync: mutateCancellRide, isPending: isCancellRidePending } =
     useMutation({
-      mutationFn: (rideId: string) => {
-        return cancelRide(rideId);
-      },
+      mutationFn: (rideId: string) => cancelRide(rideId),
       onSuccess: async (result) => {
         if (result.success) {
           toast.success("Ride cancelled successfully");
@@ -139,12 +150,18 @@ const CreatedRideHistory = () => {
   // Hook for start ride
   const { mutateAsync: mutateStartRide, isPending: isStartRidePending } =
     useMutation({
-      mutationFn: (rideId: string) => {
-        return startRide(rideId);
-      },
+      mutationFn: ({
+        rideId,
+        confirmedRiderIds,
+        rejectedRiderIds,
+      }: {
+        rideId: string;
+        confirmedRiderIds?: string[];
+        rejectedRiderIds?: string[];
+      }) => startRide(rideId, confirmedRiderIds, rejectedRiderIds),
       onSuccess: async (result) => {
         if (result.success) {
-          toast.success("Ride start successfully");
+          toast.success("Ride started successfully");
         } else {
           toast.error(result.error);
         }
@@ -157,12 +174,10 @@ const CreatedRideHistory = () => {
   // Hook for complete ride
   const { mutateAsync: mutateCompleteRide, isPending: isCompleteRidePending } =
     useMutation({
-      mutationFn: (rideId: string) => {
-        return completeRide(rideId);
-      },
+      mutationFn: (rideId: string) => completeRide(rideId),
       onSuccess: async (result) => {
         if (result.success) {
-          toast.success("Ride complete successfully");
+          toast.success("Ride completed successfully");
           await queryClient.invalidateQueries({ queryKey: ["carbonpoint"] });
         } else {
           toast.error(result.error);
@@ -178,12 +193,10 @@ const CreatedRideHistory = () => {
     mutateAsync: mutateDenyRideBooking,
     isPending: isDenyRideBookingPending,
   } = useMutation({
-    mutationFn: (bookingId: string) => {
-      return denyRideBooking(bookingId);
-    },
+    mutationFn: (bookingId: string) => denyRideBooking(bookingId),
     onSuccess: async (result) => {
       if (result.success) {
-        toast.success("Ride Booking denyed successfully");
+        toast.success("Ride booking denied successfully");
       } else {
         toast.error(result.error);
       }
@@ -225,21 +238,54 @@ const CreatedRideHistory = () => {
    * Handle start ride
    */
   const handleStartRide = async (rideId: string) => {
-    if (isStartRidePending) {
-      return true;
-    }
+    if (isStartRidePending) return;
 
-    await mutateStartRide(rideId);
+    const ride = createdRides.find((r) => r.id === rideId);
+    if (!ride) return;
+
+    const currentTime = new Date();
+    const rideStartTime = new Date(ride.startingTime);
+    const isAfterStartTime = currentTime >= rideStartTime;
+
+    const nonActiveBookings = ride.bookings.filter(
+      (booking) => booking.status === "Confirmed"
+    );
+
+    if (isAfterStartTime && nonActiveBookings.length > 0) {
+      // Show modal for non-confirmed riders
+      setRideToStart({ id: rideId, bookings: nonActiveBookings });
+      setIsStartRideModalOpen(true);
+    } else {
+      // No non-confirmed riders or before start time, attempt to start ride
+      await mutateStartRide({ rideId });
+      refetchCreatedRides();
+    }
+  };
+
+  /**
+   * Handle confirm start ride from modal
+   */
+  const handleConfirmStartRide = async (
+    confirmedRiderIds: string[],
+    rejectedRiderIds: string[]
+  ) => {
+    if (!rideToStart) return;
+
+    await mutateStartRide({
+      rideId: rideToStart.id,
+      confirmedRiderIds,
+      rejectedRiderIds,
+    });
     refetchCreatedRides();
+    setIsStartRideModalOpen(false);
+    setRideToStart(null);
   };
 
   /**
    * Handle complete ride
    */
   const handleCompleteRide = async (rideId: string) => {
-    if (isCompleteRidePending) {
-      return true;
-    }
+    if (isCompleteRidePending) return;
 
     await mutateCompleteRide(rideId);
     refetchCreatedRides();
@@ -249,9 +295,7 @@ const CreatedRideHistory = () => {
    * Handle deny ride booking
    */
   const handleDenyRideBooking = async (bookingId: string) => {
-    if (isDenyRideBookingPending) {
-      return true;
-    }
+    if (isDenyRideBookingPending) return;
 
     await mutateDenyRideBooking(bookingId);
     refetchCreatedRides();
@@ -406,6 +450,7 @@ const CreatedRideHistory = () => {
                       <Button
                         onClick={() => handleStartRide(ride.id)}
                         className="px-3 py-1 h-8 text-xs bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/40 border border-emerald-500/30 cursor-pointer"
+                        disabled={isStartRidePending}
                       >
                         <CheckCircle className="h-3 w-3 mr-1" />
                         Start Ride
@@ -478,14 +523,6 @@ const CreatedRideHistory = () => {
 
                             {booking.status === "Confirmed" && (
                               <div className="flex flex-wrap gap-2 mt-3">
-                                {/* <Button
-                                                                  onClick={() => handleConfirmRideBooking( booking.id ) }
-                                                                  className="bg-emerald-600/20 hover:bg-emerald-600/40 text-xs border border-emerald-500/30 text-emerald-300 flex-1 sm:flex-initial"
-                                                                  size="sm"
-                                                              >
-                                                                  <ShieldCheck className="h-3.5 w-3.5 mr-1.5" />
-                                                                  Accept
-                                                              </Button> */}
                                 <Button
                                   onClick={() =>
                                     handleDenyRideBooking(booking.id)
@@ -547,6 +584,18 @@ const CreatedRideHistory = () => {
                 )
               : false
           }
+        />
+      )}
+
+      {isStartRideModalOpen && rideToStart && (
+        <StartRideModal
+          isOpen={isStartRideModalOpen}
+          onClose={() => {
+            setIsStartRideModalOpen(false);
+            setRideToStart(null);
+          }}
+          onConfirm={handleConfirmStartRide}
+          bookings={rideToStart.bookings}
         />
       )}
     </>
