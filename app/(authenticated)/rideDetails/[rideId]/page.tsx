@@ -219,7 +219,6 @@ const RideDetailsPage = () => {
                   {ride.status}
                 </Badge>
               </div>
-              <div>Carbon Cost: {ride.carbonCost.toFixed(2)} CP</div>
               <div>Max Passengers: {ride.maxPassengers}</div>
             </div>
           </div>
@@ -228,9 +227,9 @@ const RideDetailsPage = () => {
           <div>
             <h3 className="text-sm font-medium text-gray-300">Driver</h3>
             <div className="mt-2 text-gray-200">
-              <p>Name: {ride.driver.name || "N/A"}</p>
-              <p>Email: {ride.driver.email}</p>
-              <p>Phone: {ride.driver.phone || "N/A"}</p>
+              <p>Name: {ride?.driver?.name || "N/A"}</p>
+              <p>Email: {ride?.driver?.email}</p>
+              <p>Phone: {ride?.driver?.phone || "N/A"}</p>
             </div>
           </div>
 

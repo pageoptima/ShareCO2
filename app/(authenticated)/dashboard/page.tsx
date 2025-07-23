@@ -34,12 +34,10 @@ export default function DashboardPage() {
   }, [data, isLoading, isError, router]);
 
   // Extract user display name
-  const fullName =
-    session?.user?.name || session?.user?.email?.split("@")[0] || "Guest";
-
-  const displayName = fullName
-    .split(" ")[0]
-    .replace(/^\w/, (c) => c.toUpperCase());
+  const displayName =
+    session?.user?.name?.split(" ")[0] ||
+    session?.user?.email?.split("@")[0] ||
+    "Guest";
 
   // Set tab from query param
   useEffect(() => {
