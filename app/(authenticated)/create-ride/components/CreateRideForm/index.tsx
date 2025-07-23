@@ -163,22 +163,38 @@ export default function CreateRideForm({
       form.setValue("vehicleId", "");
     }
 
-    const maxedPassengers = form.getValues("maxPassengers");
-
     // Set default passenger count based on vehicle type
     const vehicleType = selectedVehicle?.type;
     setVehicleType(vehicleType);
 
+    // Set default passenger count based on vehicle type
     if (vehicleType === "Wheeler2") {
       form.setValue("maxPassengers", "1");
-    } else if (vehicleType === "Wheeler4" && !maxedPassengers) {
-      form.setValue("maxPassengers", "1");
+    } else if (vehicleType === "Wheeler4") {
+      form.setValue("maxPassengers", "3");
     }
   };
 
   // Submit handler
   const submitRide = async (data: CreateRideFormValues) => {
     if (isCreating) return;
+
+    // Additional validation for office requirement
+    const startingLocationName = locations.find(
+      (location) => location.id === data.startingLocationId
+    )?.name;
+    const destinationLocationName = locations.find(
+      (location) => location.id === data.destinationLocationId
+    )?.name;
+
+    if (
+      startingLocationName?.toLowerCase() !== "office" &&
+      destinationLocationName?.toLowerCase() !== "office"
+    ) {
+      toast.error("Either starting point or destination must be Office");
+      return;
+    }
+
     mutateRide(data);
   };
 

@@ -34,8 +34,10 @@ export default function DashboardPage() {
   }, [data, isLoading, isError, router]);
 
   // Extract user display name
-  const userEmail = session?.user?.email || "Guest";
-  const displayName = userEmail.split("@")[0];
+  const displayName =
+    session?.user?.name?.split(" ")[0] ||
+    session?.user?.email?.split("@")[0] ||
+    "Guest";
 
   // Set tab from query param
   useEffect(() => {
@@ -81,7 +83,7 @@ export default function DashboardPage() {
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="created">
-                <CreatedRideHistory/>
+                <CreatedRideHistory />
               </TabsContent>
               <TabsContent value="booked">
                 <RideBookedHistory />

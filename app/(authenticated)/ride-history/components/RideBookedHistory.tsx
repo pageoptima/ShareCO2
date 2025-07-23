@@ -7,7 +7,7 @@ import {
   CheckCircle,
   Clock,
   MapPin,
-  MessageCircle,
+  // MessageCircle,
 } from "lucide-react";
 import React, { useState } from "react";
 import {
@@ -201,9 +201,9 @@ const RideBookedHistory = () => {
     setBookingToCancel(null);
   };
 
-  const handleOpenChat = (bookingId: string) => {
-    console.log(bookingId);
-  };
+  // const handleOpenChat = (bookingId: string) => {
+  //   console.log(bookingId);
+  // };
 
   if (isRideBookingsFetching || isRideBookingsRefetching) {
     return (
@@ -296,7 +296,7 @@ const RideBookedHistory = () => {
                       </Button>
                     )}
 
-                    {(rideBooking.status === "Confirmed" ||
+                    {/* {(rideBooking.status === "Confirmed" ||
                       rideBooking.status === "Active") && (
                       <Button
                         onClick={() => handleOpenChat(rideBooking.id)}
@@ -305,7 +305,7 @@ const RideBookedHistory = () => {
                         <MessageCircle className="h-3 w-3 mr-1" />
                         Chat
                       </Button>
-                    )}
+                    )} */}
                   </div>
                 </div>
               </div>

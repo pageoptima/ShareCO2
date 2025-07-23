@@ -39,9 +39,13 @@ export async function updateUserProfile({
       throw new Error("You must be logged in to update your profile");
     }
 
+    const capitalizedName = name
+      ? name.charAt(0).toUpperCase() + name.slice(1)
+      : name;
+
     const success = await updateProfile({
       id: session.user.id,
-      name,
+      name: capitalizedName,
       gender,
       age,
       phone,

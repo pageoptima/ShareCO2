@@ -38,7 +38,7 @@ export async function insertMessage(
 }
 
 /**
- * Fetch messages for a ride, including sender info, ordered oldest→newest.
+ * Fetch messages for a ride, including sender info and role (rider or driver), ordered oldest→newest.
  */
 export async function getMessagesByRide(
     {
@@ -51,18 +51,68 @@ export async function getMessagesByRide(
 ) {
     await validateCredentials({ rideId, userId });
 
+    // Fetch the ride to get the driverId
+    const ride = await prisma.ride.findUnique({
+        where: { id: rideId },
+        select: { driverId: true },
+    });
+
+    if (!ride) {
+        throw new Error("Ride not found");
+    }
+
+    // Fetch messages with user info
     const messages = await prisma.chatMessage.findMany({
         where: { rideId },
         include: {
             user: {
-                select: { id: true, name: true, email: true }
-            }
+                select: { id: true, name: true, email: true },
+            },
         },
         orderBy: { createdAt: 'asc' },
     });
 
-    return messages;
+    // Map messages to include isDriver field
+    const messagesWithRole = messages.map(message => ({
+        ...message,
+        user: {
+            ...message.user,
+            isDriver: message.user.id === ride.driverId, // true if user is driver, false if rider
+        },
+    }));
+
+    return messagesWithRole;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Validate the credential for accessing the chat

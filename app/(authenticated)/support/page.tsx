@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Mail, Phone, HelpCircle, Send } from "lucide-react";
@@ -12,15 +11,11 @@ import { toast } from "sonner";
 export default function SupportPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
     message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -35,7 +30,7 @@ export default function SupportPage() {
       toast.success("Support request submitted!", {
         description: "We'll get back to you within 24 hours.",
       });
-      setFormData({ name: "", email: "", message: "" });
+      setFormData({ message: "" });
     } catch (error) {
       toast.error("Error", {
         description: "Failed to submit your request. Please try again.",
@@ -57,7 +52,7 @@ export default function SupportPage() {
           </div>
           <Button
             variant="ghost"
-            className="text-white hover:bg-white/10"
+            className="text-white hover:bg-white/10 cursor-pointer"
             onClick={() => router.push("/")}
           >
             Back to Home
@@ -73,36 +68,7 @@ export default function SupportPage() {
           </p>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="name" className="text-white">
-                Name
-              </Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                placeholder="Your name"
-                className="bg-[#1A3C34] border-emerald-600 text-white placeholder-gray-500"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="email" className="text-white">
-                Email
-              </Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                placeholder="Your email"
-                className="bg-[#1A3C34] border-emerald-600 text-white placeholder-gray-500"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="message" className="text-white">
+              <Label htmlFor="message" className="text-white mb-2">
                 Message
               </Label>
               <Textarea
@@ -112,14 +78,14 @@ export default function SupportPage() {
                 onChange={handleInputChange}
                 placeholder="How can we help you?"
                 className="bg-[#1A3C34] border-emerald-600 text-white placeholder-gray-500"
-                rows={5}
+                rows={8}
                 required
               />
             </div>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
             >
               <Send className="mr-2 h-5 w-5" />
               {isSubmitting ? "Submitting..." : "Send Message"}
@@ -176,7 +142,7 @@ export default function SupportPage() {
             </div>
             <div className="flex items-center gap-2">
               <Phone className="h-5 w-5 text-emerald-600" />
-              <span>+1 (800) 123-4567</span>
+              <span>1800-123-4567</span>
             </div>
           </div>
         </div>

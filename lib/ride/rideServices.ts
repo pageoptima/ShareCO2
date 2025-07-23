@@ -63,7 +63,7 @@ export async function createRide({
     // Check if user profile is complete
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { isProfileCompleted: true }, // Only fetch isProfileCompleted
+      select: { isProfileCompleted: true },
     });
 
     if (!user || !user.isProfileCompleted) {
