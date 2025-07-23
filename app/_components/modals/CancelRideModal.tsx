@@ -56,16 +56,16 @@ export const CancelRideModal: React.FC<CancelRideModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] bg-[#1A3C34] text-white border-none">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-white">
             {phase === "final"
               ? "Final Confirmation"
               : phase === "reason"
               ? "Reason for Cancellation"
               : "Cancel Ride"}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-gray-400">
             {phase === "final" ? (
               "Are you sure you want to cancel this ride? You won't be able to undo this action."
             ) : phase === "reason" ? (
@@ -78,19 +78,28 @@ export const CancelRideModal: React.FC<CancelRideModalProps> = ({
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="vehicle" id="vehicle" />
-                    <Label htmlFor="vehicle" className="cursor-pointer">
+                    <Label
+                      htmlFor="vehicle"
+                      className="cursor-pointer text-white"
+                    >
                       Issue with the vehicle
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="personal" id="personal" />
-                    <Label htmlFor="personal" className="cursor-pointer">
+                    <Label
+                      htmlFor="personal"
+                      className="cursor-pointer text-white"
+                    >
                       Personal problem
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="others" id="others" />
-                    <Label htmlFor="others" className="cursor-pointer">
+                    <Label
+                      htmlFor="others"
+                      className="cursor-pointer text-white"
+                    >
                       Others
                     </Label>
                   </div>
@@ -110,7 +119,7 @@ export const CancelRideModal: React.FC<CancelRideModalProps> = ({
             variant="outline"
             onClick={handleClose}
             disabled={isPending}
-            className="cursor-pointer"
+            className="cursor-pointer bg-gray-800 text-emerald-400 border-emerald-600 hover:bg-gray-700"
           >
             Cancel
           </Button>
