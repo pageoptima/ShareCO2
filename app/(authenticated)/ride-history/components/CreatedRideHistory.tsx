@@ -9,7 +9,7 @@ import {
   CheckCircle,
   Clock,
   MapPin,
-  MessageCircle,
+  // MessageCircle,
   ShieldCheck,
   ShieldX,
   UserCircle,
@@ -311,12 +311,12 @@ const CreatedRideHistory = () => {
     refetchCreatedRides();
   };
 
-  /**
-   * Handle Chat open
-   */
-  const handleOpenChat = async (rideId: string) => {
-    console.log(rideId);
-  };
+  // /**
+  //  * Handle Chat open
+  //  */
+  // const handleOpenChat = async (rideId: string) => {
+  //   console.log(rideId);
+  // };
 
   if (
     isCreatedRidesFetching ||
@@ -418,7 +418,7 @@ const CreatedRideHistory = () => {
                       </Button>
                     )}
 
-                    {(ride.status === "Pending" ||
+                    {/* {(ride.status === "Pending" ||
                       ride.status === "Active") && (
                       <Button
                         onClick={() => handleOpenChat(ride.id)}
@@ -427,7 +427,7 @@ const CreatedRideHistory = () => {
                         <MessageCircle className="h-3 w-3 mr-1" />
                         Chat
                       </Button>
-                    )}
+                    )} */}
                   </div>
 
                   {ride.bookings && ride.bookings.length > 0 && (
