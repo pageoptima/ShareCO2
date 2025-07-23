@@ -163,16 +163,15 @@ export default function CreateRideForm({
       form.setValue("vehicleId", "");
     }
 
-    const maxedPassengers = form.getValues("maxPassengers");
-
     // Set default passenger count based on vehicle type
     const vehicleType = selectedVehicle?.type;
     setVehicleType(vehicleType);
 
+    // Set default passenger count based on vehicle type
     if (vehicleType === "Wheeler2") {
       form.setValue("maxPassengers", "1");
-    } else if (vehicleType === "Wheeler4" && !maxedPassengers) {
-      form.setValue("maxPassengers", "1");
+    } else if (vehicleType === "Wheeler4") {
+      form.setValue("maxPassengers", "3");
     }
   };
 
