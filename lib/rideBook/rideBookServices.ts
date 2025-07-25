@@ -186,6 +186,50 @@ export async function activateRideBooking({
   return true;
 }
 
+
+/**
+ * Activate (Start) the ride booking by champion (driver)
+ */
+export async function activateRideBookingByChampionService({
+  userId,
+  bookingId,
+}: {
+  userId: string;
+  bookingId: string;
+}) {
+  // Find the booking and verify the user is the ride driver
+  const booking = await prisma.rideBooking.findUnique({
+    where: { id: bookingId },
+    include: { ride: true },
+  });
+
+  if (!booking) {
+    throw new Error("Booking not found");
+  }
+
+  if (booking.ride.driverId !== userId) {
+    throw new Error("Not authorized to manage this booking");
+  }
+
+  if (booking.status !== RideBookingStatus.Confirmed) {
+    throw new Error("RideBooking is not in Confirmed state for activation");
+  }
+
+  // Check if the ride's start time has passed
+  const startTime = booking.ride.startingTime;
+  const currentTime = new Date();
+  if (currentTime < startTime) {
+    throw new Error("Cannot activate booking before the ride start time");
+  }
+
+  await prisma.rideBooking.update({
+    where: { id: bookingId },
+    data: { status: RideBookingStatus.Active },
+  });
+
+  return true;
+}
+
 /**
  * Complete a ride booking
  */

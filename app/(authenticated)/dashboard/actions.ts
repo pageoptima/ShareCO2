@@ -12,6 +12,7 @@ import {
   activateRideBooking as activateRideBookingDb,
   cancleRideBookingByUser,
   getUserRideBookings as getUserRideBookingsDb,
+  activateRideBookingByChampionService,
 } from "@/lib/rideBook/rideBookServices";
 import { cancelRide as cancelRideDb } from "@/lib/ride/rideServices";
 import { completeRide as completeRideDb } from "@/lib/ride/rideServices";
@@ -124,10 +125,7 @@ export async function cancelRide(rideId: string) {
 /**
  * Start a ride
  */
-/**
- * Start a ride
- */
-export async function startRide(rideId: string, confirmedRiderIds: string[] = [], rejectedRiderIds: string[] = []) {
+export async function startRide(rideId: string) {
   try {
     const session = await auth();
 
@@ -138,8 +136,6 @@ export async function startRide(rideId: string, confirmedRiderIds: string[] = []
     const success = await activateRide({
       userId: session.user.id,
       rideId: rideId,
-      confirmedRiderIds,
-      rejectedRiderIds,
     });
 
     return {
@@ -183,7 +179,7 @@ export async function completeRide(rideId: string) {
 }
 
 /**
- * Cancell a ridebooking by champion
+ * Cancel a ridebooking by champion
  */
 export async function denyRideBooking(bookingId: string) {
   try {
@@ -222,6 +218,34 @@ export async function activateRideBooking(bookingId: string) {
     }
 
     const success = await activateRideBookingDb({
+      userId: session.user.id,
+      bookingId: bookingId,
+    });
+
+    return {
+      success: success,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
+  }
+}
+
+/**
+ * Activate a ride booking by champion (driver)
+ */
+export async function activateRideBookingByChampion(bookingId: string) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    const success = await activateRideBookingByChampionService({
       userId: session.user.id,
       bookingId: bookingId,
     });
@@ -287,6 +311,10 @@ export async function getCarbonPoint(): Promise<number> {
   return wallet.spendableBalance + wallet.reservedBalance;
 }
 
+/**
+ * Get user Profile completion Status
+ * @returns
+ */
 export async function getUserProfileStatus() {
   const session = await auth();
 
