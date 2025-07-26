@@ -5,11 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CarbonPointsCard } from "./components/CarbonPointsCard";
-import RideBookedHistory from "./components/RideBookedHistory";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getUserProfileStatus } from "./actions";
 import CreatedRideHistory from "./components/CreatedRideHistory";
+import RideBookedHistory from "./components/RideBookedHistory";
 
 export default function DashboardPage() {
   const { data: session } = useSession();

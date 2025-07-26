@@ -1,4 +1,3 @@
-// championsider/CreatedRideHistory.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -24,17 +23,13 @@ import {
   denyRideBooking,
   getUserRides,
   startRide,
+  activateRideBookingByChampion,
 } from "../actions";
-import {
-  PublicRideBookingStatus,
-  PublicRideStatus,
-  PublicUserRides,
-} from "../types";
+import { PublicRideBookingStatus, PublicRideStatus } from "../types";
 import { toast } from "sonner";
 import { utcIsoToLocalDate, utcIsoToLocalTime12 } from "@/utils/time";
 import { RideChatModal } from "@/app/_components/modals/RideChatModal/RideChatModal";
 import { CancelRideModal } from "@/app/_components/modals/CancelRideModal";
-import { StartRideModal } from "@/app/_components/modals/StartRideModal";
 
 /**
  * Get the color of the ride status
@@ -98,16 +93,20 @@ const isThresholdTimePassed = (startTime: string): boolean => {
   return diffInMinutes <= rideThresholdMinutes;
 };
 
+/**
+ * Check if the ride start time has passed
+ */
+const isStartTimePassed = (startTime: string): boolean => {
+  const startDate = new Date(startTime);
+  const currentDate = new Date();
+  return currentDate >= startDate;
+};
+
 const CreatedRideHistory = () => {
   const [selectedRideId, setSelectedRideId] = useState<string | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [rideToCancel, setRideToCancel] = useState<string | null>(null);
-  const [isStartRideModalOpen, setIsStartRideModalOpen] = useState(false);
-  const [rideToStart, setRideToStart] = useState<{
-    id: string;
-    bookings: PublicUserRides["bookings"];
-  } | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -150,15 +149,7 @@ const CreatedRideHistory = () => {
   // Hook for start ride
   const { mutateAsync: mutateStartRide, isPending: isStartRidePending } =
     useMutation({
-      mutationFn: ({
-        rideId,
-        confirmedRiderIds,
-        rejectedRiderIds,
-      }: {
-        rideId: string;
-        confirmedRiderIds?: string[];
-        rejectedRiderIds?: string[];
-      }) => startRide(rideId, confirmedRiderIds, rejectedRiderIds),
+      mutationFn: (rideId: string) => startRide(rideId),
       onSuccess: async (result) => {
         if (result.success) {
           toast.success("Ride started successfully");
@@ -206,6 +197,24 @@ const CreatedRideHistory = () => {
     },
   });
 
+  // Hook for confirm reach by champion
+  const { mutateAsync: mutateConfirmReach, isPending: isConfirmReachPending } =
+    useMutation({
+      mutationFn: (bookingId: string) =>
+        activateRideBookingByChampion(bookingId),
+      onSuccess: async (result) => {
+        if (result.success) {
+          toast.success("Rider reach confirmed successfully by Champion");
+          refetchCreatedRides();
+        } else {
+          toast.error(result.error);
+        }
+      },
+      onError: (error) => {
+        console.error(error.message);
+      },
+    });
+
   if (isCreatedRidesFetchingError) {
     console.error(createdRidesFetchingError);
   }
@@ -213,6 +222,14 @@ const CreatedRideHistory = () => {
   if (isCreatedRidesRefetching) {
     console.error(isCreatedRidesRefetchingError);
   }
+
+  /**
+   * Handle confirm reach by champion
+   */
+  const handleConfirmReach = async (bookingId: string) => {
+    if (isConfirmReachPending) return;
+    await mutateConfirmReach(bookingId);
+  };
 
   /**
    * Handle cancel ride
@@ -227,7 +244,6 @@ const CreatedRideHistory = () => {
    */
   const confirmCancelRide = async () => {
     if (!rideToCancel) return;
-
     await mutateCancellRide(rideToCancel);
     refetchCreatedRides();
     setIsCancelModalOpen(false);
@@ -239,46 +255,8 @@ const CreatedRideHistory = () => {
    */
   const handleStartRide = async (rideId: string) => {
     if (isStartRidePending) return;
-
-    const ride = createdRides.find((r) => r.id === rideId);
-    if (!ride) return;
-
-    const currentTime = new Date();
-    const rideStartTime = new Date(ride.startingTime);
-    const isAfterStartTime = currentTime >= rideStartTime;
-
-    const nonActiveBookings = ride.bookings.filter(
-      (booking) => booking.status === "Confirmed"
-    );
-
-    if (isAfterStartTime && nonActiveBookings.length > 0) {
-      // Show modal for non-confirmed riders
-      setRideToStart({ id: rideId, bookings: nonActiveBookings });
-      setIsStartRideModalOpen(true);
-    } else {
-      // No non-confirmed riders or before start time, attempt to start ride
-      await mutateStartRide({ rideId });
-      refetchCreatedRides();
-    }
-  };
-
-  /**
-   * Handle confirm start ride from modal
-   */
-  const handleConfirmStartRide = async (
-    confirmedRiderIds: string[],
-    rejectedRiderIds: string[]
-  ) => {
-    if (!rideToStart) return;
-
-    await mutateStartRide({
-      rideId: rideToStart.id,
-      confirmedRiderIds,
-      rejectedRiderIds,
-    });
+    await mutateStartRide(rideId);
     refetchCreatedRides();
-    setIsStartRideModalOpen(false);
-    setRideToStart(null);
   };
 
   /**
@@ -286,7 +264,6 @@ const CreatedRideHistory = () => {
    */
   const handleCompleteRide = async (rideId: string) => {
     if (isCompleteRidePending) return;
-
     await mutateCompleteRide(rideId);
     refetchCreatedRides();
   };
@@ -296,7 +273,6 @@ const CreatedRideHistory = () => {
    */
   const handleDenyRideBooking = async (bookingId: string) => {
     if (isDenyRideBookingPending) return;
-
     await mutateDenyRideBooking(bookingId);
     refetchCreatedRides();
   };
@@ -450,13 +426,11 @@ const CreatedRideHistory = () => {
                       <Button
                         onClick={() => handleStartRide(ride.id)}
                         className="px-3 py-1 h-8 text-xs bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/40 border border-emerald-500/30 cursor-pointer"
-                        disabled={isStartRidePending}
                       >
                         <CheckCircle className="h-3 w-3 mr-1" />
                         Start Ride
                       </Button>
                     )}
-
                     {ride.status === "Active" && (
                       <Button
                         onClick={() => handleCompleteRide(ride.id)}
@@ -466,7 +440,6 @@ const CreatedRideHistory = () => {
                         Complete Ride
                       </Button>
                     )}
-
                     {(ride.status === "Pending" ||
                       ride.status === "Active") && (
                       <Button
@@ -477,7 +450,6 @@ const CreatedRideHistory = () => {
                         Cancel Ride
                       </Button>
                     )}
-
                     {(ride.status === "Pending" ||
                       ride.status === "Active" ||
                       ride.status === "Completed") && (
@@ -504,7 +476,6 @@ const CreatedRideHistory = () => {
                               <Avatar className="h-8 w-8 bg-gradient-to-br from-emerald-700 to-emerald-900 text-white border border-emerald-600/30 flex justify-center items-center">
                                 <UserCircle className="h-5 w-5" />
                               </Avatar>
-
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium truncate">
                                   {booking.user.name || booking.user.email}
@@ -520,19 +491,32 @@ const CreatedRideHistory = () => {
                                 </Badge>
                               </div>
                             </div>
-
                             {booking.status === "Confirmed" && (
                               <div className="flex flex-wrap gap-2 mt-3">
                                 <Button
                                   onClick={() =>
                                     handleDenyRideBooking(booking.id)
                                   }
-                                  className="bg-red-500/20 hover:bg-red-500/40 text-xs border border-red-500/30 text-red-300 flex-1 sm:flex-initial"
+                                  className="bg-red-500/20 hover:bg-red-500/40 text-xs border border-red-500/30 text-red-300 flex-1 sm:flex-initial cursor-pointer"
                                   size="sm"
                                 >
                                   <ShieldX className="h-3.5 w-3.5 mr-1.5" />
                                   Reject
                                 </Button>
+                                {isStartTimePassed(
+                                  ride.startingTime.toISOString()
+                                ) && (
+                                  <Button
+                                    onClick={() =>
+                                      handleConfirmReach(booking.id)
+                                    }
+                                    className="bg-emerald-500/20 hover:bg-emerald-500/40 text-xs border border-emerald-500/30 text-emerald-300 flex-1 sm:flex-initial cursor-pointer"
+                                    size="sm"
+                                  >
+                                    <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
+                                    Confirm Reach
+                                  </Button>
+                                )}
                               </div>
                             )}
                           </div>
@@ -584,18 +568,6 @@ const CreatedRideHistory = () => {
                 )
               : false
           }
-        />
-      )}
-
-      {isStartRideModalOpen && rideToStart && (
-        <StartRideModal
-          isOpen={isStartRideModalOpen}
-          onClose={() => {
-            setIsStartRideModalOpen(false);
-            setRideToStart(null);
-          }}
-          onConfirm={handleConfirmStartRide}
-          bookings={rideToStart.bookings}
         />
       )}
     </>

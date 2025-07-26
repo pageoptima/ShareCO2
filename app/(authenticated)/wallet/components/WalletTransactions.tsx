@@ -174,10 +174,11 @@ const WalletTransactions = () => {
                           {getPurposeLabel(txn.purpose)}
                         </p>
                       </div>
-                      <p className="text-xs text-gray-400 mt-1 truncate">
+                      <p className="text-xs text-gray-400 mt-1 truncate hidden sm:block">
                         {txn.description ||
                           `No description for ${getPurposeLabel(txn.purpose)}`}
                       </p>
+
                       <div className="flex gap-2 mt-1 text-xs text-gray-300">
                         <div className="flex items-center">
                           <Clock className="h-3 w-3 mr-1 opacity-70" />

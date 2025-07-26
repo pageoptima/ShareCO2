@@ -43,7 +43,7 @@ export interface PublicUserRides {
 export interface PublicUserRideBookings {
   id: string;
   status: PublicRideBookingStatus;
-  userId: string; 
+  userId: string;
   ride: {
     id: string;
     status: PublicRideStatus;
@@ -63,8 +63,8 @@ export interface PublicUserRideBookings {
     };
     vehicle?: {
       id: string;
-      vehicleNumber: string; 
-      model: string; 
+      vehicleNumber: string;
+      model: string;
     };
     bookings: {
       id: string;
