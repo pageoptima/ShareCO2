@@ -1,3 +1,4 @@
+
 import logger from "@/config/logger";
 import { prisma } from "@/config/prisma";
 import { RideBookingStatus, RideStatus, VehicleType } from "@prisma/client";
@@ -10,10 +11,8 @@ import {
   unholdRideCost,
 } from "@/lib/wallet/walletServices";
 import { hasPassedNMinutes, isMoreThanNMinutesLeft } from "@/utils/time";
+import { sendPushToChannel } from "../ably/actions/sendPushNotification";
 
-/**
- * Book a ride for a user
- */
 export async function bookRide({
   userId,
   rideId,
@@ -25,7 +24,7 @@ export async function bookRide({
     // Check if user profile is complete
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { isProfileCompleted: true }, // Only fetch isProfileCompleted
+      select: { isProfileCompleted: true },
     });
 
     if (!user || !user.isProfileCompleted) {
@@ -49,7 +48,7 @@ export async function bookRide({
       throw new Error("Ride is not available for booking");
     }
 
-    // Check confirmed bookings for seat availability (first-come-first-serve)
+    // Check confirmed bookings for seat availability
     const confirmedBookings = ride.bookings.filter(
       (booking) => booking.status === RideBookingStatus.Confirmed
     ).length;
@@ -66,7 +65,7 @@ export async function bookRide({
       throw new Error("You have already booked this ride");
     }
 
-    // Check if the user has an active ride - can only book a new ride if previous rides are completed
+    // Check if user has any active ride
     const activeBookings = await prisma.rideBooking.findMany({
       where: {
         userId,
@@ -85,9 +84,9 @@ export async function bookRide({
       );
     }
 
-    // Create a new booking in a transaction (no carbon points deduction at booking time)
+    // Create booking inside transaction
     await prisma.$transaction(async (tx) => {
-      // Double-check seat availability within transaction to prevent race conditions
+      // Recheck ride availability inside transaction
       const currentRide = await tx.ride.findUnique({
         where: { id: rideId },
         include: {
@@ -102,23 +101,19 @@ export async function bookRide({
         },
       });
 
-      // Check ride existence
       if (!currentRide) {
         throw new Error("Ride not found");
       }
 
-      // Check for passenger capacity
       if (currentRide.bookings.length >= currentRide.maxPassengers) {
         throw new Error("Ride has reached maximum passenger capacity");
       }
 
-      // Calculate riding cost amount
       const amount =
         currentRide.vehicle?.type === VehicleType.Wheeler2
           ? Number(process.env.NEXT_PUBLIC_CARBON_COST_TWO_WHEELER)
           : Number(process.env.NEXT_PUBLIC_CARBON_COST_FOUR_WHEELER);
 
-      // Check user has sufficient balance before creating ride
       if (!(await hasSufficientSpendableBalance({ tx, userId, amount }))) {
         throw new Error("Wallet has not sufficient spendable balance");
       }
@@ -133,7 +128,7 @@ export async function bookRide({
         },
       });
 
-      // Hold the ride cost
+      // Hold cost
       await holdRideCost({
         tx,
         userId,
@@ -141,6 +136,22 @@ export async function bookRide({
         rideBookId: rideBook.id,
         amount,
       });
+
+      // Notify driver via Ably channel
+      if (currentRide.driverId) {
+        await sendPushToChannel("driver", currentRide.driverId, {
+          title: "New Ride Booking",
+          body: "A rider just booked your ride.",
+          url: "/dashboard?tab=created",
+        }, "booking");
+      }
+
+      // Notify rider to confirm booking
+      await sendPushToChannel("rider", userId, {
+        title: "Ride Booked",
+        body: "Your ride has been successfully booked!",
+        url: "/dashboard?tab=booked",
+      }, "booking");
     });
 
     return true;
@@ -185,7 +196,6 @@ export async function activateRideBooking({
 
   return true;
 }
-
 
 /**
  * Activate (Start) the ride booking by champion (driver)
@@ -527,17 +537,14 @@ export async function cancleRideBookingByUser({
 /**
  * Get all ride bookings of a user from the database
  */
-export async function getUserRideBookings(
-  userId: string,
-  limit: number = 20
-) {
+export async function getUserRideBookings(userId: string, limit: number = 20) {
   try {
     const rideBookings = await prisma.rideBooking.findMany({
       where: { userId: userId },
       select: {
         id: true,
         status: true,
-        userId: true, 
+        userId: true,
         ride: {
           select: {
             id: true,
@@ -559,8 +566,8 @@ export async function getUserRideBookings(
             vehicle: {
               select: {
                 id: true,
-                vehicleNumber: true, 
-                model: true, 
+                vehicleNumber: true,
+                model: true,
               },
             },
             bookings: {
