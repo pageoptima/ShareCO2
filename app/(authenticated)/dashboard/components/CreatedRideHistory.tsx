@@ -440,8 +440,7 @@ const CreatedRideHistory = () => {
                         Complete Ride
                       </Button>
                     )}
-                    {(ride.status === "Pending" ||
-                      ride.status === "Active") && (
+                    {ride.status === "Pending" && (
                       <Button
                         variant="destructive"
                         onClick={() => handleCancelRide(ride.id)}
