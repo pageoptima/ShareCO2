@@ -13,7 +13,12 @@ export async function GET() {
     const userId = session.user.id;
 
     try {
-        const token = await ably.auth.createTokenRequest( { clientId: userId } );
+        const token = await ably.auth.createTokenRequest({
+            clientId: userId,
+            capability: {
+                "*": ["push-subscribe"]
+            }
+        });
         return NextResponse.json(token);
     } catch (error) {
         logger.error('GET /api/messages/token error:', error);

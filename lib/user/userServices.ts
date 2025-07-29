@@ -1,5 +1,6 @@
 import logger from "@/config/logger";
 import { prisma } from "@/config/prisma";
+import ably from "@/services/ably";
 import { User } from "@prisma/client";
 import { z } from "zod";
 
@@ -46,7 +47,7 @@ export async function updateProfile({
       age,
       phone,
     });
-    
+
     // Determine if profile is completed
     const isProfileCompleted = Boolean(name && gender && age && phone);
 
@@ -60,6 +61,21 @@ export async function updateProfile({
         phone: phone,
         isProfileCompleted,
       },
+    });
+
+    const channel = ably.channels.get(`user:${id}`);
+    await channel.publish({
+      name: 'update',
+      data: {},
+      extras: {
+        push: {
+          notification: {
+            title: 'Breaking News',
+            body: 'Notification is working!'
+          },
+          data: { userId: id }
+        }
+      }
     });
 
     return true;

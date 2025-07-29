@@ -8,8 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { BottomNav } from "@/app/_components/layout/BottomNav";
 import { UserMenu } from "@/app/_components/layout/UserMenu";
 import { DisclaimerModal } from "@/app/_components/modals/DisclaimerModal";
-import { useAblyPush } from "@/lib/ably/useAblyPush";
-import { useRegisterServiceWorker } from "@/lib/ably/useRegisterServiceWorker";
+
 
 // Loading placeholder for UX
 function LoadingScreen(): JSX.Element {
@@ -31,11 +30,8 @@ interface AuthenticatedContentProps {
 function AuthenticatedContent({
   children,
 }: AuthenticatedContentProps): JSX.Element {
-  const { data: session, status } = useSession();
 
-  // ⬇️ Activate push once the session is authenticated
-  useRegisterServiceWorker();
-  useAblyPush();
+  const { data: session, status } = useSession();
 
   if (status === "loading") {
     return <LoadingScreen />;
