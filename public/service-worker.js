@@ -60,3 +60,13 @@ self.addEventListener("notificationclick", (event) => {
       })
   );
 });
+
+
+
+self.addEventListener("install", () => {
+  self.skipWaiting(); // activate new SW immediately
+});
+
+self.addEventListener("activate", () => {
+  clients.claim(); // take control of uncontrolled pages
+});
