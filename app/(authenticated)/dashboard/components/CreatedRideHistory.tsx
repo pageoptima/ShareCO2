@@ -219,8 +219,8 @@ const CreatedRideHistory = () => {
     console.error(createdRidesFetchingError);
   }
 
-  if (isCreatedRidesRefetching) {
-    console.error(isCreatedRidesRefetchingError);
+  if (isCreatedRidesRefetchingError) {
+    console.error(createdRidesFetchingError);
   }
 
   /**

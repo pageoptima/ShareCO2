@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
-import { useChannel } from "@ably-labs/react-hooks";
+import { useChannel, ChannelProvider } from "ably/react";
 import { utcIsoToLocalDate, utcIsoToLocalTime12 } from "@/utils/time";
 
 // Interface for message
@@ -300,11 +300,13 @@ export function RideChatModal({
   isActive: boolean;
 }) {
   return (
-    <RideChatModal_
-      isOpen={isOpen}
-      onClose={onClose}
-      rideId={rideId}
-      isActive={isActive}
-    />
+    <ChannelProvider channelName={`ride:${rideId}`}>
+      <RideChatModal_
+        isOpen={isOpen}
+        onClose={onClose}
+        rideId={rideId}
+        isActive={isActive}
+      />
+    </ChannelProvider>
   );
 }

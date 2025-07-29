@@ -11,7 +11,6 @@ import {
   unholdRideCost,
 } from "@/lib/wallet/walletServices";
 import { hasPassedNMinutes, isMoreThanNMinutesLeft } from "@/utils/time";
-import { sendPushToChannel } from "../ably/actions/sendPushNotification";
 
 export async function bookRide({
   userId,
@@ -136,22 +135,6 @@ export async function bookRide({
         rideBookId: rideBook.id,
         amount,
       });
-
-      // Notify driver via Ably channel
-      if (currentRide.driverId) {
-        await sendPushToChannel("driver", currentRide.driverId, {
-          title: "New Ride Booking",
-          body: "A rider just booked your ride.",
-          url: "/dashboard?tab=created",
-        }, "booking");
-      }
-
-      // Notify rider to confirm booking
-      await sendPushToChannel("rider", userId, {
-        title: "Ride Booked",
-        body: "Your ride has been successfully booked!",
-        url: "/dashboard?tab=booked",
-      }, "booking");
     });
 
     return true;
