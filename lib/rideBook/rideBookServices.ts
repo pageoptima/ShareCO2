@@ -1,4 +1,3 @@
-
 import logger from "@/config/logger";
 import { prisma } from "@/config/prisma";
 import { RideBookingStatus, RideStatus, VehicleType } from "@prisma/client";
@@ -11,6 +10,7 @@ import {
   unholdRideCost,
 } from "@/lib/wallet/walletServices";
 import { hasPassedNMinutes, isMoreThanNMinutesLeft } from "@/utils/time";
+import { sendPushNotification } from "@/services/ably";
 
 export async function bookRide({
   userId,
@@ -23,7 +23,7 @@ export async function bookRide({
     // Check if user profile is complete
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { isProfileCompleted: true },
+      select: { isProfileCompleted: true, name: true },
     });
 
     if (!user || !user.isProfileCompleted) {
@@ -100,6 +100,8 @@ export async function bookRide({
         },
       });
 
+      // console.log("currentride", currentRide);
+
       if (!currentRide) {
         throw new Error("Ride not found");
       }
@@ -134,6 +136,15 @@ export async function bookRide({
         rideId: rideBook.rideId,
         rideBookId: rideBook.id,
         amount,
+      });
+
+      // Send notification to the driver after successful booking
+      await sendPushNotification({
+        userId: currentRide.driverId, // Use driverId from currentRide
+        title: "Ride Booked Successfully!",
+        body: `${user.name || "A passenger"} has booked your ride. Get ready for the journey!`,
+        eventName: "booking_confirmation",
+        redirectUrl: "/dashboard?tab=created",
       });
     });
 
