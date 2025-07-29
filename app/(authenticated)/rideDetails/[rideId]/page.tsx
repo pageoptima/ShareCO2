@@ -10,7 +10,7 @@ import { getRideDetails } from "../actions";
 import { utcIsoToLocalDate, utcIsoToLocalTime12 } from "@/utils/time";
 import { toast } from "sonner";
 import { PublicRideBookingStatus, PublicRideStatus } from "../types";
-import { ScrollArea } from "@radix-ui/react-scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area"; // Use the same ScrollArea as WalletTransactions
 
 // Shimmer Component for Loading State (unchanged)
 const Loading = () => (
@@ -234,7 +234,7 @@ const RideDetailsPage = () => {
           {/* Bookings */}
           <div>
             <h3 className="text-md font-medium text-gray-300">Passengers</h3>
-            <ScrollArea className="h-[150px] mt-2 mb-20">
+            <ScrollArea className="h-[250px] w-full mt-2 mb-20">
               {ride.bookings.length > 0 ? (
                 <div className="space-y-2 pr-4">
                   {ride.bookings.map((booking) => (
