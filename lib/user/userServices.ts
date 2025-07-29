@@ -63,19 +63,20 @@ export async function updateProfile({
       },
     });
 
+    
     const channel = ably.channels.get(`user:${id}`);
     await channel.publish({
-      name: 'update',
+      name: "update",
       data: {},
       extras: {
         push: {
           notification: {
-            title: 'Breaking News',
-            body: 'Notification is working!'
+            title: "Breaking News",
+            body: "Notification is working!",
           },
-          data: { userId: id }
-        }
-      }
+          data: { userId: id },
+        },
+      },
     });
 
     return true;
