@@ -1,22 +1,19 @@
 "use client";
 
-import * as Ably from "ably";
 import { AblyProvider } from "ably/react";
-import Push from "ably/push";
 import { ReactNode } from "react";
 import { AblyPushRegistrar } from "./AblyPushRegistrar";
+import { getAblyClient } from "@/services/ablyClient";
 
 export function AblyClientProvider({ children }: { children: ReactNode }) {
+  
   // Only build the client in the browser
   if (typeof window === "undefined") {
     return <>{children}</>;
   }
 
-  const ablyClient = new Ably.Realtime({
-    authUrl: `${location.origin}/api/message/token`,
-    pushServiceWorkerUrl: "/service-worker.js?v=3",
-    plugins: { Push },
-  });
+  // Get the ably client
+  const ablyClient = getAblyClient();
 
   return (
     <AblyProvider client={ablyClient}>

@@ -3,6 +3,7 @@ import * as Ably from "ably";
 
 // Initialize Ably REST client with your API key
 const ably = new Ably.Rest(process.env.ABLY_SERVER_API_KEY as string);
+export default ably;
 
 // Function to send push notification
 export async function sendPushNotification({
@@ -50,5 +51,3 @@ export async function sendPushNotification({
     throw error;
   }
 }
-
-export default ably;
