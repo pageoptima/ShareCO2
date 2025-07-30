@@ -12,6 +12,7 @@ import {
 } from "../wallet/walletServices";
 import { isMoreThanNMinutesLeft } from "@/utils/time";
 import { addDays, endOfDay } from "date-fns";
+import { sendPushNotification } from "@/services/ably";
 
 // Validate the inputs
 const createRideSchema = z.object({
@@ -166,6 +167,7 @@ export async function cancelRide({
               in: [RideBookingStatus.Confirmed, RideBookingStatus.Active],
             },
           },
+          include: { user: true },
         },
       },
     });
@@ -228,6 +230,21 @@ export async function cancelRide({
         data: { status: RideStatus.Cancelled },
       });
     });
+
+    // Send notifications to all riders concurrently
+    await Promise.all(
+      rideBookings.map((rideBooking) =>
+        sendPushNotification({
+          userId: rideBooking.userId,
+          title: "😔 Ride Cancelled",
+          body: `Oops, ${
+            rideBooking.user.name || "Rider"
+          }, the driver cancelled your ride. No worries—book another one and let’s roll! 🌈`,
+          eventName: "ride_cancelled",
+          redirectUrl: "/dashboard?tab=booked",
+        })
+      )
+    );
 
     return true;
   } catch (error) {
@@ -292,6 +309,21 @@ export async function activateRide({
       data: { status: RideStatus.Active },
     });
 
+    // Send notifications to all riders concurrently
+    await Promise.all(
+      rideBookings.map((rideBooking) =>
+        sendPushNotification({
+          userId: rideBooking.userId,
+          title: "🚗 Your Ride Is On the Way!",
+          body: `Buckle up, ${
+            rideBooking.user.name || "Rider"
+          }! Your journey has begun. Enjoy the ride! 🎉`,
+          eventName: "ride_started",
+          redirectUrl: "/dashboard?tab=booked",
+        })
+      )
+    );
+
     return true;
   } catch (error) {
     logger.error(`Error activating ride: ${error}`);
@@ -355,6 +387,21 @@ export async function completeRide({
     where: { id: rideId },
     data: { status: RideStatus.Completed },
   });
+
+  // Send notifications to all riders concurrently
+  await Promise.all(
+    rideBookings.map((rideBooking) =>
+      sendPushNotification({
+        userId: rideBooking.userId,
+        title: "🚀 Ride Complete!",
+        body: `Woohoo, ${
+          rideBooking.user.name || "Rider"
+        }! You've reached your destination. Thanks for choosing us! 🌟`,
+        eventName: "ride_completed",
+        redirectUrl: "/dashboard?tab=booked",
+      })
+    )
+  );
 
   return true;
 }

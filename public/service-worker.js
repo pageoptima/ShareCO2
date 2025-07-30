@@ -19,6 +19,21 @@ self.addEventListener("push", (event) => {
     case "booking_confirmation":
       sound = "/audios/bookingSound.mp3";
       break;
+    case "ride_activated":
+      sound = "";
+      break;
+    case "ride_started":
+      sound = "";
+      break;
+    case "ride_completed":
+      sound = "";
+      break;
+    case "ride_cancelled":
+      sound = "";
+      break;
+    case "booking_cancelled":
+      sound = "";
+      break;
   }
 
   // Show the notification
@@ -60,8 +75,6 @@ self.addEventListener("notificationclick", (event) => {
       })
   );
 });
-
-
 
 self.addEventListener("install", () => {
   self.skipWaiting(); // activate new SW immediately

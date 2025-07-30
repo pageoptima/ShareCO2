@@ -142,7 +142,9 @@ export async function bookRide({
       await sendPushNotification({
         userId: currentRide.driverId, // Use driverId from currentRide
         title: "Ride Booked Successfully!",
-        body: `${user.name || "A passenger"} has booked your ride. Get ready for the journey!`,
+        body: `${
+          user.name || "A passenger"
+        } has booked your ride. Get ready for the journey!`,
         eventName: "booking_confirmation",
         redirectUrl: "/dashboard?tab=created",
       });
@@ -168,7 +170,7 @@ export async function activateRideBooking({
   // Find the booking and verify the driver is the ride owner
   const booking = await prisma.rideBooking.findUnique({
     where: { id: bookingId },
-    include: { ride: true },
+    include: { ride: true, user: true },
   });
 
   if (!booking) {
@@ -186,6 +188,17 @@ export async function activateRideBooking({
   await prisma.rideBooking.update({
     where: { id: bookingId },
     data: { status: RideBookingStatus.Active },
+  });
+
+  // Send notification to the driver (champion)
+  await sendPushNotification({
+    userId: booking.ride.driverId,
+    title: "🌟 Rider Arrived!",
+    body: `${
+      booking.user.name || "Rider"
+    } is at the starting point! Time to kick off the journey! 🚀`,
+    eventName: "ride_activated",
+    redirectUrl: "/dashboard?tab=created",
   });
 
   return true;
@@ -480,7 +493,7 @@ export async function cancleRideBookingByUser({
   // Find the booking and verify the driver is the ride owner
   const booking = await prisma.rideBooking.findUnique({
     where: { id: bookingId, userId: userId },
-    include: { ride: true },
+    include: { ride: true, user: true },
   });
 
   if (!booking) {
@@ -523,6 +536,17 @@ export async function cancleRideBookingByUser({
       where: { id: bookingId },
       data: { status: RideBookingStatus.CancelledUser },
     });
+  });
+
+  // Send notification to the driver (champion)
+  await sendPushNotification({
+    userId: booking.ride.driverId,
+    title: "🚗 Booking Cancelled",
+    body: `${
+      booking.user.name || "A rider"
+    } has cancelled their booking. Check your ride details! 🌟`,
+    eventName: "booking_cancelled",
+    redirectUrl: "/dashboard?tab=created",
   });
 
   return true;
