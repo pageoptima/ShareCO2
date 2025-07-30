@@ -15,9 +15,6 @@ export async function GET() {
     try {
         const token = await ably.auth.createTokenRequest({
             clientId: userId,
-            capability: {
-                "*": ["push-subscribe"]
-            }
         });
         return NextResponse.json(token);
     } catch (error) {
