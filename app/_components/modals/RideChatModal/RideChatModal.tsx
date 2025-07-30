@@ -16,9 +16,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-
 import { useChannel, ChannelProvider } from "ably/react";
 import { utcIsoToLocalDate, utcIsoToLocalTime12 } from "@/utils/time";
+import ParticipantContainer from "./ParticipantContainer";
 
 // Interface for message
 interface Message {
@@ -137,6 +137,9 @@ function RideChatModal_({
             </DialogDescription>
           </DialogHeader>
         </div>
+
+        {/* Participants - Conditionally Rendered */}
+        {showParticipants && <ParticipantContainer rideId={rideId} />}
 
         {/* Main content - Scrollable */}
         <div className="flex-1 overflow-y-auto px-4 pb-4">

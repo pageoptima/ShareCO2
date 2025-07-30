@@ -407,7 +407,7 @@ export async function completeRide({
 }
 
 /**
- * Get all ride of a user
+ * Get all rides of a user
  */
 export async function getUserRides(userId: string, limit: number = 20) {
   try {
@@ -426,7 +426,16 @@ export async function getUserRides(userId: string, limit: number = 20) {
           select: { id: true, type: true, model: true },
         },
         bookings: {
-          include: { user: true },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+              },
+            },
+          },
         },
       },
       orderBy: {
@@ -484,6 +493,7 @@ export async function getRideById(rideId: string) {
     throw error;
   }
 }
+
 /**
  * Get avialable ride for a user
  */

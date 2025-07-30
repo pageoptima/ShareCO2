@@ -595,6 +595,8 @@ export async function getUserRideBookings(userId: string, limit: number = 20) {
                   select: {
                     id: true,
                     name: true,
+                    email: true,
+                    phone: true,
                   },
                 },
               },
