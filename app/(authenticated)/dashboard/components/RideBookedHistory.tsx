@@ -11,6 +11,7 @@ import {
   MessageCircle,
   Users,
   Car,
+  Phone,
 } from "lucide-react";
 import React, { useState } from "react";
 import {
@@ -164,47 +165,47 @@ const RideBookedHistory = () => {
     setExpandedRideId(expandedRideId === rideId ? null : rideId);
   };
 
- if (isRideBookingsFetching || isRideBookingsRefetching) {
-   return (
-     <ScrollArea className="h-[400px] w-full px-3 pb-3 sm:h-[500px] sm:px-4 sm:pb-4">
-       <div className="space-y-2 sm:space-y-3">
-         {[...Array(3)].map((_, index) => (
-           <div
-             key={index}
-             className="p-3 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 sm:p-4 sm:rounded-xl"
-           >
-             <div className="flex flex-col gap-2 sm:gap-3">
-               <div className="space-y-1 sm:space-y-2">
-                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
-                   <div className="flex items-center">
-                     <MapPin className="h-3 w-3 text-gray-400 mr-1 sm:h-4 sm:w-4" />
-                     <div className="h-3 w-20 bg-gray-600/50 rounded animate-pulse sm:h-4 sm:w-24" />
-                   </div>
-                   <span className="hidden sm:inline mx-1">→</span>
-                   <div className="flex items-center">
-                     <MapPin className="h-3 w-3 text-gray-400 mr-1 sm:h-4 sm:w-4" />
-                     <div className="h-3 w-20 bg-gray-600/50 rounded animate-pulse sm:h-4 sm:w-24" />
-                   </div>
-                 </div>
-                 <div className="flex flex-wrap gap-2 sm:gap-3">
-                   <div className="h-5 w-16 bg-gray-600/50 rounded-3xl animate-pulse sm:h-6 sm:w-20" />
-                   <div className="h-5 w-16 bg-gray-600/50 rounded-3xl animate-pulse sm:h-6 sm:w-20" />
-                   <div className="h-5 w-20 bg-gray-600/50 rounded-3xl animate-pulse sm:h-6 sm:w-24" />
-                   <div className="h-5 w-20 bg-gray-600/50 rounded-3xl animate-pulse sm:h-6 sm:w-24" />
-                 </div>
-               </div>
-               <div className="flex items-center gap-1 sm:gap-2">
-                 <div className="h-6 w-20 bg-gray-600/50 rounded animate-pulse sm:h-8 sm:w-24" />
-                 <div className="h-6 w-20 bg-gray-600/50 rounded animate-pulse sm:h-8 sm:w-24" />
-                 <div className="h-6 w-12 bg-gray-600/50 rounded animate-pulse sm:h-8 sm:w-16" />
-               </div>
-             </div>
-           </div>
-         ))}
-       </div>
-     </ScrollArea>
-   );
- }
+  if (isRideBookingsFetching || isRideBookingsRefetching) {
+    return (
+      <ScrollArea className="h-[400px] w-full px-3 pb-3 sm:h-[500px] sm:px-4 sm:pb-4">
+        <div className="space-y-2 sm:space-y-3">
+          {[...Array(3)].map((_, index) => (
+            <div
+              key={index}
+              className="p-3 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 sm:p-4 sm:rounded-xl"
+            >
+              <div className="flex flex-col gap-2 sm:gap-3">
+                <div className="space-y-1 sm:space-y-2">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+                    <div className="flex items-center">
+                      <MapPin className="h-3 w-3 text-gray-400 mr-1 sm:h-4 sm:w-4" />
+                      <div className="h-3 w-20 bg-gray-600/50 rounded animate-pulse sm:h-4 sm:w-24" />
+                    </div>
+                    <span className="hidden sm:inline mx-1">→</span>
+                    <div className="flex items-center">
+                      <MapPin className="h-3 w-3 text-gray-400 mr-1 sm:h-4 sm:w-4" />
+                      <div className="h-3 w-20 bg-gray-600/50 rounded animate-pulse sm:h-4 sm:w-24" />
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 sm:gap-3">
+                    <div className="h-5 w-16 bg-gray-600/50 rounded-3xl animate-pulse sm:h-6 sm:w-20" />
+                    <div className="h-5 w-16 bg-gray-600/50 rounded-3xl animate-pulse sm:h-6 sm:w-20" />
+                    <div className="h-5 w-20 bg-gray-600/50 rounded-3xl animate-pulse sm:h-6 sm:w-24" />
+                    <div className="h-5 w-20 bg-gray-600/50 rounded-3xl animate-pulse sm:h-6 sm:w-24" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <div className="h-6 w-20 bg-gray-600/50 rounded animate-pulse sm:h-8 sm:w-24" />
+                  <div className="h-6 w-20 bg-gray-600/50 rounded animate-pulse sm:h-8 sm:w-24" />
+                  <div className="h-6 w-12 bg-gray-600/50 rounded animate-pulse sm:h-8 sm:w-16" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
+    );
+  }
 
   return (
     <>
@@ -302,12 +303,32 @@ const RideBookedHistory = () => {
                             Co-Passengers
                           </h4>
                           {rideBooking.ride.bookings.length > 0 ? (
-                            <ul className="list-disc list-inside">
+                            <ul className="list-disc list-inside space-y-1">
                               {rideBooking.ride.bookings
                                 .filter((b) => b.user.id !== rideBooking.userId)
                                 .map((b) => (
-                                  <li key={b.id}>
-                                    {b.user.name || "Unnamed User"}
+                                  <li
+                                    key={b.id}
+                                    className="flex flex-col sm:flex-row sm:items-center gap-3"
+                                  >
+                                    <span className="text-sm truncate ">
+                                      {b.user.name ||
+                                        b.user.email ||
+                                        "Unnamed User"}
+                                    </span>
+                                    {b.user.phone && (
+                                      <a
+                                        href={`tel:${b.user.phone}`}
+                                        className="flex items-center text-xs sm:text-sm text-gray-300 hover:text-gray-100 py-1 px-2 -mx-2 rounded-md hover:bg-white/10 transition-colors"
+                                        title={`Call ${b.user.phone}`}
+                                        aria-label={`Call ${b.user.phone}`}
+                                      >
+                                        <Phone className="h-3 w-3 mr-1 opacity-70" />
+                                        <span className="truncate">
+                                          {b.user.phone}
+                                        </span>
+                                      </a>
+                                    )}
                                   </li>
                                 ))}
                             </ul>

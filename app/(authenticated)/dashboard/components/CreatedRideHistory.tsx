@@ -480,7 +480,7 @@ const CreatedRideHistory = () => {
                                 <p className="text-sm font-medium truncate">
                                   {booking.user.name || booking.user.email}
                                 </p>
-                                <div className="flex items-center gap-2 mt-1.5">
+                                <div className="flex flex-wrap items-center gap-2 mt-1.5">
                                   <Badge
                                     className={`text-xs px-2 py-0.5 border ${getBookingStatusColor(
                                       booking.status
@@ -508,7 +508,7 @@ const CreatedRideHistory = () => {
                                   onClick={() =>
                                     handleDenyRideBooking(booking.id)
                                   }
-                                  className="bg-red-500/20 hover:bg-red-500/40 text-xs border border-red-500/30 text-red-300 flex-1 sm:flex-initial cursor-pointer"
+                                  className="bg-red-500/20 hover:bg-red-500/40 text-xs border border-red-500/30 text-red-300 sm:flex-initial cursor-pointer"
                                   size="sm"
                                 >
                                   <ShieldX className="h-3.5 w-3.5 mr-1.5" />
@@ -521,7 +521,7 @@ const CreatedRideHistory = () => {
                                     onClick={() =>
                                       handleConfirmReach(booking.id)
                                     }
-                                    className="bg-emerald-500/20 hover:bg-emerald-500/40 text-xs border border-emerald-500/30 text-emerald-300 flex-1 sm:flex-initial cursor-pointer"
+                                    className="bg-emerald-500/20 hover:bg-emerald-500/40 text-xs border border-emerald-500/30 text-emerald-300 sm:flex-initial cursor-pointer"
                                     size="sm"
                                   >
                                     <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
