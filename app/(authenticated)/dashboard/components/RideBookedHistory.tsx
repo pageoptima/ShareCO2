@@ -164,47 +164,47 @@ const RideBookedHistory = () => {
     setExpandedRideId(expandedRideId === rideId ? null : rideId);
   };
 
-  if (isRideBookingsFetching || isRideBookingsRefetching) {
-    return (
-      <ScrollArea className="h-[500px] w-full px-4 pb-4">
-        <div className="space-y-3">
-          {[...Array(3)].map((_, index) => (
-            <div
-              key={index}
-              className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10"
-            >
-              <div className="flex flex-col gap-3">
-                <div className="space-y-2">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                    <div className="flex items-center">
-                      <MapPin className="h-4 w-4 text-gray-400 mr-1" />
-                      <div className="h-4 w-24 bg-gray-600/50 rounded animate-pulse" />
-                    </div>
-                    <span className="hidden sm:inline mx-1">→</span>
-                    <div className="flex items-center">
-                      <MapPin className="h-4 w-4 text-gray-400 mr-1" />
-                      <div className="h-4 w-24 bg-gray-600/50 rounded animate-pulse" />
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-3">
-                    <div className="h-6 w-20 bg-gray-600/50 rounded-3xl animate-pulse" />
-                    <div className="h-6 w-20 bg-gray-600/50 rounded-3xl animate-pulse" />
-                    <div className="h-6 w-24 bg-gray-600/50 rounded-3xl animate-pulse" />
-                    <div className="h-6 w-24 bg-gray-600/50 rounded-3xl animate-pulse" />
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-24 bg-gray-600/50 rounded animate-pulse" />
-                  <div className="h-8 w-24 bg-gray-600/50 rounded animate-pulse" />
-                  <div className="h-8 w-16 bg-gray-600/50 rounded animate-pulse" />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </ScrollArea>
-    );
-  }
+ if (isRideBookingsFetching || isRideBookingsRefetching) {
+   return (
+     <ScrollArea className="h-[400px] w-full px-3 pb-3 sm:h-[500px] sm:px-4 sm:pb-4">
+       <div className="space-y-2 sm:space-y-3">
+         {[...Array(3)].map((_, index) => (
+           <div
+             key={index}
+             className="p-3 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 sm:p-4 sm:rounded-xl"
+           >
+             <div className="flex flex-col gap-2 sm:gap-3">
+               <div className="space-y-1 sm:space-y-2">
+                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+                   <div className="flex items-center">
+                     <MapPin className="h-3 w-3 text-gray-400 mr-1 sm:h-4 sm:w-4" />
+                     <div className="h-3 w-20 bg-gray-600/50 rounded animate-pulse sm:h-4 sm:w-24" />
+                   </div>
+                   <span className="hidden sm:inline mx-1">→</span>
+                   <div className="flex items-center">
+                     <MapPin className="h-3 w-3 text-gray-400 mr-1 sm:h-4 sm:w-4" />
+                     <div className="h-3 w-20 bg-gray-600/50 rounded animate-pulse sm:h-4 sm:w-24" />
+                   </div>
+                 </div>
+                 <div className="flex flex-wrap gap-2 sm:gap-3">
+                   <div className="h-5 w-16 bg-gray-600/50 rounded-3xl animate-pulse sm:h-6 sm:w-20" />
+                   <div className="h-5 w-16 bg-gray-600/50 rounded-3xl animate-pulse sm:h-6 sm:w-20" />
+                   <div className="h-5 w-20 bg-gray-600/50 rounded-3xl animate-pulse sm:h-6 sm:w-24" />
+                   <div className="h-5 w-20 bg-gray-600/50 rounded-3xl animate-pulse sm:h-6 sm:w-24" />
+                 </div>
+               </div>
+               <div className="flex items-center gap-1 sm:gap-2">
+                 <div className="h-6 w-20 bg-gray-600/50 rounded animate-pulse sm:h-8 sm:w-24" />
+                 <div className="h-6 w-20 bg-gray-600/50 rounded animate-pulse sm:h-8 sm:w-24" />
+                 <div className="h-6 w-12 bg-gray-600/50 rounded animate-pulse sm:h-8 sm:w-16" />
+               </div>
+             </div>
+           </div>
+         ))}
+       </div>
+     </ScrollArea>
+   );
+ }
 
   return (
     <>

@@ -55,7 +55,6 @@ function RideChatModal_({
   rideId: string;
   isActive: boolean;
 }) {
-  // get the user id.
   const session = useSession();
   const userId = session.data?.user?.id;
 
@@ -79,13 +78,11 @@ function RideChatModal_({
   }
 
   useEffect(() => {
-    // Scroll to bottom when messages change
     if (bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messageHistory]);
 
-  // Mutation funciton for send message
   const { mutateAsync: mutateSendMessage, isPending: isMessageSending } =
     useMutation({
       mutationFn: async ({
@@ -108,11 +105,8 @@ function RideChatModal_({
       },
     });
 
-  // Handle sending a message
   const handleSendMessage = async () => {
-    if (isMessageSending) {
-      return;
-    }
+    if (isMessageSending) return;
     await mutateSendMessage({ rideId, content: message });
     setMessage("");
   };
@@ -123,12 +117,12 @@ function RideChatModal_({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-full min-h-screen h-screen max-h-screen p-0 m-0 overflow-hidden max-w-full border-none bg-[#1A3C34] text-white flex flex-col">
+      <DialogContent className="w-full h-[100dvh] max-h-[100dvh] p-0 m-0 overflow-hidden max-w-full border-none bg-[#1A3C34] text-white flex flex-col">
         {/* Header - Fixed */}
-        <div className="p-4 border-b border-white/10">
+        <div className="p-4 border-b border-white/10 shrink-0">
           <DialogHeader className="space-y-1">
             <DialogTitle className="text-center text-white">
-              Ride Chat:
+              Ride Chat
             </DialogTitle>
             <DialogDescription className="text-center text-gray-400">
               <Button
@@ -145,18 +139,14 @@ function RideChatModal_({
         </div>
 
         {/* Main content - Scrollable */}
-        <div
-          className="flex-1 overflow-y-auto"
-          style={{ height: "calc(100vh - 152px)" }}
-        >
+        <div className="flex-1 overflow-y-auto px-4 pb-4">
           {messageHistoryFetching ? (
             <div className="flex items-center justify-center h-full">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
             </div>
           ) : (
             <>
-              {/* Messages Section */}
-              <div className="p-4 pb-20 space-y-4">
+              <div className="space-y-4">
                 {messageHistory.length > 0 ? (
                   messageHistory.map((msg) => (
                     <div
@@ -227,8 +217,6 @@ function RideChatModal_({
                     </p>
                   </div>
                 )}
-
-                {/* Dummy element to scroll to */}
                 <div ref={bottomRef} />
               </div>
             </>
@@ -236,18 +224,17 @@ function RideChatModal_({
         </div>
 
         {/* Footer - Fixed */}
-        <div
-          className="p-4 border-t border-white/10 bg-[#1A3C34] w-full"
-          style={{ position: "absolute", bottom: 0, left: 0, right: 0 }}
-        >
+        <div className="p-4 border-t border-white/10 bg-[#1A3C34] shrink-0">
           <div className="flex gap-2">
             <Input
               placeholder="Type your message..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              // onKeyDown={(e) => e.key === 'Enter' && !isMessageSending && handleSendMessage()}
+              onKeyDown={(e) =>
+                e.key === "Enter" && !isMessageSending && handleSendMessage()
+              }
               className="flex-1 bg-gray-700/50 border-gray-600 text-white placeholder:text-gray-400"
-              disabled={!isActive && isMessageSending}
+              disabled={!isActive || isMessageSending}
             />
             <Button
               onClick={() => handleSendMessage()}

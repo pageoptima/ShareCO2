@@ -14,7 +14,7 @@ export function AblyClientProvider({ children }: { children: ReactNode }) {
 
   const ablyClient = new Ably.Realtime({
     authUrl: `${location.origin}/api/message/token`,
-    pushServiceWorkerUrl: "/service-worker.js?v=2",
+    pushServiceWorkerUrl: "/service-worker.js?v=3",
     plugins: { Push },
   });
 

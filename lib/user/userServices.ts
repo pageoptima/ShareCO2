@@ -1,6 +1,5 @@
 import logger from "@/config/logger";
 import { prisma } from "@/config/prisma";
-import ably from "@/services/ably";
 import { User } from "@prisma/client";
 import { z } from "zod";
 
@@ -63,22 +62,6 @@ export async function updateProfile({
       },
     });
 
-    
-    const channel = ably.channels.get(`user:${id}`);
-    await channel.publish({
-      name: "update",
-      data: {},
-      extras: {
-        push: {
-          notification: {
-            title: "Breaking News",
-            body: "Notification is working!",
-          },
-          data: { userId: id },
-        },
-      },
-    });
-
     return true;
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -89,7 +72,6 @@ export async function updateProfile({
     throw error;
   }
 }
-
 
 /**
  * Get a user by id
