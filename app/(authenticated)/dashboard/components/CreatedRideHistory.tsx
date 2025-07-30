@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   ShieldX,
   UserCircle,
+  Phone,
 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -479,15 +480,26 @@ const CreatedRideHistory = () => {
                                 <p className="text-sm font-medium truncate">
                                   {booking.user.name || booking.user.email}
                                 </p>
-                                <Badge
-                                  className={`mt-1.5 text-xs px-2 py-0.5 border ${getBookingStatusColor(
-                                    booking.status
-                                  )} flex w-fit items-center`}
-                                  variant="outline"
-                                >
-                                  {getBookingStatusIcon(booking.status)}
-                                  {booking.status}
-                                </Badge>
+                                <div className="flex items-center gap-2 mt-1.5">
+                                  <Badge
+                                    className={`text-xs px-2 py-0.5 border ${getBookingStatusColor(
+                                      booking.status
+                                    )} flex w-fit items-center`}
+                                    variant="outline"
+                                  >
+                                    {getBookingStatusIcon(booking.status)}
+                                    {booking.status}
+                                  </Badge>
+                                  {booking.user.phone && (
+                                    <a
+                                      href={`tel:${booking.user.phone}`}
+                                      className="flex items-center text-xs text-gray-300 hover:text-gray-100"
+                                    >
+                                      <Phone className="h-3 w-3 mr-1 opacity-70" />
+                                      <span>{booking.user.phone}</span>
+                                    </a>
+                                  )}
+                                </div>
                               </div>
                             </div>
                             {booking.status === "Confirmed" && (
