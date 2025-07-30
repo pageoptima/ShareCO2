@@ -239,7 +239,7 @@ export async function cancelRide({
           title: "😔 Ride Cancelled",
           body: `Oops, ${
             rideBooking.user.name || "Rider"
-          }, the driver cancelled your ride. No worries—book another one and let’s roll! 🌈`,
+          }, the driver cancelled your ride. No worries—book another one and let’s roll! 🚗`,
           eventName: "ride_cancelled",
           redirectUrl: "/dashboard?tab=booked",
         })
