@@ -145,12 +145,11 @@ const RideRequestList = ({
                     {window.requests.map((rideRequest, index) => (
                       <Card
                         key={index}
-                        className={`bg-teal-800/50 text-white border-none shadow-md hover:shadow-lg transition-all hover:scale-[1.01] ${
-                          highlightedRequestId &&
-                          rideRequest.requestIds.includes(highlightedRequestId)
+                        className={`bg-teal-800/50 text-white border-none shadow-md hover:shadow-lg transition-all hover:scale-[1.01] ${highlightedRequestId &&
+                            rideRequest.requestIds.includes(highlightedRequestId)
                             ? "ring-2 ring-green-500 ring-opacity-75 animate-pulse"
                             : ""
-                        }`}
+                          }`}
                       >
                         <CardHeader className="pb-2 border-b border-white/10">
                           <div className="flex flex-col gap-2">
