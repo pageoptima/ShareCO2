@@ -20,9 +20,10 @@ import { utcIsoToLocalTime12 } from "@/utils/time";
 import { useRouter } from "next/navigation";
 
 const AvailableRides = ({
-  onSuccess,
+  onSuccess, onError
 }: {
   onSuccess: (message: string) => void;
+  onError: (message: string) => void;
 }) => {
   const router = useRouter();
   // State to track pending status for each ride
@@ -64,6 +65,7 @@ const AvailableRides = ({
     onError: (error: Error, rideId) => {
       console.error(error.message);
       setPendingRides((prev) => ({ ...prev, [rideId]: false }));
+      onError?.(error.message);
     },
   });
 
@@ -228,11 +230,10 @@ const AvailableRides = ({
                     disabled={!hasSeats || pendingRides[ride.id]}
                     variant="default"
                     size="sm"
-                    className={`w-full justify-center cursor-pointer ${
-                      !hasSeats
-                        ? "bg-red-700/50 hover:bg-red-700/60"
-                        : "bg-[#2E7D32]"
-                    }`}
+                    className={`w-full justify-center cursor-pointer ${!hasSeats
+                      ? "bg-red-700/50 hover:bg-red-700/60"
+                      : "bg-[#2E7D32]"
+                      }`}
                   >
                     {pendingRides[ride.id] ? (
                       <span className="flex items-center">
