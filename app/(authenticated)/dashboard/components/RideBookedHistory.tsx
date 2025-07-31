@@ -309,7 +309,7 @@ const RideBookedHistory = () => {
                                 .map((b) => (
                                   <li
                                     key={b.id}
-                                    className="flex flex-col sm:flex-row sm:items-center gap-3"
+                                    className="flex sm:flex-row sm:items-center gap-3"
                                   >
                                     <span className="text-sm truncate ">
                                       {b.user.name ||

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -17,17 +17,19 @@ import {
 import { bookRide, getAvialableRides } from "./actions";
 import { PublicAvialableRides } from "./types";
 import { utcIsoToLocalTime12 } from "@/utils/time";
-
 import { useRouter } from "next/navigation";
 
 const AvailableRides = ({
-  onSuccess,
+  onSuccess, onError
 }: {
   onSuccess: (message: string) => void;
   onError: (message: string) => void;
 }) => {
   const router = useRouter();
-  // Hook for fetching avilalable rides
+  // State to track pending status for each ride
+  const [pendingRides, setPendingRides] = useState<{ [key: string]: boolean }>({});
+
+  // Hook for fetching available rides
   const {
     data: availableRides = [],
     isLoading: isAvailableRidesFetching,
@@ -45,47 +47,46 @@ const AvailableRides = ({
     console.error(AaailableRidesFetchingError);
   }
 
-  // Hook for book rides
-  // Mutation hook
+  // Hook for booking rides
   const mutation = useMutation({
     mutationFn: (rideId: string) => bookRide(rideId),
-    onSuccess: async (result) => {
+    onSuccess: async (result, rideId) => {
       if (result.success) {
         toast.success("Ride booked and confirmed successfully");
         onSuccess?.("Ride booked and confirmed successfully");
+        setPendingRides((prev) => ({ ...prev, [rideId]: false }));
         router.push("/dashboard?tab=booked");
         refechAvailableRides();
       } else {
         toast.error(result.error);
+        setPendingRides((prev) => ({ ...prev, [rideId]: false }));
       }
     },
-    onError: (error: Error) => {
+    onError: (error: Error, rideId) => {
       console.error(error.message);
+      setPendingRides((prev) => ({ ...prev, [rideId]: false }));
+      onError?.(error.message);
     },
   });
 
   // Calculate carbon points required for a ride based on vehicle type
   const calculateRequiredPoints = (ride: PublicAvialableRides): number => {
-    // Fixed carbon points based on vehicle type
     if (ride.vehicleType === "Wheeler2") {
       return Number(process.env.NEXT_PUBLIC_CARBON_COST_TWO_WHEELER);
     }
-
-    if (ride.vehicleType == "Wheeler4") {
+    if (ride.vehicleType === "Wheeler4") {
       return Number(process.env.NEXT_PUBLIC_CARBON_COST_FOUR_WHEELER);
     }
-
     return 0;
   };
 
   // Handle ride booking
   const handleBookRide = async (rideId: string) => {
+    setPendingRides((prev) => ({ ...prev, [rideId]: true }));
     await mutation.mutateAsync(rideId);
-    refechAvailableRides();
   };
 
   if (isAvailableRidesFetching || isAvailableRidesRefetching) {
-    // Loading screan
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
@@ -196,15 +197,12 @@ const AvailableRides = ({
                       </span>
                     </div>
                     <div className="flex items-center text-sm">
-                      <Phone className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />{" "}
-                      {/* Added */}
+                      <Phone className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
                       <span>
                         <strong> Phone: </strong>
                         {ride.driverPhone || "Not provided"}
-                      </span>{" "}
-                      {/* Added */}
+                      </span>
                     </div>
-
                     <div className="flex items-center text-sm">
                       <Car className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
                       <span>
@@ -229,16 +227,15 @@ const AvailableRides = ({
 
                   <Button
                     onClick={() => handleBookRide(ride.id)}
-                    disabled={!hasSeats || mutation.isPending}
+                    disabled={!hasSeats || pendingRides[ride.id]}
                     variant="default"
                     size="sm"
-                    className={`w-full justify-center cursor-pointer ${
-                      !hasSeats
-                        ? "bg-red-700/50 hover:bg-red-700/60"
-                        : "bg-[#2E7D32]"
-                    }`}
+                    className={`w-full justify-center cursor-pointer ${!hasSeats
+                      ? "bg-red-700/50 hover:bg-red-700/60"
+                      : "bg-[#2E7D32]"
+                      }`}
                   >
-                    {mutation.isPending ? (
+                    {pendingRides[ride.id] ? (
                       <span className="flex items-center">
                         <svg
                           className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
