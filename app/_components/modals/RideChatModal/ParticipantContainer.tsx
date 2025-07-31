@@ -73,7 +73,7 @@ const ParticipantContainer = ({ rideId }: { rideId: string }) => {
                   {participant.name.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-xs">{participant.email.split("@")[0]}</span>
+              <span className="text-xs">{participant.name || participant.email.split("@")[0]}</span>
               {participant.isDriver ? (
                 <Badge className="text-[0.6rem] py-0 h-4 bg-emerald-600 hover:bg-emerald-600">
                   <Car className="h-2 w-2 mr-1" />
