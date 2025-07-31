@@ -1,3 +1,4 @@
+
 self.addEventListener("push", (event) => {
   // If the push message has JSON data, parse it. Otherwise, fall back to an empty object.
   let payload = {};
@@ -53,18 +54,18 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   const notification = event.notification;
   const data = notification.data || {};
-  const redirectUrl = data.redirectUrl || "/"; 
+  const redirectUrl = data.redirectUrl || "/";
 
   event.notification.close();
 
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
       let matchingClient = null;
-      const targetUrl = new URL(redirectUrl, self.location.origin).href; 
+      const targetUrl = new URL(redirectUrl, self.location.origin).href;
 
       for (const client of windowClients) {
-       
-        const pwaStartUrl = new URL('/', self.location.origin).href; 
+
+        const pwaStartUrl = new URL('/', self.location.origin).href;
 
         if (client.url.startsWith(pwaStartUrl) && "focus" in client) {
           matchingClient = client;
