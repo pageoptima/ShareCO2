@@ -294,6 +294,8 @@ const CreatedRideHistory = () => {
     setIsChatOpen(false);
   };
 
+
+
   if (
     isCreatedRidesFetching ||
     isCreatedRidesRefetching ||
@@ -453,14 +455,14 @@ const CreatedRideHistory = () => {
                     {(ride.status === "Pending" ||
                       ride.status === "Active" ||
                       ride.status === "Completed") && (
-                      <Button
-                        onClick={() => handleOpenChat(ride.id)}
-                        className="px-3 py-1 h-8 text-xs bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 border border-blue-500/30 cursor-pointer"
-                      >
-                        <MessageCircle className="h-3 w-3 mr-1" />
-                        Chat
-                      </Button>
-                    )}
+                        <Button
+                          onClick={() => handleOpenChat(ride.id)}
+                          className="px-3 py-1 h-8 text-xs bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 border border-blue-500/30 cursor-pointer"
+                        >
+                          <MessageCircle className="h-3 w-3 mr-1" />
+                          Chat
+                        </Button>
+                      )}
                   </div>
 
                   {ride.bookings && ride.bookings.length > 0 && (
@@ -517,17 +519,17 @@ const CreatedRideHistory = () => {
                                 {isStartTimePassed(
                                   ride.startingTime.toISOString()
                                 ) && (
-                                  <Button
-                                    onClick={() =>
-                                      handleConfirmReach(booking.id)
-                                    }
-                                    className="bg-emerald-500/20 hover:bg-emerald-500/40 text-xs border border-emerald-500/30 text-emerald-300 sm:flex-initial cursor-pointer"
-                                    size="sm"
-                                  >
-                                    <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
-                                    Confirm Reach
-                                  </Button>
-                                )}
+                                    <Button
+                                      onClick={() =>
+                                        handleConfirmReach(booking.id)
+                                      }
+                                      className="bg-emerald-500/20 hover:bg-emerald-500/40 text-xs border border-emerald-500/30 text-emerald-300 sm:flex-initial cursor-pointer"
+                                      size="sm"
+                                    >
+                                      <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
+                                      Confirm Reach
+                                    </Button>
+                                  )}
                               </div>
                             )}
                           </div>
@@ -551,15 +553,18 @@ const CreatedRideHistory = () => {
         </div>
       </ScrollArea>
 
-      {isChatOpen && (
+      {/* Chat Modal */}
+      {isChatOpen && selectedRideId && (
         <RideChatModal
           isOpen={isChatOpen}
           onClose={handleCloseChat}
-          rideId={selectedRideId as string}
-          isActive={true}
+          rideId={selectedRideId}
+          isActive={
+            createdRides.find((ride) => ride.id === selectedRideId)?.status === "Pending" ||
+            createdRides.find((ride) => ride.id === selectedRideId)?.status === "Active"
+          }
         />
       )}
-
       {isCancelModalOpen && (
         <CancelRideModal
           isOpen={isCancelModalOpen}
@@ -573,10 +578,10 @@ const CreatedRideHistory = () => {
           isThresholdPassed={
             rideToCancel
               ? isThresholdTimePassed(
-                  createdRides
-                    .find((ride) => ride.id === rideToCancel)
-                    ?.startingTime?.toISOString() || new Date().toISOString()
-                )
+                createdRides
+                  .find((ride) => ride.id === rideToCancel)
+                  ?.startingTime?.toISOString() || new Date().toISOString()
+              )
               : false
           }
         />

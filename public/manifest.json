@@ -1,6 +1,6 @@
 {
-  "name": "Share CO2",
-  "short_name": "ShareCO2",
+  "name": "Share Co2",
+  "short_name": "ShareCo2",
   "description": "A ride-sharing app to reduce carbon footprints",
   "start_url": "/",
   "display": "standalone",
