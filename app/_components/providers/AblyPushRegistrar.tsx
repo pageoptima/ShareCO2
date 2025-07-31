@@ -1,7 +1,7 @@
 "use client";
 
 import { useAbly } from "ably/react";
-import { useEffect } from "react";
+// import { useEffect } from "react";
 
 export function AblyPushRegistrar() {
 
