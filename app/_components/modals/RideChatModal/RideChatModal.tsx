@@ -154,16 +154,14 @@ function RideChatModal_({
                   messageHistory.map((msg) => (
                     <div
                       key={msg.id}
-                      className={`flex ${
-                        msg.user.id === userId ? "justify-end" : "justify-start"
-                      }`}
+                      className={`flex ${msg.user.id === userId ? "justify-end" : "justify-start"
+                        }`}
                     >
                       <div
-                        className={`flex gap-2 max-w-[80%] ${
-                          msg.user.id === userId
-                            ? "flex-row-reverse"
-                            : "flex-row"
-                        }`}
+                        className={`flex gap-2 max-w-[80%] ${msg.user.id === userId
+                          ? "flex-row-reverse"
+                          : "flex-row"
+                          }`}
                       >
                         <Avatar className="h-8 w-8">
                           <AvatarImage
@@ -180,11 +178,10 @@ function RideChatModal_({
                               {msg.user.name}
                             </span>
                             <Badge
-                              className={`text-[0.6rem] py-0 h-4 ${
-                                msg.user.isDriver
-                                  ? "bg-emerald-600 hover:bg-emerald-600"
-                                  : "bg-blue-600 hover:bg-blue-600"
-                              }`}
+                              className={`text-[0.6rem] py-0 h-4 ${msg.user.isDriver
+                                ? "bg-emerald-600 hover:bg-emerald-600"
+                                : "bg-blue-600 hover:bg-blue-600"
+                                }`}
                             >
                               {msg.user.isDriver ? (
                                 <Car className="h-2 w-2 mr-1" />
@@ -196,11 +193,10 @@ function RideChatModal_({
                           </div>
 
                           <div
-                            className={`p-3 rounded-lg ${
-                              msg.user.id === userId
-                                ? "bg-emerald-700 text-white rounded-tr-none"
-                                : "bg-gray-700 text-white rounded-tl-none"
-                            }`}
+                            className={`p-3 rounded-lg ${msg.user.id === userId
+                              ? "bg-emerald-700 text-white rounded-tr-none"
+                              : "bg-gray-700 text-white rounded-tl-none"
+                              }`}
                           >
                             <p className="text-sm">{msg.content}</p>
                           </div>
@@ -227,14 +223,15 @@ function RideChatModal_({
         </div>
 
         {/* Footer - Fixed */}
+
         <div className="p-4 border-t border-white/10 bg-[#1A3C34] shrink-0">
           <div className="flex gap-2">
             <Input
-              placeholder="Type your message..."
+              placeholder={isActive ? "Type your message..." : "Chat is disabled"}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={(e) =>
-                e.key === "Enter" && !isMessageSending && handleSendMessage()
+                e.key === "Enter" && isActive && !isMessageSending && handleSendMessage()
               }
               className="flex-1 bg-gray-700/50 border-gray-600 text-white placeholder:text-gray-400"
               disabled={!isActive || isMessageSending}
@@ -242,7 +239,7 @@ function RideChatModal_({
             <Button
               onClick={() => handleSendMessage()}
               className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
-              disabled={isMessageSending}
+              disabled={!isActive || isMessageSending}
             >
               {isMessageSending ? (
                 <div className="flex items-center">

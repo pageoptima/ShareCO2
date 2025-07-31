@@ -290,10 +290,9 @@ const RideBookedHistory = () => {
                           <p>
                             Car details:{" "}
                             {rideBooking.ride.vehicle
-                              ? `${rideBooking.ride.vehicle.model || "N/A"} (${
-                                  rideBooking.ride.vehicle.vehicleNumber ||
-                                  "N/A"
-                                })`
+                              ? `${rideBooking.ride.vehicle.model || "N/A"} (${rideBooking.ride.vehicle.vehicleNumber ||
+                              "N/A"
+                              })`
                               : "N/A"}
                           </p>
                         </div>
@@ -360,14 +359,14 @@ const RideBookedHistory = () => {
                     {(rideBooking.status === "Active" ||
                       rideBooking.status === "Completed" ||
                       rideBooking.status === "Confirmed") && (
-                      <Button
-                        onClick={() => handleOpenChat(rideBooking.ride.id)}
-                        className="px-3 py-1 h-8 text-xs bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 border border-blue-500/30 cursor-pointer"
-                      >
-                        <MessageCircle className="h-3 w-3 mr-1" />
-                        Chat
-                      </Button>
-                    )}
+                        <Button
+                          onClick={() => handleOpenChat(rideBooking.ride.id)}
+                          className="px-3 py-1 h-8 text-xs bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 border border-blue-500/30 cursor-pointer"
+                        >
+                          <MessageCircle className="h-3 w-3 mr-1" />
+                          Chat
+                        </Button>
+                      )}
                   </div>
                 </div>
               </div>
@@ -384,12 +383,19 @@ const RideBookedHistory = () => {
           )}
         </div>
       </ScrollArea>
-      {isChatOpen && (
+
+      {/* Chat Modal */}
+      {isChatOpen && selectedRideId && (
         <RideChatModal
           isOpen={isChatOpen}
           onClose={handleCloseChat}
-          rideId={selectedRideId as string}
-          isActive={true}
+          rideId={selectedRideId}
+          isActive={
+            rideBookings.find((booking) => booking.ride.id === selectedRideId)?.status ===
+            "Active" ||
+            rideBookings.find((booking) => booking.ride.id === selectedRideId)?.status ===
+            "Confirmed"
+          }
         />
       )}
 
@@ -406,11 +412,11 @@ const RideBookedHistory = () => {
           isThresholdPassed={
             bookingToCancel
               ? isThresholdTimePassed(
-                  rideBookings
-                    .find((booking) => booking.id === bookingToCancel)
-                    ?.ride.startingTime?.toISOString() ||
-                    new Date().toISOString()
-                )
+                rideBookings
+                  .find((booking) => booking.id === bookingToCancel)
+                  ?.ride.startingTime?.toISOString() ||
+                new Date().toISOString()
+              )
               : false
           }
         />
