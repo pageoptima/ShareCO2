@@ -1,68 +1,108 @@
 "use client";
 
 import { useAbly } from "ably/react";
-// import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export function AblyPushRegistrar() {
 
+    // const getNotificationStatus = () => {
+    //     const notificationStatus = localStorage.getItem("notificationAllowed");
+    //     return notificationStatus === "granted" ? "granted" : "denied";
+    // };
+
+    const setNotificationStatus = (status: string) => {
+        localStorage.setItem("notificationAllowed", status)
+    }
+
+    const shouldShowPopup = () => {
+        const notificationStatus = localStorage.getItem("notificationAllowed");
+        if (notificationStatus === "granted" || notificationStatus === "denied")
+            return false;
+        return true;
+    }
+
     const ably = useAbly();
 
-    // useEffect(() => {
-    //     if ( !ably ) return;
+    const [isOpen, setIsOpen] = useState(shouldShowPopup());
 
-    //     ably.push.activate(
-    //         async (deviceDetails) => {
 
-    //             // Now register this browser on your backend
-    //             await fetch("/api/notification/register", {
-    //                 method: "POST",
-    //                 headers: { "Content-Type": "application/json" },
-    //                 body: JSON.stringify({
-    //                     deviceId    : deviceDetails.id,
-    //                     platform    : deviceDetails.platform,
-    //                     formFactor  : deviceDetails.formFactor,
-    //                     pushRecipent: deviceDetails.push.recipient,
-    //                 }),
-    //             });
-                
-    //         },
-    //         (error) => {
-    //             console.error( `Push activation failed:`, error );
-    //         }
-    //     );
-    // }, [ ably ]);
+    // Startup check: if already granted, just activate
+    useEffect(() => {
+        if (Notification.permission === "granted") {
+            handleAllow();
+        }
+    }, []);
 
-    // return null;
+    const handleAllow = async () => {
+        // Close the popup
+        setIsOpen(false);
 
-    const handleAllow = () => {
+        if (!ably) return;
 
-        if ( !ably ) return;
+        // Ask browser for notification permission explicitly
+        const permission = await Notification.requestPermission();
+
+        if (permission !== "granted") {
+            setNotificationStatus("denied");
+            toast.info("Notification permission not granted");
+            return;
+        }
 
         ably.push.activate(
             async (deviceDetails) => {
+                // Register this browser on your backend
 
-                // Now register this browser on your backend
                 await fetch("/api/notification/register", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        deviceId    : deviceDetails.id,
-                        platform    : deviceDetails.platform,
-                        formFactor  : deviceDetails.formFactor,
-                        pushRecipent: deviceDetails.push.recipient,
+                        deviceId: deviceDetails.id,
+                        platform: deviceDetails.platform,
+                        formFactor: deviceDetails.formFactor,
+                        pushRecipient: deviceDetails.push.recipient,
                     }),
                 });
-                
+
+                setNotificationStatus("granted");
+
             },
             (error) => {
-                console.error( `Push activation failed:`, error );
+                console.error(`Push activation failed:`, error);
+                toast.error("Something went wrong while allowing notification!")
             }
         );
-    }
+    };
+
+    const handleDeny = () => {
+        // Close the popup
+        setIsOpen(false);
+        setNotificationStatus("denied");
+    };
 
     return (
-        <h1 onClick={handleAllow}>
-            Allow Notification
-        </h1>
+        <>
+            {isOpen && (
+                <div className="fixed bottom-4 right-4 w-[90%] max-w-sm bg-white border border-gray-200 rounded-2xl shadow-xl p-4 z-50 animate-slide-up md:right-6 md:bottom-6">
+                    <p className="text-gray-800 text-base font-medium mb-4">
+                        Enable notifications to stay updated!
+                    </p>
+                    <div className="flex justify-end gap-3">
+                        <button
+                            onClick={handleDeny}
+                            className="px-4 py-2 text-sm rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition cursor-pointer"
+                        >
+                            Not now
+                        </button>
+                        <button
+                            onClick={handleAllow}
+                            className="px-4 py-2 text-sm rounded-full bg-blue-600 text-white hover:bg-blue-700 transition cursor-pointer"
+                        >
+                            Allow
+                        </button>
+                    </div>
+                </div>
+            )}
+        </>
     );
 }

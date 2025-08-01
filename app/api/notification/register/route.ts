@@ -16,10 +16,10 @@ export async function POST(req: Request) {
         deviceId,
         platform,
         formFactor,
-        pushRecipent
+        pushRecipient
     } = await req.json();
 
-    if ( !deviceId || !platform || !formFactor || !pushRecipent) {
+    if ( !deviceId || !platform || !formFactor || !pushRecipient) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
         platform  : platform,
         formFactor: formFactor,
         push      : {
-            recipient: pushRecipent
+            recipient: pushRecipient
         },
     });
 
