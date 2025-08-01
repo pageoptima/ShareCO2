@@ -6,10 +6,16 @@ import { toast } from "sonner";
 
 export function AblyPushRegistrar() {
 
-    // const getNotificationStatus = () => {
-    //     const notificationStatus = localStorage.getItem("notificationAllowed");
-    //     return notificationStatus === "granted" ? "granted" : "denied";
-    // };
+    const getNotificationStatus = () => {
+        const notificationStatus = localStorage.getItem("notificationAllowed");
+
+        switch ( notificationStatus ) {
+            case 'granted': return 'granted';
+            case 'notnow' : return 'notnow';
+            case 'denied' : return 'denied';
+            default : return 'denied';
+        }
+    };
 
     const setNotificationStatus = (status: string) => {
         localStorage.setItem("notificationAllowed", status)
@@ -17,8 +23,20 @@ export function AblyPushRegistrar() {
 
     const shouldShowPopup = () => {
         const notificationStatus = localStorage.getItem("notificationAllowed");
-        if (notificationStatus === "granted" || notificationStatus === "denied")
+
+        if ( notificationStatus === "notnow" ) {
             return false;
+        }
+        if ( Notification.permission === "default" ) {
+            return true;
+        }
+        if ( notificationStatus === "denied" ) {
+            return false;
+        }
+        if (notificationStatus === "granted") {
+            return false;
+        }
+
         return true;
     }
 
@@ -29,7 +47,18 @@ export function AblyPushRegistrar() {
 
     // Startup check: if already granted, just activate
     useEffect(() => {
-        if (Notification.permission === "granted") {
+
+        // Update notification status to denied for manual denied from browsers
+        if ( Notification.permission === "denied" ) {
+            setNotificationStatus( "denied" );
+        }
+
+        // Update notification status to granted for manual update from browser
+        if (
+            Notification.permission === "granted" &&
+            getNotificationStatus() !== "granted"
+        ) {
+            console.log("this is now calling the handle allow");
             handleAllow();
         }
     }, []);
@@ -42,12 +71,15 @@ export function AblyPushRegistrar() {
 
         // Ask browser for notification permission explicitly
         const permission = await Notification.requestPermission();
-
+    
         if (permission !== "granted") {
             setNotificationStatus("denied");
             toast.info("Notification permission not granted");
             return;
         }
+
+        // Refresh the previous activation information
+        try { await ably.push.deactivate() } catch {}
 
         ably.push.activate(
             async (deviceDetails) => {
@@ -74,10 +106,9 @@ export function AblyPushRegistrar() {
         );
     };
 
-    const handleDeny = () => {
-        // Close the popup
+    const handleNotNow = () => {
         setIsOpen(false);
-        setNotificationStatus("denied");
+        setNotificationStatus("notnow");
     };
 
     return (
@@ -89,7 +120,7 @@ export function AblyPushRegistrar() {
                     </p>
                     <div className="flex justify-end gap-3">
                         <button
-                            onClick={handleDeny}
+                            onClick={handleNotNow}
                             className="px-4 py-2 text-sm rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition cursor-pointer"
                         >
                             Not now
