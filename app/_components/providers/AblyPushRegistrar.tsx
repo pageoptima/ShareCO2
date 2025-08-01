@@ -78,9 +78,6 @@ export function AblyPushRegistrar() {
             return;
         }
 
-        // Refresh the previous activation information
-        try { await ably.push.deactivate() } catch {}
-
         ably.push.activate(
             async (deviceDetails) => {
                 // Register this browser on your backend
