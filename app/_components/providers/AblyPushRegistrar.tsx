@@ -9,11 +9,11 @@ export function AblyPushRegistrar() {
     const getNotificationStatus = () => {
         const notificationStatus = localStorage.getItem("notificationAllowed");
 
-        switch ( notificationStatus ) {
+        switch (notificationStatus) {
             case 'granted': return 'granted';
-            case 'notnow' : return 'notnow';
-            case 'denied' : return 'denied';
-            default : return 'denied';
+            case 'notnow': return 'notnow';
+            case 'denied': return 'denied';
+            default: return 'denied';
         }
     };
 
@@ -24,13 +24,13 @@ export function AblyPushRegistrar() {
     const shouldShowPopup = () => {
         const notificationStatus = localStorage.getItem("notificationAllowed");
 
-        if ( notificationStatus === "notnow" ) {
+        if (notificationStatus === "notnow") {
             return false;
         }
-        if ( Notification.permission === "default" ) {
+        if (Notification.permission === "default") {
             return true;
         }
-        if ( notificationStatus === "denied" ) {
+        if (notificationStatus === "denied") {
             return false;
         }
         if (notificationStatus === "granted") {
@@ -45,25 +45,26 @@ export function AblyPushRegistrar() {
     const [isOpen, setIsOpen] = useState(shouldShowPopup());
 
 
-    // Startup check: if already granted, just activate
-    useEffect(() => {
+    // const unregister = async () => {
 
-        // Update notification status to denied for manual denied from browsers
-        if ( Notification.permission === "denied" ) {
-            setNotificationStatus( "denied" );
-        }
+    //     const device = ably.device();
 
-        // Update notification status to granted for manual update from browser
-        if (
-            Notification.permission === "granted" &&
-            getNotificationStatus() !== "granted"
-        ) {
-            console.log("this is now calling the handle allow");
-            handleAllow();
-        }
-    }, []);
+    //     if (!device || !device.id) { return }
+
+    //     await fetch("/api/notification/unregister", {
+    //         method: "POST",
+    //         headers: { "Content-Type": "application/json" },
+    //         body: JSON.stringify({ deviceId: device.id }),
+    //     });
+
+    //     // Remove every Ably key (including device codes & activation)
+    //     Object.keys(localStorage)
+    //         .filter(k => k.startsWith("ably"))
+    //         .forEach(k => localStorage.removeItem(k));
+    // }
 
     const handleAllow = async () => {
+
         // Close the popup
         setIsOpen(false);
 
@@ -71,17 +72,21 @@ export function AblyPushRegistrar() {
 
         // Ask browser for notification permission explicitly
         const permission = await Notification.requestPermission();
-    
+
         if (permission !== "granted") {
             setNotificationStatus("denied");
             toast.info("Notification permission not granted");
             return;
         }
 
+        // Unregister the device before activation
+        // await unregister();
+        localStorage.removeItem( 'ably.push.deviceId' );
+
         ably.push.activate(
             async (deviceDetails) => {
-                // Register this browser on your backend
 
+                // Register this browser on your backend
                 await fetch("/api/notification/register", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -107,6 +112,44 @@ export function AblyPushRegistrar() {
         setIsOpen(false);
         setNotificationStatus("notnow");
     };
+
+    // Startup check: if already granted, just activate
+    useEffect(() => {
+
+        // Update notification status to denied for manual denied from browsers
+        if (Notification.permission === "denied") {
+            setNotificationStatus("denied");
+        }
+
+        // Update notification status to granted for manual update from browser
+        if (
+            Notification.permission === "granted" &&
+            getNotificationStatus() !== "granted"
+        ) {
+            console.log("this is now calling the handle allow");
+            handleAllow();
+        }
+    }, [ably, handleAllow]);
+
+    ////////////////////////////////////////////////////////////////////
+    useEffect(() => {
+        if (!ably) return;
+
+        try {
+            // Already allowed at JS level—check subscription
+            navigator.serviceWorker.ready
+                .then((reg) => reg.pushManager.getSubscription())
+                .then((sub) => {
+                    if (sub) {
+                        console.log(sub);
+                    } else {
+                        console.log("No Sub found");
+                    }
+                })
+                .catch(console.error);
+        } catch {}
+    }, []);
+
 
     return (
         <>
