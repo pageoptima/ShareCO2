@@ -53,6 +53,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
 
   // —————————————
+  // COOKIES
+  // —————————————
+  cookies: {
+    sessionToken: {
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production" ? true : false,
+      }
+    }
+  },
+
+  // —————————————
   // CALLBACKS
   // —————————————
   callbacks: {

@@ -44,25 +44,6 @@ export function AblyPushRegistrar() {
 
     const [isOpen, setIsOpen] = useState(shouldShowPopup());
 
-
-    // const unregister = async () => {
-
-    //     const device = ably.device();
-
-    //     if (!device || !device.id) { return }
-
-    //     await fetch("/api/notification/unregister", {
-    //         method: "POST",
-    //         headers: { "Content-Type": "application/json" },
-    //         body: JSON.stringify({ deviceId: device.id }),
-    //     });
-
-    //     // Remove every Ably key (including device codes & activation)
-    //     Object.keys(localStorage)
-    //         .filter(k => k.startsWith("ably"))
-    //         .forEach(k => localStorage.removeItem(k));
-    // }
-
     const handleAllow = async () => {
 
         // Close the popup
@@ -130,26 +111,6 @@ export function AblyPushRegistrar() {
             handleAllow();
         }
     }, [ably, handleAllow]);
-
-    ////////////////////////////////////////////////////////////////////
-    useEffect(() => {
-        if (!ably) return;
-
-        try {
-            // Already allowed at JS level—check subscription
-            navigator.serviceWorker.ready
-                .then((reg) => reg.pushManager.getSubscription())
-                .then((sub) => {
-                    if (sub) {
-                        console.log(sub);
-                    } else {
-                        console.log("No Sub found");
-                    }
-                })
-                .catch(console.error);
-        } catch {}
-    }, []);
-
 
     return (
         <>
