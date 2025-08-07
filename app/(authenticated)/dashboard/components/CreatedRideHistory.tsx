@@ -31,6 +31,7 @@ import { toast } from "sonner";
 import { utcIsoToLocalDate, utcIsoToLocalTime12 } from "@/utils/time";
 import { RideChatModal } from "@/app/_components/modals/RideChatModal/RideChatModal";
 import { CancelRideModal } from "@/app/_components/modals/CancelRideModal";
+import CarbonEmissionPopup from "@/app/_components/modals/CarbonEmissionPopup";
 
 /**
  * Get the color of the ride status
@@ -108,6 +109,7 @@ const CreatedRideHistory = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [rideToCancel, setRideToCancel] = useState<string | null>(null);
+  const [isCarbonPopupOpen, setIsCarbonPopupOpen] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -170,6 +172,7 @@ const CreatedRideHistory = () => {
       onSuccess: async (result) => {
         if (result.success) {
           toast.success("Ride completed successfully");
+           setIsCarbonPopupOpen(true);
           await queryClient.invalidateQueries({ queryKey: ["carbonpoint"] });
         } else {
           toast.error(result.error);
@@ -552,6 +555,13 @@ const CreatedRideHistory = () => {
           )}
         </div>
       </ScrollArea>
+
+      {/* Carbon Emission Popup */}
+      <CarbonEmissionPopup
+        isOpen={isCarbonPopupOpen}
+        onClose={() => setIsCarbonPopupOpen(false)}
+        carbonSaved={175} // Hardcoded for now; replace with dynamic value if available
+      />
 
       {/* Chat Modal */}
       {isChatOpen && selectedRideId && (
