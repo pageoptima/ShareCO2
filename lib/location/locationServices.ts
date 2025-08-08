@@ -7,6 +7,15 @@ export async function getLocations(): Promise<Location[]> {
     orderBy: {
       name: 'asc',
     },
+    select: {
+      id: true,
+      name: true,
+      distanceFromOrg: true,
+      isOrganization: true,
+      createdAt: true,
+      updatedAt: true,
+      deletedAt: true,
+    },
   });
   return locations;
 }

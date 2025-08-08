@@ -12,12 +12,12 @@ import { PublicLocation, PublicRideRequest } from "./types";
  * Get the avialable location
  */
 export const getLocations = async (): Promise<PublicLocation[]> => {
-    try {
-        return await getLocationDb();
-    } catch (error: unknown ) {
-        console.error( error );
-        throw new Error('Failed to fetch locations');
-    }
+  try {
+    return await getLocationDb();
+  } catch (error: unknown) {
+    console.error(error);
+    throw new Error('Failed to fetch locations');
+  }
 };
 
 /**
@@ -87,19 +87,19 @@ export async function cancelRideRequest(requestId: string) {
   }
 }
 
-    
+
 /**
  * Get all ride request for a user
  */
 export const getUserRideRequests = async (): Promise<PublicRideRequest[]> => {
 
-    // Authenticate the user
-    const session = await auth();
-    if (!session?.user?.id) {
-        throw new Error('You must be signed in to request a ride');
-    }
+  // Authenticate the user
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error('You must be signed in to request a ride');
+  }
 
-    const rideRequests = await getUserRideRequestsDb(session.user.id);
+  const rideRequests = await getUserRideRequestsDb(session.user.id);
 
-    return rideRequests;
+  return rideRequests;
 };

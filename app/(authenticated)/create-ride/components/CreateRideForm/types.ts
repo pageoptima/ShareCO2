@@ -2,16 +2,16 @@ import { RideStatus } from "@prisma/client";
 import { VehicleType, Vehicle } from "@prisma/client";
 
 export interface PublicRide {
-    id: string;
-    vehicleId: string | null;
-    maxPassengers: number;
-    status: RideStatus;
-    createdAt: Date;
-    driverId: string;
-    startingTime: Date;
-    startingLocationId: string | null;
-    destinationLocationId: string | null;
-    carbonCost: number;
+  id: string;
+  vehicleId: string | null;
+  maxPassengers: number;
+  status: RideStatus;
+  createdAt: Date;
+  driverId: string;
+  startingTime: Date;
+  startingLocationId: string | null;
+  destinationLocationId: string | null;
+  carbonCost: number;
 
 }
 
@@ -27,7 +27,11 @@ export const vehicleTypeLabels: Record<PublicVehicleType, string> = {
 };
 
 export interface PublicLocation {
-    id: string;
-    name: string;
-    distanceFromOrg: number;
+  id: string;
+  name: string;
+  distanceFromOrg: number;
+  isOrganization: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+  deletedAt?: Date | null;
 }
