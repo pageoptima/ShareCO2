@@ -57,11 +57,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   // —————————————
   cookies: {
     sessionToken: {
+      name: `next-auth.session-token`,
       options: {
         httpOnly: true,
-        sameSite: "none",
+        sameSite: "lax",
         path: "/",
-        secure: process.env.NODE_ENV === "production" ? true : false,
+        secure: process.env.NODE_ENV === "production"
       }
     }
   },
@@ -70,6 +71,52 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   // CALLBACKS
   // —————————————
   callbacks: {
+    async signIn({ user, account }) {
+
+      if (process.env.NEXT_PUBLIC_DEBUG_MODE) {
+        console.info("Sign-in callback triggered:", { user, account });
+      }
+
+      try {
+        if (account?.provider === "resend" && user?.email) {
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email },
+          });
+
+          if (!existingUser) {
+
+            // await prisma.user.create({
+            //   data: { email: user.email },
+            // });
+
+
+            // Create user and wallet in one transection
+            await prisma.$transaction(async (tx) => {
+              const newUser = await tx.user.create({
+                data: {
+                  email: user.email as string,
+                  name:  user?.name,
+                  image: user?.image,
+                },
+              });
+
+              await tx.wallet.create({
+                data: { userId: newUser.id },
+              });
+            });
+          }
+        }
+
+        return true;
+
+      } catch ( error ) {
+        if ( process.env.NEXT_PUBLIC_DEBUG_MODE ) {
+          console.error( "Sign-in callback error:", error );
+        }
+        return false;
+      }
+    },
+
     // Persist user.id into the token on first sign-in
     async jwt({ token, user }) {
       if (user) {
