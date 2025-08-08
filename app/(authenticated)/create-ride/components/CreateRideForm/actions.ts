@@ -50,28 +50,29 @@ export async function createRide(
  */
 export async function getUserVehicles(): Promise<PublicVehicle[]> {
 
-    // Get authenticated user
-    const session = await auth();
+  // Get authenticated user
+  const session = await auth();
 
-    if (!session?.user?.id) {
-        throw new Error('You must be signed in to view your vehicles');
-    }
+  if (!session?.user?.id) {
+    throw new Error('You must be signed in to view your vehicles');
+  }
 
-    // Get user's vehicles
-    const vehicles = await getUserVehiclesDb(session.user.id);
+  // Get user's vehicles
+  const vehicles = await getUserVehiclesDb(session.user.id);
 
-    return vehicles as PublicVehicle[];
+  return vehicles as PublicVehicle[];
 }
 
 /**
- * Get the avialable location
+ * Get the available locations
  * @returns 
  */
 export const getLocations = async (): Promise<PublicLocation[]> => {
-    try {
-        return await getLocationDb();
-    } catch (error) {
-        console.error(error);
-        throw new Error('Failed to fetch locations');
-    }
+  try {
+    return await getLocationDb();
+
+  } catch (error) {
+    console.error(error);
+    throw new Error('Failed to fetch locations');
+  }
 };

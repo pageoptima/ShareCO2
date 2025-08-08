@@ -141,12 +141,38 @@ export default function CreateRideForm({
   const watchedStartingPoint = form.watch("startingLocationId");
   const watchedDestination = form.watch("destinationLocationId");
 
+  console.log("Locations:", locations);
+  
+  // Identify office locations
+  const officeLocations = locations.filter((location) => location.isOrganization);
+  const nonOfficeLocations = locations.filter((location) => !location.isOrganization);
+
   // Filter locations based on selection
   const getFilteredLocationsForStarting = () => {
     return locations.filter((location) => location.id !== watchedDestination);
   };
 
   const getFilteredLocationsForDestination = () => {
+    const startingLocation = locations.find(
+      (location) => location.id === watchedStartingPoint
+    );
+
+    if (!startingLocation) return [];
+
+    // Rule 3: If starting point is an office, remove all offices from destination
+    if (startingLocation.isOrganization) {
+      return nonOfficeLocations.filter(
+        (location) => location.id !== watchedStartingPoint
+      );
+    }
+
+    // Rule 4: If starting point is a non-office, remove all non-offices from destination
+    if (!startingLocation.isOrganization) {
+      return officeLocations.filter(
+        (location) => location.id !== watchedStartingPoint
+      );
+    }
+
     return locations.filter((location) => location.id !== watchedStartingPoint);
   };
 
@@ -179,19 +205,23 @@ export default function CreateRideForm({
   const submitRide = async (data: CreateRideFormValues) => {
     if (isCreating) return;
 
-    // Additional validation for office requirement
-    const startingLocationName = locations.find(
+    // Check if either starting or destination is an office
+    const startingLocation = locations.find(
       (location) => location.id === data.startingLocationId
-    )?.name;
-    const destinationLocationName = locations.find(
+    );
+    const destinationLocation = locations.find(
       (location) => location.id === data.destinationLocationId
-    )?.name;
+    );
 
-    if (
-      startingLocationName?.toLowerCase() !== "office" &&
-      destinationLocationName?.toLowerCase() !== "office"
-    ) {
-      toast.error("Either starting point or destination must be Office");
+    // Rule 1: Starting OR destination must be an office
+    if (!startingLocation?.isOrganization && !destinationLocation?.isOrganization) {
+      toast.error("Either starting point or destination must be an office");
+      return;
+    }
+
+    // Rule 2: Both cannot be offices
+    if (startingLocation?.isOrganization && destinationLocation?.isOrganization) {
+      toast.error("Both starting point and destination cannot be offices");
       return;
     }
 
@@ -203,8 +233,7 @@ export default function CreateRideForm({
       <div className="mb-4">
         <h2 className="text-lg font-medium text-white">Create a Ride</h2>
         <p className="text-sm text-white/60 mt-1">
-          Note: Either starting point or destination must be Office. Choose your
-          vehicle and passenger count.
+          Note: Either starting point or destination must be an office, Choose your vehicle and passenger count.
         </p>
       </div>
 
@@ -227,7 +256,6 @@ export default function CreateRideForm({
                     disabled={isLocationFetching || isCreating}
                     onValueChange={(value) => {
                       field.onChange(value);
-                      // If destination is the same as selected starting point, clear destination
                       if (watchedDestination === value) {
                         form.setValue("destinationLocationId", "");
                       }
@@ -240,13 +268,11 @@ export default function CreateRideForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="bg-[#1A3C34] text-white border-gray-700">
-                      {getFilteredLocationsForStarting().map(
-                        (location, index) => (
-                          <SelectItem key={index} value={location.id}>
-                            {location.name}
-                          </SelectItem>
-                        )
-                      )}
+                      {getFilteredLocationsForStarting().map((location) => (
+                        <SelectItem key={location.id} value={location.id}>
+                          {location.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage className="text-red-300" />
@@ -269,7 +295,6 @@ export default function CreateRideForm({
                     disabled={isLocationFetching || isCreating}
                     onValueChange={(value) => {
                       field.onChange(value);
-                      // If starting point is the same as selected destination, clear starting point
                       if (watchedStartingPoint === value) {
                         form.setValue("startingLocationId", "");
                       }
@@ -282,13 +307,11 @@ export default function CreateRideForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="bg-[#1A3C34] text-white border-gray-700">
-                      {getFilteredLocationsForDestination().map(
-                        (location, index) => (
-                          <SelectItem key={index} value={location.id}>
-                            {location.name}
-                          </SelectItem>
-                        )
-                      )}
+                      {getFilteredLocationsForDestination().map((location) => (
+                        <SelectItem key={location.id} value={location.id}>
+                          {location.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage className="text-red-300" />
@@ -321,8 +344,8 @@ export default function CreateRideForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="bg-[#1A3C34] text-white border-gray-700">
-                      {vehicles.map((vehicle, index) => (
-                        <SelectItem key={index} value={vehicle.id}>
+                      {vehicles.map((vehicle) => (
+                        <SelectItem key={vehicle.id} value={vehicle.id}>
                           {vehicle.model || vehicle.type}
                         </SelectItem>
                       ))}
