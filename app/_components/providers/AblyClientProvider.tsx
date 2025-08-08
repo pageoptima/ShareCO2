@@ -17,7 +17,7 @@ export function AblyClientProvider({ children }: { children: ReactNode }) {
 
   return (
     <AblyProvider client={ablyClient}>
-{/*       <AblyPushRegistrar /> */}
+      {/* <AblyPushRegistrar /> */}
       {children}
     </AblyProvider>
   );
