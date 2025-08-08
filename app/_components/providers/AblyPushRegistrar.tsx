@@ -1,21 +1,21 @@
 "use client";
 
 import { useAbly } from "ably/react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 function AblyPushRegistrar() {
 
-    // const getNotificationStatus = () => {
-    //     const notificationStatus = localStorage.getItem("notificationAllowed");
+    const getNotificationStatus = () => {
+        const notificationStatus = localStorage.getItem( "notificationAllowed" );
 
-    //     switch (notificationStatus) {
-    //         case 'granted': return 'granted';
-    //         case 'notnow': return 'notnow';
-    //         case 'denied': return 'denied';
-    //         default: return 'denied';
-    //     }
-    // };
+        switch (notificationStatus) {
+            case 'granted': return 'granted';
+            case 'notnow': return 'notnow';
+            case 'denied': return 'denied';
+            default: return 'denied';
+        }
+    };
 
     const setNotificationStatus = (status: string) => {
         localStorage.setItem("notificationAllowed", status);
@@ -27,9 +27,9 @@ function AblyPushRegistrar() {
         if (notificationStatus === "notnow") {
             return false;
         }
-        // if (Notification?.permission === "default") {
-        //     return true;
-        // }
+        if (Notification?.permission === "default") {
+            return true;
+        }
         if (notificationStatus === "denied") {
             return false;
         }
@@ -90,21 +90,21 @@ function AblyPushRegistrar() {
     };
 
     // Startup check: if already granted, just activate
-    // useEffect(() => {
-    //     // Update notification status to denied for manual denied from browsers
-    //     if (Notification.permission === "denied") {
-    //         setNotificationStatus("denied");
-    //     }
+    useEffect(() => {
+        // Update notification status to denied for manual denied from browsers
+        if (Notification.permission === "denied") {
+            setNotificationStatus("denied");
+        }
 
-    //     // Update notification status to granted for manual update from browser
-    //     if (
-    //         Notification.permission === "granted" &&
-    //         getNotificationStatus() !== "granted"
-    //     ) {
-    //         console.log("this is now calling the handle allow");
-    //         handleAllow();
-    //     }
-    // }, [ably, handleAllow]);
+        // Update notification status to granted for manual update from browser
+        if (
+            Notification.permission === "granted" &&
+            getNotificationStatus() !== "granted"
+        ) {
+            console.log("this is now calling the handle allow");
+            handleAllow();
+        }
+    }, [ably, handleAllow]);
 
     return (
         <>
