@@ -85,11 +85,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           if (!existingUser) {
 
-            // await prisma.user.create({
-            //   data: { email: user.email },
-            // });
-
-
             // Create user and wallet in one transection
             await prisma.$transaction(async (tx) => {
               const newUser = await tx.user.create({
@@ -145,8 +140,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         // Update user id, name, eamil
         if (dbUser) {
-          session.user.id = dbUser.id;
-          session.user.name = dbUser.name;
+          session.user.id    = dbUser.id;
+          session.user.name  = dbUser.name;
           session.user.email = dbUser.email;
         }
 

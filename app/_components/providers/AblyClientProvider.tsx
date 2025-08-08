@@ -2,7 +2,7 @@
 
 import { AblyProvider } from "ably/react";
 import { ReactNode } from "react";
-import { AblyPushRegistrar } from "./AblyPushRegistrar";
+// import { AblyPushRegistrar } from "./AblyPushRegistrar";
 import { getAblyClient } from "@/services/ablyClient";
 
 export function AblyClientProvider({ children }: { children: ReactNode }) {
@@ -17,7 +17,7 @@ export function AblyClientProvider({ children }: { children: ReactNode }) {
 
   return (
     <AblyProvider client={ablyClient}>
-      <AblyPushRegistrar />
+      {/* <AblyPushRegistrar /> */}
       {children}
     </AblyProvider>
   );
