@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import type { NextRequest } from 'next/server';
+
 /**
  * Next js middleware function
  */
@@ -15,6 +16,7 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({
     req,
     secret: process.env.AUTH_SECRET,
+    cookieName: 'next-auth.session-token',
     secureCookie: process.env.NODE_ENV === 'production'
   });
 
@@ -28,9 +30,7 @@ export async function middleware(req: NextRequest) {
   if (
     isAuthenticated &&
     (
-      req.nextUrl.pathname === '/' ||
-      req.nextUrl.pathname === '/signin'
-    )
+      req.nextUrl.pathname === '/' )
   ) {
     return NextResponse.redirect(new URL('/dashboard', req.url));
   }
@@ -54,7 +54,6 @@ export async function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     '/',                       // home page
-    '/signin',                 // signin page
     '/dashboard',              // dashboard main
     '/dashboard/:path*',       // all subpaths of dashboard
   ],
