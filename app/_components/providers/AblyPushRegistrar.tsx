@@ -1,10 +1,11 @@
 "use client";
 
 import { useAbly } from "ably/react";
-import { useEffect, useState, useCallback } from "react"; // Add useCallback
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 
 export function AblyPushRegistrar() {
+
     const getNotificationStatus = () => {
         const notificationStatus = localStorage.getItem("notificationAllowed");
 
