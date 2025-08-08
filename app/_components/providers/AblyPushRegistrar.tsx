@@ -1,11 +1,10 @@
 "use client";
 
 import { useAbly } from "ably/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react"; // Add useCallback
 import { toast } from "sonner";
 
 export function AblyPushRegistrar() {
-
     const getNotificationStatus = () => {
         const notificationStatus = localStorage.getItem("notificationAllowed");
 
@@ -18,8 +17,8 @@ export function AblyPushRegistrar() {
     };
 
     const setNotificationStatus = (status: string) => {
-        localStorage.setItem("notificationAllowed", status)
-    }
+        localStorage.setItem("notificationAllowed", status);
+    };
 
     const shouldShowPopup = () => {
         const notificationStatus = localStorage.getItem("notificationAllowed");
@@ -38,14 +37,12 @@ export function AblyPushRegistrar() {
         }
 
         return true;
-    }
+    };
 
     const ably = useAbly();
-
     const [isOpen, setIsOpen] = useState(shouldShowPopup());
 
-    const handleAllow = async () => {
-
+    const handleAllow = useCallback(async () => {
         // Close the popup
         setIsOpen(false);
 
@@ -61,12 +58,10 @@ export function AblyPushRegistrar() {
         }
 
         // Unregister the device before activation
-        // await unregister();
-        localStorage.removeItem( 'ably.push.deviceId' );
+        localStorage.removeItem('ably.push.deviceId');
 
         ably.push.activate(
             async (deviceDetails) => {
-
                 // Register this browser on your backend
                 await fetch("/api/notification/register", {
                     method: "POST",
@@ -80,14 +75,13 @@ export function AblyPushRegistrar() {
                 });
 
                 setNotificationStatus("granted");
-
             },
             (error) => {
                 console.error(`Push activation failed:`, error);
-                toast.error("Something went wrong while allowing notification!")
+                toast.error("Something went wrong while allowing notification!");
             }
         );
-    };
+    }, [ably, setIsOpen]); // Dependencies for useCallback
 
     const handleNotNow = () => {
         setIsOpen(false);
@@ -96,7 +90,6 @@ export function AblyPushRegistrar() {
 
     // Startup check: if already granted, just activate
     useEffect(() => {
-
         // Update notification status to denied for manual denied from browsers
         if (Notification.permission === "denied") {
             setNotificationStatus("denied");

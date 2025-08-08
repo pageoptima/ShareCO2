@@ -99,7 +99,7 @@ export default function RideRequestForm({
     },
   });
 
-  // Initialize form first
+  // Initialize form
   const form = useForm<RequestFormValues>({
     resolver: zodResolver(requestFormSchema),
     defaultValues: {
@@ -109,7 +109,44 @@ export default function RideRequestForm({
     },
   });
 
-  // Create a stable submit handler with useCallback
+  // Watch form values for filtering
+  const watchedStartingPoint = form.watch("startingLocationId");
+  const watchedDestination = form.watch("destinationLocationId");
+
+  // Identify office and non-office locations
+  const officeLocations = locations.filter((location) => location.isOrganization);
+  const nonOfficeLocations = locations.filter((location) => !location.isOrganization);
+
+  // Filter locations based on selection
+  const getFilteredLocationsForStarting = () => {
+    return locations.filter((location) => location.id !== watchedDestination);
+  };
+
+  const getFilteredLocationsForDestination = () => {
+    const startingLocation = locations.find(
+      (location) => location.id === watchedStartingPoint
+    );
+
+    if (!startingLocation) return [];
+
+    // Rule 3: If starting point is an office, remove all offices from destination
+    if (startingLocation.isOrganization) {
+      return nonOfficeLocations.filter(
+        (location) => location.id !== watchedStartingPoint
+      );
+    }
+
+    // Rule 4: If starting point is a non-office, remove all non-offices from destination
+    if (!startingLocation.isOrganization) {
+      return officeLocations.filter(
+        (location) => location.id !== watchedStartingPoint
+      );
+    }
+
+    return locations.filter((location) => location.id !== watchedStartingPoint);
+  };
+
+  // Submit handler
   const submitRequest = async (data: RequestFormValues) => {
     if (isRideReqestPending) return;
 
@@ -119,40 +156,29 @@ export default function RideRequestForm({
       return;
     }
 
-    // Additional validation for office requirement
-    const startingLocationName = locations.find(
+    // Check if either starting or destination is an office
+    const startingLocation = locations.find(
       (location) => location.id === data.startingLocationId
-    )?.name;
-    const destinationLocationName = locations.find(
+    );
+    const destinationLocation = locations.find(
       (location) => location.id === data.destinationLocationId
-    )?.name;
+    );
 
-    if (
-      startingLocationName?.toLowerCase() !== "office" &&
-      destinationLocationName?.toLowerCase() !== "office"
-    ) {
-      toast.error("Either starting point or destination must be Office");
+    // Rule 1: Starting OR destination must be an office
+    if (!startingLocation?.isOrganization && !destinationLocation?.isOrganization) {
+      toast.error("Either starting point or destination must be an office");
+      return;
+    }
+
+    // Rule 2: Both cannot be offices
+    if (startingLocation?.isOrganization && destinationLocation?.isOrganization) {
+      toast.error("Both starting point and destination cannot be offices");
       return;
     }
 
     await mutateCreateRideRequest(data);
     form.reset();
   };
-
-  // Watch form values for filtering
-  const watchedStartingPoint = form.watch("startingLocationId");
-  const watchedDestination = form.watch("destinationLocationId");
-
-  // Filter locations based on selection
-  const getFilteredLocationsForStarting = () => {
-    return locations.filter((location) => location.id !== watchedDestination);
-  };
-
-  const getFilteredLocationsForDestination = () => {
-    return locations.filter((location) => location.id !== watchedStartingPoint);
-  };
-
-  // Always show the form regardless of whether user has existing requests
 
   return (
     <Card className="bg-[#1A3C34] rounded-xl shadow-lg">
@@ -161,16 +187,14 @@ export default function RideRequestForm({
           Request a Ride
         </CardTitle>
         <p className="text-sm text-white/60 mt-1">
-          Note: Either starting point or destination must be Office
+          Note: Either starting point or destination must be an office, but both
+          cannot be offices.
         </p>
       </CardHeader>
 
       <CardContent>
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(submitRequest)}
-            className="space-y-4"
-          >
+          <form onSubmit={form.handleSubmit(submitRequest)} className="space-y-4">
             <div className="space-y-4">
               {/* Starting location input */}
               <FormField
@@ -188,9 +212,8 @@ export default function RideRequestForm({
                       disabled={isLocationFetching || isRideReqestPending}
                       onValueChange={(value) => {
                         field.onChange(value);
-                        // If destination is the same as selected starting point, clear destination
                         if (watchedDestination === value) {
-                          form.setValue("startingLocationId", "");
+                          form.setValue("destinationLocationId", "");
                         }
                       }}
                       value={field.value}
@@ -201,13 +224,11 @@ export default function RideRequestForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-[#1A3C34] text-white border-gray-700">
-                        {getFilteredLocationsForStarting().map(
-                          (location, index) => (
-                            <SelectItem key={index} value={location.id}>
-                              {location.name}
-                            </SelectItem>
-                          )
-                        )}
+                        {getFilteredLocationsForStarting().map((location) => (
+                          <SelectItem key={location.id} value={location.id}>
+                            {location.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage className="text-red-300" />
@@ -231,7 +252,6 @@ export default function RideRequestForm({
                       disabled={isLocationFetching || isRideReqestPending}
                       onValueChange={(value) => {
                         field.onChange(value);
-                        // If starting point is the same as selected destination, clear starting point
                         if (watchedStartingPoint === value) {
                           form.setValue("startingLocationId", "");
                         }
@@ -244,13 +264,11 @@ export default function RideRequestForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-[#1A3C34] text-white border-gray-700">
-                        {getFilteredLocationsForDestination().map(
-                          (location, index) => (
-                            <SelectItem key={index} value={location.id}>
-                              {location.name}
-                            </SelectItem>
-                          )
-                        )}
+                        {getFilteredLocationsForDestination().map((location) => (
+                          <SelectItem key={location.id} value={location.id}>
+                            {location.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage className="text-red-300" />
@@ -265,7 +283,7 @@ export default function RideRequestForm({
                 render={({ field }) => {
                   const now = new Date();
                   const minStartingTime = format(
-                    addMinutes(now, 30), //after 30 minutes
+                    addMinutes(now, 30), // after 30 minutes
                     "yyyy-MM-dd'T'HH:mm"
                   );
 
