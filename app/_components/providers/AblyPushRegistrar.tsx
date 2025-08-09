@@ -52,8 +52,6 @@ function AblyPushRegistrar() {
         // Ask browser for notification permission explicitly
         const permission = await Notification.requestPermission();
 
-        window.alert( permission );
-
         if (permission !== "granted") {
             setNotificationStatus("denied");
             toast.info("Notification permission not granted");
