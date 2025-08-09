@@ -7,7 +7,7 @@ import { toast } from "sonner";
 function AblyPushRegistrar() {
 
     const getNotificationStatus = () => {
-        const notificationStatus = localStorage.getItem( "notificationAllowed" );
+        const notificationStatus = localStorage.getItem("notificationAllowed");
 
         switch (notificationStatus) {
             case 'granted': return 'granted';
@@ -47,7 +47,7 @@ function AblyPushRegistrar() {
         // Close the popup
         setIsOpen(false);
 
-        if ( !ably ) return;
+        if (!ably) return;
 
         // Ask browser for notification permission explicitly
         const permission = await Notification.requestPermission();
@@ -62,8 +62,20 @@ function AblyPushRegistrar() {
         localStorage.removeItem('ably.push.deviceId');
 
         try {
+            window.alert("Before run activate 1");
+            window.alert("Before run activate 2");
+
             ably.push.activate(
                 async (deviceDetails) => {
+
+                    window.alert(JSON.stringify({
+                        deviceId: deviceDetails.id,
+                        platform: deviceDetails.platform,
+                        formFactor: deviceDetails.formFactor,
+                        pushRecipient: deviceDetails.push.recipient,
+                    }))
+
+
                     // Register this browser on your backend
                     await fetch("/api/notification/register", {
                         method: "POST",
@@ -75,16 +87,18 @@ function AblyPushRegistrar() {
                             pushRecipient: deviceDetails.push.recipient,
                         }),
                     });
-    
+
+                    window.alert("After notification register");
+
                     setNotificationStatus("granted");
                 },
                 (error) => {
                     console.error(`Push activation failed:`, error);
-                    toast.error( "Something went wrong while allowing notification!" );
+                    toast.error("Something went wrong while allowing notification!");
                 }
             );
         } catch (error) {
-            window.alert(( error as Error ).stack );
+            window.alert((error as Error).stack);
         }
 
     }, [ably, setIsOpen]); // Dependencies for useCallback
@@ -112,7 +126,7 @@ function AblyPushRegistrar() {
 
     return (
         <>
-            { isOpen && (
+            {isOpen && (
                 <div className="fixed bottom-4 right-4 w-[90%] max-w-sm bg-white border border-gray-200 rounded-2xl shadow-xl p-4 z-50 animate-slide-up md:right-6 md:bottom-6">
                     <p className="text-gray-800 text-base font-medium mb-4">
                         Enable notifications to stay updated!
