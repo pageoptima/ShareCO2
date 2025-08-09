@@ -18,7 +18,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("created");
 
   const isProfileCompleted =
-    localStorage.getItem("isProfileCompleted") == "true";
+    localStorage.getItem("isProfileCompleted") === "true";
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["profile-status"],
@@ -28,10 +28,10 @@ export default function DashboardPage() {
 
   // Redirect to /profile if profile is not completed
   useEffect(() => {
-    if (!isLoading && !isError && data && !data.isProfileCompleted) {
+    if (!isLoading && !isError && data && !data.isProfileCompleted && !isProfileCompleted) {
       router.push("/profile");
     }
-  }, [data, isLoading, isError, router]);
+  }, [data, isLoading, isError, router, isProfileCompleted]);
 
   // Extract user display name
   const displayName =
