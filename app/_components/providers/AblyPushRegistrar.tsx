@@ -129,7 +129,7 @@ function AblyPushRegistrar() {
                 }
             );
         } catch (error) {
-            // window.alert((error as Error).stack);
+            window.alert((error as Error).stack);
         }
 
     }, [ably, setIsOpen]); // Dependencies for useCallback
