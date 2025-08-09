@@ -79,7 +79,7 @@ function AblyPushRegistrar() {
             },
             (error) => {
                 console.error(`Push activation failed:`, error);
-                toast.error("Something went wrong while allowing notification!");
+                toast.error( "Something went wrong while allowing notification!" );
             }
         );
     }, [ably, setIsOpen]); // Dependencies for useCallback
@@ -101,7 +101,6 @@ function AblyPushRegistrar() {
             Notification.permission === "granted" &&
             getNotificationStatus() !== "granted"
         ) {
-            console.log("this is now calling the handle allow");
             handleAllow();
         }
     }, [ably, handleAllow]);
