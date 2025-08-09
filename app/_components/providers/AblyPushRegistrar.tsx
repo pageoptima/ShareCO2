@@ -63,37 +63,16 @@ function AblyPushRegistrar() {
 
         try {
 
-            // 1. Browser & platform info
-            window.alert( `User Agent: ${navigator.userAgent}` );
-            window.alert( `Platform: ${navigator.platform}` );
-
-            // 2. Check basic API support
-            const pushSupported = "PushManager" in window;
-            const notifSupported = "Notification" in window;
-            const swSupported = "serviceWorker" in navigator;
-
-            window.alert(`PushManager supported: ${pushSupported}`);
-            window.alert(`Notification API supported: ${notifSupported}`);
-            window.alert(`Service Worker supported: ${swSupported}`);
-
-            if (!pushSupported || !notifSupported || !swSupported) {
-                window.alert("Push is not supported on this browser/device.");
-                return;
-            }
-
-            // 3. Check current notification permission
-            window.alert(`Current Notification.permission: ${Notification.permission}`);
-
             // 4. Check service worker registration
             try {
                 const reg = await navigator.serviceWorker.getRegistration();
                 if (!reg) {
                     window.alert("No service worker registered! Push won't work.");
                 } else {
-                    window.alert("Service worker registered:" + reg );
+                    window.alert("Service worker registered:" + reg);
                 }
             } catch (err) {
-                window.alert("Error checking service worker registration:" + err );
+                window.alert("Error checking service worker registration:" + err);
             }
 
             ably.push.activate(
@@ -154,6 +133,28 @@ function AblyPushRegistrar() {
             handleAllow();
         }
     }, [ably, handleAllow]);
+
+    useEffect(() => {
+        if ( "serviceWorker" in navigator ) {
+            (async () => {
+                try {
+                    const existingReg = await navigator.serviceWorker.getRegistration();
+
+                    if (existingReg) {
+                        window.alert("Service worker already registered:" + existingReg);
+                    } else {
+                        window.alert("No service worker found. Registering now...");
+                        const reg = await navigator.serviceWorker.register("/service-worker.js?v=7");
+                        window.alert("Service worker registered:" + reg);
+                    }
+                } catch (err) {
+                    window.alert("Service worker check/registration failed:" + err);
+                }
+            })();
+        } else {
+            window.alert("Service workers not supported in this browser.");
+        }
+    }, []); // Empty deps → run only once on mount
 
     return (
         <>
