@@ -61,27 +61,32 @@ function AblyPushRegistrar() {
         // Unregister the device before activation
         localStorage.removeItem('ably.push.deviceId');
 
-        ably.push.activate(
-            async (deviceDetails) => {
-                // Register this browser on your backend
-                await fetch("/api/notification/register", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        deviceId: deviceDetails.id,
-                        platform: deviceDetails.platform,
-                        formFactor: deviceDetails.formFactor,
-                        pushRecipient: deviceDetails.push.recipient,
-                    }),
-                });
+        try {
+            ably.push.activate(
+                async (deviceDetails) => {
+                    // Register this browser on your backend
+                    await fetch("/api/notification/register", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            deviceId: deviceDetails.id,
+                            platform: deviceDetails.platform,
+                            formFactor: deviceDetails.formFactor,
+                            pushRecipient: deviceDetails.push.recipient,
+                        }),
+                    });
+    
+                    setNotificationStatus("granted");
+                },
+                (error) => {
+                    console.error(`Push activation failed:`, error);
+                    toast.error( "Something went wrong while allowing notification!" );
+                }
+            );
+        } catch (error) {
+            window.alert(( error as Error ).stack );
+        }
 
-                setNotificationStatus("granted");
-            },
-            (error) => {
-                console.error(`Push activation failed:`, error);
-                toast.error( "Something went wrong while allowing notification!" );
-            }
-        );
     }, [ably, setIsOpen]); // Dependencies for useCallback
 
     const handleNotNow = () => {
