@@ -47,10 +47,12 @@ function AblyPushRegistrar() {
         // Close the popup
         setIsOpen(false);
 
-        if (!ably) return;
+        if ( !ably ) return;
 
         // Ask browser for notification permission explicitly
         const permission = await Notification.requestPermission();
+
+        window.alert( permission );
 
         if (permission !== "granted") {
             setNotificationStatus("denied");
