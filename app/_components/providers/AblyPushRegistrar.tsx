@@ -62,18 +62,49 @@ function AblyPushRegistrar() {
         localStorage.removeItem('ably.push.deviceId');
 
         try {
-            window.alert("Before run activate 1");
-            window.alert("Before run activate 2");
+
+            // 1. Browser & platform info
+            window.alert( `User Agent: ${navigator.userAgent}` );
+            window.alert( `Platform: ${navigator.platform}` );
+
+            // 2. Check basic API support
+            const pushSupported = "PushManager" in window;
+            const notifSupported = "Notification" in window;
+            const swSupported = "serviceWorker" in navigator;
+
+            window.alert(`PushManager supported: ${pushSupported}`);
+            window.alert(`Notification API supported: ${notifSupported}`);
+            window.alert(`Service Worker supported: ${swSupported}`);
+
+            if (!pushSupported || !notifSupported || !swSupported) {
+                window.alert("Push is not supported on this browser/device.");
+                return;
+            }
+
+            // 3. Check current notification permission
+            window.alert(`Current Notification.permission: ${Notification.permission}`);
+
+            // 4. Check service worker registration
+            try {
+                const reg = await navigator.serviceWorker.getRegistration();
+                if (!reg) {
+                    window.alert("No service worker registered! Push won't work.");
+                } else {
+                    window.alert("Service worker registered:" + reg );
+                }
+            } catch (err) {
+                window.alert("Error checking service worker registration:" + err );
+            }
 
             ably.push.activate(
                 async (deviceDetails) => {
 
-                    window.alert(JSON.stringify({
-                        deviceId: deviceDetails.id,
-                        platform: deviceDetails.platform,
-                        formFactor: deviceDetails.formFactor,
-                        pushRecipient: deviceDetails.push.recipient,
-                    }))
+                    // window.alert(JSON.stringify({
+                    //     deviceId: deviceDetails.id,
+                    //     platform: deviceDetails.platform,
+                    //     formFactor: deviceDetails.formFactor,
+                    //     pushRecipient: deviceDetails.push.recipient,
+                    // }))
 
 
                     // Register this browser on your backend
@@ -88,7 +119,7 @@ function AblyPushRegistrar() {
                         }),
                     });
 
-                    window.alert("After notification register");
+                    // window.alert("After notification register");
 
                     setNotificationStatus("granted");
                 },
@@ -98,7 +129,7 @@ function AblyPushRegistrar() {
                 }
             );
         } catch (error) {
-            window.alert((error as Error).stack);
+            // window.alert((error as Error).stack);
         }
 
     }, [ably, setIsOpen]); // Dependencies for useCallback
