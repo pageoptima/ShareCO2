@@ -52,6 +52,8 @@ function AblyPushRegistrar() {
         // Ask browser for notification permission explicitly
         const permission = await Notification.requestPermission();
 
+        window.alert("Permission:" + permission);
+
         if (permission !== "granted") {
             setNotificationStatus("denied");
             toast.info("Notification permission not granted");
@@ -78,12 +80,12 @@ function AblyPushRegistrar() {
             ably.push.activate(
                 async (deviceDetails) => {
 
-                    // window.alert(JSON.stringify({
-                    //     deviceId: deviceDetails.id,
-                    //     platform: deviceDetails.platform,
-                    //     formFactor: deviceDetails.formFactor,
-                    //     pushRecipient: deviceDetails.push.recipient,
-                    // }))
+                    window.alert(JSON.stringify({
+                        deviceId: deviceDetails.id,
+                        platform: deviceDetails.platform,
+                        formFactor: deviceDetails.formFactor,
+                        pushRecipient: deviceDetails.push.recipient,
+                    }))
 
 
                     // Register this browser on your backend
@@ -98,7 +100,7 @@ function AblyPushRegistrar() {
                         }),
                     });
 
-                    // window.alert("After notification register");
+                    window.alert("After notification register");
 
                     setNotificationStatus("granted");
                 },
