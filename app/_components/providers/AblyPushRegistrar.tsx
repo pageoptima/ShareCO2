@@ -54,13 +54,14 @@ function AblyPushRegistrar() {
         if ( Notification.permission !== "granted" ) {
             // Request for permission
             const permission = await Notification.requestPermission();
-            if (permission !== "granted") {
-                setNotificationStatus("denied");
-                toast.info("Notification permission not granted");
+            if ( permission !== "granted" ) {
+                setNotificationStatus( "denied" );
+                toast.info( "Notification permission not granted" );
                 return;
             }
         }
 
+        setNotificationStatus("granted");
         
         try {
             // Unregister the device before activation
@@ -91,14 +92,11 @@ function AblyPushRegistrar() {
         } catch (error) {
             console.error((error as Error).stack);
         }
-
-        setNotificationStatus( "denied" );
-
     }, [ably, setIsOpen]);
 
     const handleNotNow = () => {
         setIsOpen(false);
-        setNotificationStatus("notnow");
+        setNotificationStatus( "notnow" );
     };
 
     // Startup check: if already granted, just activate

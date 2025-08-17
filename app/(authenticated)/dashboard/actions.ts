@@ -1,8 +1,6 @@
 "use server";
 
 import { auth } from "@/lib/auth/auth";
-import { requestTopUp as requestTopUpDb } from "@/lib/transaction/requestTopUp";
-import { getUserTransactions } from "@/lib/transaction/transactionServices";
 import {
   activateRide,
   getUserRides as getUserRidesDb,
@@ -16,53 +14,10 @@ import {
 } from "@/lib/rideBook/rideBookServices";
 import { cancelRide as cancelRideDb } from "@/lib/ride/rideServices";
 import { completeRide as completeRideDb } from "@/lib/ride/rideServices";
-import { PublicUserRides, PublicTransactions } from "./types";
+import { PublicUserRides } from "./types";
 
 import { getWalletByUserId } from "@/lib/wallet/walletServices";
 import { getUserById } from "@/lib/user/userServices";
-
-/**
- * Submit a top-up request for carbon points
- */
-export async function requestTopUp(amount: number) {
-  try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      throw new Error("Not authenticated");
-    }
-
-    const success = await requestTopUpDb({
-      userId: session.user.id,
-      amount: amount,
-    });
-
-    return {
-      success: success,
-      error: null,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: (error as Error).message,
-    };
-  }
-}
-
-/**
- * Get all transactions for a user
- */
-export async function getTransactions(): Promise<PublicTransactions[]> {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    throw new Error("Not authenticated");
-  }
-
-  const transactions = await getUserTransactions(session.user.id);
-
-  return transactions;
-}
 
 /**
  * Get created rides

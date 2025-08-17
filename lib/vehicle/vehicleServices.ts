@@ -56,7 +56,7 @@ export async function createVehicle({
     if (error instanceof z.ZodError) {
       throw new Error(error.errors[0].message);
     }
-    logger.error(`Error updating profile: ${error}`);
+    logger.error(`Error creating vehicle: ${error}`);
     throw error;
   }
 }

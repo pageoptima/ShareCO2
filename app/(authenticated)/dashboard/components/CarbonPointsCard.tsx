@@ -12,14 +12,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
 import {
   rupeesToCarbonPoints,
   RUPEES_PER_CARBON_POINT,
   formatCarbonPointsForUI,
 } from "@/utils/carbonPointsConversion";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { getCarbonPoint, requestTopUp } from "../actions";
+import { useQuery } from "@tanstack/react-query";
+import { getCarbonPoint } from "../actions";
+import RazorpayButton from "@/app/_components/payments/Rozorpay";
 
 
 export function CarbonPointsCard() {
@@ -38,24 +38,6 @@ export function CarbonPointsCard() {
     console.error(carbonPointFetchingError);
   }
 
-  // Hook for topupRequest
-  const { mutateAsync: mutateRequestTopup, isPending: isRequestTopupPending } =
-    useMutation({
-      mutationFn: (amount: number) => {
-        return requestTopUp(amount);
-      },
-      onSuccess: async (result) => {
-        if (result.success) {
-          toast.success("Top-up request submitted successfully");
-        } else {
-          toast.error(result.error);
-        }
-      },
-      onError: (error) => {
-        console.error(error.message);
-      },
-    });
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -68,11 +50,7 @@ export function CarbonPointsCard() {
   };
 
   const handleTopUpRequest = async () => {
-    if (isRequestTopupPending) {
-      return;
-    }
-
-    await mutateRequestTopup(Number(amount));
+    console.log('Redirect to topup page');
   };
 
   if (isCarbonPointFetching) {
@@ -105,6 +83,11 @@ export function CarbonPointsCard() {
           >
             Top Up
           </Button>
+          <RazorpayButton
+            carbonCoin={5}
+            onError={(error) => console.log(error)}
+            onSuccess={() => console.log("payment successfull")}
+          />
         </CardContent>
       </Card>
 
@@ -173,9 +156,8 @@ export function CarbonPointsCard() {
             <Button
               onClick={handleTopUpRequest}
               className="bg-[#2E7D32] hover:bg-[#388E3C]"
-              disabled={isRequestTopupPending}
             >
-              {isRequestTopupPending ? "Submitting..." : "Request Top Up"}
+              { "Request Top Up" }
             </Button>
           </DialogFooter>
         </DialogContent>

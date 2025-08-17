@@ -5,7 +5,6 @@ import {
   getWalletByUserId,
   getWalletTransactions,
 } from "@/lib/wallet/walletServices";
-import { requestTopUp as requestTopUpDb } from "@/lib/transaction/requestTopUp";
 import { PublicWallet, PublicWalletTransaction } from "./types";
 
 /**
@@ -64,20 +63,3 @@ export async function getTransactions({
   };
 }
 
-/**
- * Submit a top-up request for carbon points
- */
-export async function requestTopUp(amount: number) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    throw new Error("Not authenticated");
-  }
-
-  const success = await requestTopUpDb({
-    userId: session.user.id,
-    amount,
-  });
-
-  return success;
-}

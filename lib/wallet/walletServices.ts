@@ -422,3 +422,39 @@ export async function applyFineChargeRide({
 
   return true;
 }
+
+/**
+ * Add coin for user topup
+ * - Increment `spendableBalance` by `amount`
+ * - logs a CREDIT transaction
+ */
+export async function creditUserTopup({
+  tx,
+  userId,
+  transactionId,
+  amount,
+}: {
+  tx: Prisma.TransactionClient;
+  userId: string;
+  transactionId: string;
+  amount: number;
+}): Promise<boolean> {
+
+  await tx.wallet.update({
+    where: { userId },
+    data: {
+      spendableBalance: { increment: amount },
+      transactions: {
+        create: {
+          amount: amount,
+          direction: WalletTransactionDirection.CREDIT,
+          purpose: WalletTransactionPurpose.TOPUP,
+          transaction: { connect: { id: transactionId } },
+          description: `Credited topup amount ${amount} coins`,
+        },
+      },
+    },
+  });
+
+  return true;
+}

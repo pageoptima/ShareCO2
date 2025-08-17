@@ -25,14 +25,14 @@ model User {
   updatedAt          DateTime  @updatedAt
 
   // User relation
-  transactions  Transaction[]
-  createdRides  Ride[]         @relation("DriverRides")
-  bookedRides   RideBooking[]
-  rideRequests  RideRequest[]
-  messages      ChatMessage[]
-  vehicles      Vehicle[]
-  topUpRequests TopUpRequest[]
-  Wallet        Wallet?
+  Payment      Payment[]
+  transactions Transaction[]
+  createdRides Ride[]        @relation("DriverRides")
+  bookedRides  RideBooking[]
+  rideRequests RideRequest[]
+  messages     ChatMessage[]
+  vehicles     Vehicle[]
+  Wallet       Wallet?
 }
 
 // Add the VerificationToken model for Auth.js
@@ -47,20 +47,49 @@ model VerificationToken {
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
+model Payment {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  user           User          @relation(fields: [userId], references: [id])
+  userId         String        @db.ObjectId
+  orderId        String        @unique
+  paymentId      String?
+  signature      String?
+  status         PaymentStatus @default(PENDING)
+  amount         Float
+  coinAmount     Float
+  conversionRate Float?
+  currency       String        @default("INR")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  Transaction    Transaction[]
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
 model Transaction {
   id                String              @id @default(auto()) @map("_id") @db.ObjectId
   user              User                @relation(fields: [userId], references: [id])
   userId            String              @db.ObjectId
   type              TransactionType
   amount            Float
+  coinAmount        Float
+  metadata          Json?
   description       String
   createdAt         DateTime            @default(now())
+  payment           Payment?            @relation(fields: [paymentId], references: [id])
+  paymentId         String?             @db.ObjectId
   WalletTransaction WalletTransaction[]
 }
 
 enum TransactionType {
-  debit
-  credit
+  CREDIT
+  DEBIT
+  ADJUST
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -184,22 +213,6 @@ model ChatMessage {
   user      User     @relation(fields: [userId], references: [id])
   content   String
   createdAt DateTime @default(now())
-}
-
-// Add TopUpRequest model for carbon points top-up requests
-model TopUpRequest {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId       String   @db.ObjectId
-  user         User     @relation(fields: [userId], references: [id])
-  amount       Int // Amount in INR (keeping as Int since it's currency)
-  phoneNumber  String // Phone number for contact
-  status       String   @default("Pending") // Pending, Approved, Rejected
-  adminComment String? // Optional comment from admin
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@index([userId])
-  @@index([status])
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
