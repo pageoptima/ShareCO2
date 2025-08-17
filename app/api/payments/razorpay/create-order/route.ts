@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { convertToRazorpayAmount, createOrder } from '@/services/razorpay';
 import { carbonPointsToRupees, getConversionRate } from '@/utils/carbonPointsConversion';
 import { createPayment } from '@/lib/payment/paymentServices';
+import { errorToPOJO } from '@/utils/error';
 
 export async function POST(req: Request) {
 
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
         });
 
     } catch ( error ) {
-        logger.error(`Unable to craeate razorpay order: ${error}`);
+        logger.error(`Unable to craeate razorpay order: ${errorToPOJO(error)}`);
         return NextResponse.json({ error: 'Unable to create razorpay order' }, { status: 500 });
     }
 
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
             conversionRate: conversionRate,
         });
     } catch( error ) {
-        logger.error(`Unable to insert Payment in db: ${error}`);
+        logger.error(`Unable to insert Payment in db: ${errorToPOJO(error)}`);
         return NextResponse.json({ error: 'Internal Server Error.' }, { status: 500 });
     }
 
