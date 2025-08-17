@@ -1,9 +1,15 @@
 /**
  * Carbon Points Conversion Utilities
- * Conversion Rate: 1 Carbon Point = ₹18
  */
 
-export const RUPEES_PER_CARBON_POINT = 18;
+export const RUPEES_PER_CARBON_POINT = Number(process.env.NEXT_PUBLIC_RUPEES_PER_CARBON_POINT);
+
+/**
+ * Get the carbonpoint conversion rate
+ */
+export function getConversionRate(): number {
+  return RUPEES_PER_CARBON_POINT;
+}
 
 /**
  * Convert rupees to carbon points with precise decimal calculation
@@ -33,23 +39,3 @@ export function carbonPointsToRupees(carbonPoints: number): number {
 export function formatCarbonPointsForUI(carbonPoints: number): string {
   return carbonPoints.toFixed(2);
 }
-
-/**
- * Format carbon points for database storage (6 decimal places precision)
- * @param carbonPoints Number of carbon points
- * @returns Number rounded to 6 decimal places
- */
-export function formatCarbonPointsForDB(carbonPoints: number): number {
-  return Math.round(carbonPoints * 1000000) / 1000000;
-}
-
-/**
- * Calculate how much money is "lost" due to rounding down (deprecated for decimal system)
- * @param _rupees Amount in rupees (unused in decimal system)
- * @returns Always returns 0 since we now use precise decimals
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function getRoundingLoss(_rupees: number): number {
-  // With decimal conversion, there's no rounding loss
-  return 0;
-} 

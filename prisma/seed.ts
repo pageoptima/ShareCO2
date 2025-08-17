@@ -2,7 +2,6 @@ import {
   PrismaClient,
   RideBookingStatus,
   RideStatus,
-  TransactionType,
 } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -47,35 +46,6 @@ async function main() {
     create: {
       email: "passenger@example.com",
     },
-  });
-
-  /**
-   * Create sample transactions
-   */
-  await prisma.transaction.createMany({
-    data: [
-      {
-        userId: user.id,
-        type: TransactionType.credit,
-        amount: 100,
-        description: "Purchased 100 CP",
-        createdAt: new Date("2025-03-01"),
-      },
-      {
-        userId: user.id,
-        type: TransactionType.debit,
-        amount: 50,
-        description: "Used 50 CP for ride",
-        createdAt: new Date("2025-03-02"),
-      },
-      {
-        userId: user.id,
-        type: TransactionType.credit,
-        amount: 30,
-        description: "Earned 30 CP from ride",
-        createdAt: new Date("2025-03-03"),
-      },
-    ],
   });
 
   /**
