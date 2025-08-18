@@ -86,6 +86,8 @@ const getPurposeLabel = (purpose: PublicWalletTransaction["purpose"]) => {
 
 const WalletTransactions = () => {
   const router = useRouter();
+
+  // Fetching all Transactions
   const {
     data: { transactions = [] } = {},
     isLoading,
@@ -167,9 +169,8 @@ const WalletTransactions = () => {
                       <div className="flex items-center gap-2">
                         {getTransactionStyle(txn.direction).icon}
                         <p
-                          className={`font-medium ${
-                            getTransactionStyle(txn.direction).color
-                          }`}
+                          className={`font-medium ${getTransactionStyle(txn.direction).color
+                            }`}
                         >
                           {getPurposeLabel(txn.purpose)}
                         </p>
@@ -178,7 +179,6 @@ const WalletTransactions = () => {
                         {txn.description ||
                           `No description for ${getPurposeLabel(txn.purpose)}`}
                       </p>
-
                       <div className="flex gap-2 mt-1 text-xs text-gray-300">
                         <div className="flex items-center">
                           <Clock className="h-3 w-3 mr-1 opacity-70" />
@@ -189,29 +189,41 @@ const WalletTransactions = () => {
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <Badge
-                        className={`text-sm ${
-                          getTransactionStyle(txn.direction).color
-                        }`}
+                        className={`text-sm ${getTransactionStyle(txn.direction).color
+                          }`}
                         variant="outline"
                       >
                         {txn.direction === "CREDIT"
                           ? "+"
                           : txn.direction === "DEBIT"
-                          ? "-"
-                          : ""}
+                            ? "-"
+                            : ""}
                         {txn.amount.toFixed(2)} CP
                       </Badge>
-                      {txn.rideId && (
+                      {txn.purpose === "TOPUP" && txn.paymentId ? (
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() =>
-                            router.push(`/rideDetails/${txn.rideId}`)
+                            router.push(`/paymentDetails/${txn.paymentId}`)
                           }
                           className="text-white hover:bg-white/10 cursor-pointer text-xs px-2 py-0 h-6"
                         >
-                          Ride Details
+                          Payment Details
                         </Button>
+                      ) : (
+                        txn.rideId && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              router.push(`/rideDetails/${txn.rideId}`)
+                            }
+                            className="text-white hover:bg-white/10 cursor-pointer text-xs px-2 py-0 h-6"
+                          >
+                            Ride Details
+                          </Button>
+                        )
                       )}
                     </div>
                   </div>

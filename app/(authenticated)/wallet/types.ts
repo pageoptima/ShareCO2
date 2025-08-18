@@ -25,4 +25,5 @@ export interface PublicWalletTransaction {
   description: string;
   createdAt: Date;
   rideId: string | null;
+  paymentId?: string | null;
 }

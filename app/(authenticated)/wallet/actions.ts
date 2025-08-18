@@ -58,8 +58,8 @@ export async function getTransactions({
       description: txn.description || "",
       createdAt: txn.createdAt,
       rideId: txn.rideId,
+      paymentId: txn.transaction?.payment?.id || null,
     })),
     total,
   };
 }
-

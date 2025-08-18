@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WalletIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getWallet } from "../actions";
+import { useRouter } from "next/navigation";
 
 // Shimmer Component for Loading State
 const ShimmerWalletCard = () => (
@@ -30,6 +31,8 @@ const ShimmerWalletCard = () => (
 );
 
 const WalletBalance = () => {
+
+  const router = useRouter();
   // Fetch wallet data
   const {
     data: wallet,
@@ -69,7 +72,8 @@ const WalletBalance = () => {
           </div>
         </div>
         <div className="flex justify-center">
-          <Button className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer">
+          <Button className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
+            onClick={() => router.push("/topup")}>
             Top Up
           </Button>
         </div>

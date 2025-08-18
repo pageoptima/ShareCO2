@@ -2,7 +2,7 @@ import logger from '@/config/logger';
 import { auth } from '@/lib/auth/auth';
 import { NextResponse } from 'next/server';
 import { getPaymentDetailsById, verifyPayment } from '@/services/razorpay';
-import { handlePaymentCapture } from '@/lib/payment/paymentServices';
+import { getPaymentByOrder, handlePaymentCapture } from '@/lib/payment/paymentServices';
 
 export async function POST(req: Request) {
 
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
         razorpay_signature
     } = await req.json();
 
-    if ( !razorpay_payment_id || !razorpay_order_id || !razorpay_signature ) {
+    if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -27,24 +27,24 @@ export async function POST(req: Request) {
     const isValidPayment = verifyPayment(
         {
             razorpayPaymentId: razorpay_payment_id,
-            razorpayOrderId:   razorpay_order_id,
+            razorpayOrderId: razorpay_order_id,
             razorpaySignature: razorpay_signature,
         }
     );
 
-    if ( !isValidPayment ) {
+    if (!isValidPayment) {
         return NextResponse.json({ error: 'Payment verification failed!' }, { status: 401 });
     }
 
     // Verify payment success
     try {
-        const payment = await getPaymentDetailsById( razorpay_payment_id );
+        const payment = await getPaymentDetailsById(razorpay_payment_id);
 
-        if ( payment.status === 'failed' ) {
+        if (payment.status === 'failed') {
             return NextResponse.json({ error: 'Payment transection failed!' }, { status: 401 });
         }
 
-        if ( payment.status !== 'captured' ) {
+        if (payment.status !== 'captured') {
             return NextResponse.json({ error: 'Payment transection incomplete!' }, { status: 401 });
         }
 
@@ -53,16 +53,24 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
     }
 
-    try{
+    try {
         // Handle payment capture
         await handlePaymentCapture({
             orderId: razorpay_order_id,
             paymentId: razorpay_payment_id,
             signature: razorpay_signature,
         });
+
+        // Fetch the payment to get the Payment schema id
+        const payment = await getPaymentByOrder(razorpay_order_id);
+        if (!payment) {
+            logger.error(`Payment not found for order: ${razorpay_order_id}`);
+            return NextResponse.json({ error: 'Payment not found' }, { status: 404 });
+        }
+
+        // Return the Payment schema id
+        return NextResponse.json({ id: payment.id }, { status: 200 });
     } catch {
         return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
     }
-    
-    return NextResponse.json({ success: true }, { status: 201 });
 }
