@@ -2,15 +2,16 @@
 
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation"; // Add useRouter import
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MapPin, Car, Copy } from "lucide-react";
+import { Clock, MapPin, Car, Copy, Home } from "lucide-react"; // Add Home import
 import { getRideDetails } from "../actions";
 import { utcIsoToLocalDate, utcIsoToLocalTime12 } from "@/utils/time";
 import { toast } from "sonner";
 import { PublicRideBookingStatus, PublicRideStatus } from "../types";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 
 // Shimmer Component for Loading State
 const Loading = () => (
@@ -65,7 +66,7 @@ const Loading = () => (
                 className="p-2 bg-white/5 rounded-lg border border-white/10"
               >
                 <div className="flex justify-between">
-                  <div className="space-y-2">
+                  <div className="space предмет: y-2">
                     <div className="h-4 w-32 bg-gray-600/50 rounded-lg" />
                     <div className="h-3 w-40 bg-gray-600/50 rounded-lg" />
                     <div className="h-3 w-28 bg-gray-600/50 rounded-lg" />
@@ -126,6 +127,7 @@ const getBookingStatusColor = (status: PublicRideBookingStatus) => {
 
 const RideDetailsPage = () => {
   const params = useParams();
+  const router = useRouter(); // Add useRouter hook
   const rideId = params.rideId as string;
 
   const {
@@ -160,9 +162,20 @@ const RideDetailsPage = () => {
   return (
     <Card className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 backdrop-blur-lg border-gray-700/30 max-w-2xl mx-auto shadow-lg hover:shadow-xl transition-shadow duration-300">
       <CardHeader className="border-b border-gray-700/20 pb-4">
-        <CardTitle className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent">
-          Ride Details
-        </CardTitle>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent">
+            Ride Details
+          </CardTitle>
+          <Button
+            variant="ghost"
+            className="text-gray-400 hover:text-gray-200 cursor-pointer flex items-center gap-2 bg-gray-700/50 border border-gray-600/50 hover:bg-gray-600/50 rounded-lg px-3 py-1 transition-all duration-200"
+            onClick={() => router.push("/")}
+            aria-label="Home"
+          >
+            <Home className="h-5 w-5" />
+            <span className="hidden sm:inline">Home</span>
+          </Button>
+        </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-4">
           <div className="flex items-center gap-3 animate-fade-in">
             <MapPin className="h-6 w-6 text-blue-400" />
