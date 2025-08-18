@@ -94,7 +94,7 @@ export default function TopUpPage() {
                     <RazorpayButton
                         carbonCoin={parseFloat(carbonPoints) || 0}
                         onError={(error) => console.log(error)}
-                        onSuccess={() => router.push("/")}
+                        onSuccess={(paymentId) => router.push(`/paymentDetails/${paymentId}`)}
                     />
                 </CardContent>
             </Card>

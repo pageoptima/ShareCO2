@@ -18,6 +18,10 @@ interface CreateOrderResponse {
     currency: string;
 }
 
+interface VerifyPaymentResponse {
+    id: string; // Payment schema id
+}
+
 /**
  * Create payment order
  */
@@ -32,10 +36,10 @@ const createOrder = async (payload: CreateOrderPayload): Promise<CreateOrderResp
 };
 
 /**
- * Varify payment
+ * Verify payment
  */
-const verifyPayment = async (payload: void) => {
-    const response = await fetch('/api/payments/razorpay/varify-payment', {
+const verifyPayment = async (payload: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }): Promise<VerifyPaymentResponse> => {
+    const response = await fetch('/api/payments/razorpay/verify-payment', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -53,7 +57,7 @@ const RazorpayButton = ({
 }: {
     carbonCoin: number;
     onError: (error: string) => void;
-    onSuccess: () => void;
+    onSuccess: (paymentId: string) => void;
 }) => {
     const { data: session } = useSession();
     const { error, isLoading, Razorpay } = useRazorpay();
@@ -64,9 +68,9 @@ const RazorpayButton = ({
         mutationFn: (option: CreateOrderPayload) => createOrder(option),
     });
 
-    // Mutation hook for varify payment
+    // Mutation hook for verify payment
     const { mutateAsync: verifyPaymentMute } = useMutation({
-        mutationFn: (option) => verifyPayment(option),
+        mutationFn: (option: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => verifyPayment(option),
     });
 
     // Reset isProcessing on component unmount
@@ -116,13 +120,13 @@ const RazorpayButton = ({
                     //     "razorpay_order_id": "order_PA6RQ8FwV7oUQs",
                     //     "razorpay_signature": "3ea1bf0bc5d5a76b8ed9e072b2570857d3684fdef295504a625d63aa3f87d09e"
                     // }
-                    await verifyPaymentMute(response as unknown as void, {
+                    await verifyPaymentMute(response, {
                         onError: (error) => {
                             onError(error.message);
                             setIsProcessing(false);
                         },
-                        onSuccess: () => {
-                            onSuccess();
+                        onSuccess: (data: VerifyPaymentResponse) => {
+                            onSuccess(data.id);
                             setIsProcessing(false);
                         },
                     });

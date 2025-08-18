@@ -48,7 +48,7 @@ export function CarbonPointsCard() {
         </div>
         <Button
           className="w-full bg-[#2E7D32] hover:bg-[#388E3C] cursor-pointer"
-          onClick={() => router.push("/TopUp")}
+          onClick={() => router.push("/topup")}
         >
           Top Up
         </Button>

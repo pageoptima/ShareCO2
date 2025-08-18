@@ -73,7 +73,7 @@ const WalletBalance = () => {
         </div>
         <div className="flex justify-center">
           <Button className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
-            onClick={() => router.push("/TopUp")}>
+            onClick={() => router.push("/topup")}>
             Top Up
           </Button>
         </div>

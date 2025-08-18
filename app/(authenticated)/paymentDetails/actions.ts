@@ -9,9 +9,6 @@ import { getPaymentById } from "@/lib/payment/paymentServices";
 export async function getPaymentDetails(paymentId: string): Promise<{
     id: string;
     userId: string;
-    orderId: string;
-    paymentId?: string | null;
-    signature?: string | null;
     status: "PENDING" | "COMPLETED" | "CANCELLED" | "FAILED";
     amount: number;
     coinAmount: number;
@@ -31,9 +28,6 @@ export async function getPaymentDetails(paymentId: string): Promise<{
     return {
         id: payment.id,
         userId: payment.userId,
-        orderId: payment.orderId,
-        paymentId: payment.paymentId,
-        signature: payment.signature,
         status: payment.status,
         amount: payment.amount,
         coinAmount: payment.coinAmount,

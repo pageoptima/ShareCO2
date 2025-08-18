@@ -61,18 +61,6 @@ export async function updatePaymentStatus(
     });
 }
 
-/**
- * Get payment by ID
- */
-// export async function getPaymentById(id: string) {
-//     return await prisma.payment.findUnique({
-//         where: { id },
-//         include: {
-//             user       : true,
-//             Transaction: true,
-//         },
-//     });
-// }
 
 /**
  * Get payment by  order ID
@@ -201,8 +189,6 @@ export async function handlePaymentFailed(
 }
 
 
-
-
 /**
  * Get payment details by payment ID
  */
@@ -213,9 +199,6 @@ export async function getPaymentById(paymentId: string, userId: string) {
       select: {
         id: true,
         userId: true,
-        orderId: true,
-        paymentId: true,
-        signature: true,
         status: true,
         amount: true,
         coinAmount: true,
