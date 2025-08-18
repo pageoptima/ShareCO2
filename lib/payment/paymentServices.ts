@@ -64,15 +64,15 @@ export async function updatePaymentStatus(
 /**
  * Get payment by ID
  */
-export async function getPaymentById(id: string) {
-    return await prisma.payment.findUnique({
-        where: { id },
-        include: {
-            user       : true,
-            Transaction: true,
-        },
-    });
-}
+// export async function getPaymentById(id: string) {
+//     return await prisma.payment.findUnique({
+//         where: { id },
+//         include: {
+//             user       : true,
+//             Transaction: true,
+//         },
+//     });
+// }
 
 /**
  * Get payment by  order ID
@@ -198,4 +198,41 @@ export async function handlePaymentFailed(
     }
 
     return true;
+}
+
+
+
+
+/**
+ * Get payment details by payment ID
+ */
+export async function getPaymentById(paymentId: string, userId: string) {
+  try {
+    const payment = await prisma.payment.findUnique({
+      where: { id: paymentId, userId },
+      select: {
+        id: true,
+        userId: true,
+        orderId: true,
+        paymentId: true,
+        signature: true,
+        status: true,
+        amount: true,
+        coinAmount: true,
+        conversionRate: true,
+        currency: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!payment) {
+      throw new Error("Payment not found or not authorized");
+    }
+
+    return payment;
+  } catch (error) {
+    logger.error(`Error fetching payment by ID ${paymentId}: ${error}`);
+    throw error;
+  }
 }

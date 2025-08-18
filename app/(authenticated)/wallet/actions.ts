@@ -49,6 +49,8 @@ export async function getTransactions({
     limit,
   });
 
+  //console.log("Transactions: ", transactions)
+
   return {
     transactions: transactions.map((txn) => ({
       id: txn.id,
@@ -58,6 +60,7 @@ export async function getTransactions({
       description: txn.description || "",
       createdAt: txn.createdAt,
       rideId: txn.rideId,
+      paymentId: txn.transactionId,
     })),
     total,
   };

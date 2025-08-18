@@ -56,7 +56,7 @@ export async function POST(req: Request) {
             conversionRate: conversionRate,
         });
     } catch( error ) {
-        logger.error(`Unable to insert Payment in db: ${errorToPOJO(error)}`);
+        logger.error(`Unable to insert Payment in db: ${error}`);
         return NextResponse.json({ error: 'Internal Server Error.' }, { status: 500 });
     }
 

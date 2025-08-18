@@ -1,29 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  rupeesToCarbonPoints,
-  RUPEES_PER_CARBON_POINT,
-  formatCarbonPointsForUI,
-} from "@/utils/carbonPointsConversion";
 import { useQuery } from "@tanstack/react-query";
 import { getCarbonPoint } from "../actions";
-import RazorpayButton from "@/app/_components/payments/Rozorpay";
-
 
 export function CarbonPointsCard() {
-  // Hook for fetching the carbon point
+  const router = useRouter();
+
   const {
     data: carbonPoint = 0,
     isLoading: isCarbonPointFetching,
@@ -37,21 +22,6 @@ export function CarbonPointsCard() {
   if (isCarbonPointFetchingError) {
     console.error(carbonPointFetchingError);
   }
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [amount, setAmount] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-
-  // Calculate preview of carbon points
-  const getPointsPreview = () => {
-    const amountNum = parseInt(amount) || 0;
-    if (amountNum <= 0) return "0.00";
-    return formatCarbonPointsForUI(rupeesToCarbonPoints(amountNum));
-  };
-
-  const handleTopUpRequest = async () => {
-    console.log('Redirect to topup page');
-  };
 
   if (isCarbonPointFetching) {
     return (
@@ -68,100 +38,21 @@ export function CarbonPointsCard() {
   }
 
   return (
-    <>
-      <Card className="bg-[#1A3C34] text-white border-none">
-        <CardContent className="space-y-4">
-          <div>
-            <p className="text-sm text-gray-300 text-center">Carbon Points</p>
-            <p className="text-2xl font-semibold text-center">
-              {carbonPoint} CP
-            </p>
-          </div>
-          <Button
-            className="w-full bg-[#2E7D32] hover:bg-[#388E3C] cursor-pointer"
-            onClick={() => setIsModalOpen(true)}
-          >
-            Top Up
-          </Button>
-          <RazorpayButton
-            carbonCoin={5}
-            onError={(error) => console.log(error)}
-            onSuccess={() => console.log("payment successfull")}
-          />
-        </CardContent>
-      </Card>
-
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="bg-[#1A3C34] text-white border-none">
-          <DialogHeader>
-            <DialogTitle className="text-white">
-              Top Up Carbon Points
-            </DialogTitle>
-            <p className="text-sm text-gray-400 mt-2">
-              Conversion Rate: ₹{RUPEES_PER_CARBON_POINT} = 1 Carbon Point
-              (Precise decimal calculation)
-            </p>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="amount" className="text-white">
-                Amount (INR)
-              </Label>
-              <Input
-                id="amount"
-                type="number"
-                placeholder="Enter amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="bg-black/30 border-gray-700 text-white"
-                min="1"
-              />
-              <p className="text-xs text-gray-400">
-                Any positive amount accepted (₹{RUPEES_PER_CARBON_POINT} = 1.00
-                CP)
-              </p>
-              {amount && parseInt(amount) > 0 && (
-                <div className="text-sm text-emerald-400 bg-emerald-500/10 p-2 rounded">
-                  ₹{amount} → {getPointsPreview()} Carbon Points
-                </div>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="text-white">
-                Phone Number
-              </Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="Enter your phone number"
-                value={phoneNumber}
-                onChange={(e) => {
-                  // Only allow numbers
-                  const value = e.target.value.replace(/[^0-9]/g, "");
-                  // Limit to 10 digits
-                  if (value.length <= 10) {
-                    setPhoneNumber(value);
-                  }
-                }}
-                className="bg-black/30 border-gray-700 text-white"
-                maxLength={10}
-                pattern="[0-9]{10}"
-              />
-              <p className="text-xs text-gray-400">
-                Enter a 10-digit phone number
-              </p>
-            </div>
-          </div>
-          <DialogFooter className="sm:justify-end">
-            <Button
-              onClick={handleTopUpRequest}
-              className="bg-[#2E7D32] hover:bg-[#388E3C]"
-            >
-              { "Request Top Up" }
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+    <Card className="bg-[#1A3C34] text-white border-none">
+      <CardContent className="space-y-4">
+        <div>
+          <p className="text-sm text-gray-300 text-center">Carbon Points</p>
+          <p className="text-2xl font-semibold text-center">
+            {carbonPoint} CP
+          </p>
+        </div>
+        <Button
+          className="w-full bg-[#2E7D32] hover:bg-[#388E3C] cursor-pointer"
+          onClick={() => router.push("/TopUp")}
+        >
+          Top Up
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
