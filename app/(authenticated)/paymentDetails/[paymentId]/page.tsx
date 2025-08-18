@@ -13,35 +13,78 @@ import { getPaymentDetails } from "../actions";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Shimmer Component for Loading State
-const Loading = () => (
-  <Card className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-md border-gray-700/20 max-w-2xl mx-auto">
-    <CardHeader className="relative">
-      <div className="h-6 w-40 bg-gray-600/30 rounded-lg shimmer" />
-      <div className="absolute top-4 right-4 h-8 w-20 bg-gray-600/30 rounded-lg shimmer" />
-    </CardHeader>
-    <CardContent>
-      <div className="space-y-5">
-        <div>
-          <div className="h-5 w-28 bg-gray-600/30 rounded-lg shimmer mb-3" />
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="h-4 w-4 bg-gray-600/30 rounded-full shimmer" />
-              <div className="h-4 w-52 bg-gray-600/30 rounded-lg shimmer" />
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-4 w-4 bg-gray-600/30 rounded-full shimmer" />
-              <div className="h-4 w-60 bg-gray-600/30 rounded-lg shimmer" />
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-4 w-4 bg-gray-600/30 rounded-full shimmer" />
-              <div className="h-4 w-48 bg-gray-600/30 rounded-lg shimmer" />
-            </div>
+const shimmer = `relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent`;
+const Loading = () => {
+  return (
+    <Card className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 backdrop-blur-lg border-gray-700/30 max-w-2xl mx-auto shadow-lg h-auto">
+      <CardHeader className="border-b border-gray-700/20 pb-4">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          {/* Title Placeholder */}
+          <div className={`${shimmer} h-8 w-48 bg-gray-700/50 rounded-md`} />
+          {/* Home Button Placeholder */}
+          <Button
+            variant="ghost"
+            className="text-gray-400 flex items-center gap-2 bg-gray-700/50 border border-gray-600/50 rounded-lg px-3 py-1"
+            disabled
+          >
+            <Home className="h-5 w-5" />
+            <span className="hidden sm:inline">Home</span>
+          </Button>
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-4">
+          {/* Amount Placeholder */}
+          <div className="flex items-center gap-3">
+            <div className={`${shimmer} h-8 w-8 bg-gray-700/50 rounded-full`} />
+            <div className={`${shimmer} h-6 w-32 bg-gray-700/50 rounded-md`} />
+          </div>
+          {/* Payment ID Button Placeholder */}
+          <div className="flex items-center gap-2 px-3 py-2 bg-gray-700/50 rounded-lg">
+            <div className={`${shimmer} h-5 w-40 bg-gray-700/50 rounded-md`} />
+            <Copy className="h-5 w-5 text-gray-400" />
           </div>
         </div>
-      </div>
-    </CardContent>
-  </Card>
-);
+        {/* Conversion Rate Placeholder */}
+        <div className={`${shimmer} h-5 w-64 bg-gray-700/50 rounded-md mt-2`} />
+      </CardHeader>
+      <CardContent className="pt-6">
+        <ScrollArea className="h-[400px] pr-4">
+          <div className="space-y-6">
+            <div>
+              {/* Overview Title Placeholder */}
+              <div className={`${shimmer} h-6 w-32 bg-gray-700/50 rounded-md mb-2`} />
+              <div className="mt-4 space-y-3">
+                {/* Amount Placeholder */}
+                <div className="flex items-center gap-3 p-2 bg-gray-700/20 rounded-lg">
+                  <div className={`${shimmer} h-5 w-48 bg-gray-600/50 rounded-md`} />
+                </div>
+                {/* Coin Amount Placeholder */}
+                <div className="flex items-center gap-3 p-2 bg-gray-700/20 rounded-lg">
+                  <div className={`${shimmer} h-5 w-48 bg-gray-600/50 rounded-md`} />
+                </div>
+                {/* Currency Placeholder */}
+                <div className="flex items-center gap-3 p-2 bg-gray-700/20 rounded-lg">
+                  <div className={`${shimmer} h-5 w-48 bg-gray-600/50 rounded-md`} />
+                </div>
+                {/* Date/Time Placeholder */}
+                <div className="flex items-center gap-3 p-2 bg-gray-700/20 rounded-lg">
+                  <Clock className="h-5 w-5 text-gray-400" />
+                  <div className={`${shimmer} h-5 w-48 bg-gray-600/50 rounded-md`} />
+                </div>
+                {/* Status Placeholder */}
+                <div className="flex items-center gap-3 p-2 bg-gray-700/20 rounded-lg">
+                  <div className={`${shimmer} h-5 w-24 bg-gray-600/50 rounded-md`} />
+                  <Badge className="p-2 rounded-full bg-gray-700/50" variant="outline">
+                    <div className={`${shimmer} h-4 w-20 bg-gray-600/50 rounded-md`} />
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ScrollArea>
+      </CardContent>
+    </Card>
+  );
+};
 
 /**
  * Get the color of the payment status
