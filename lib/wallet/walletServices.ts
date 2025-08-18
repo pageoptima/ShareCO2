@@ -47,7 +47,7 @@ export async function getWalletTransactions({
     throw new Error(`Wallet not found for user ${userId}`);
   }
 
-  // Fetch paginated transactions
+  // Fetch paginated transactions with related Transaction and Payment data
   const [transactions, total] = await prisma.$transaction([
     prisma.walletTransaction.findMany({
       where: {
@@ -57,13 +57,23 @@ export async function getWalletTransactions({
       orderBy: { createdAt: "desc" },
       skip: skip,
       take: limit,
+      include: {
+        transaction: {
+          include: {
+            payment: {
+              select: {
+                id: true, 
+              },
+            },
+          },
+        },
+      },
     }),
     prisma.walletTransaction.count({
       where: { walletId: wallet.id },
     }),
   ]);
 
-  // console.log("transactions", transactions)
   return {
     transactions,
     total,

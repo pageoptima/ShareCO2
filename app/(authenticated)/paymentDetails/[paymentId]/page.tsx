@@ -101,7 +101,7 @@ const PaymentDetailsPage = () => {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mt-2">
           <div className="flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-gray-400" />
-            <span className="text-lg sm:text-xl">
+            <span className="text-lg sm:text-xl text-white">
               Top Up: {payment.coinAmount.toFixed(2)} CP
             </span>
           </div>
