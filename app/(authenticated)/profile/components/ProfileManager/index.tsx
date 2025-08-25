@@ -45,7 +45,7 @@ const userProfileSchema = z.object({
     .max(100),
   phone: z
     .string()
-    .regex(/^\+?1?\s?\(?[2-9][0-9]{2}\)?[-. ]?[2-9][0-9]{2}[-. ]?[0-9]{4}$/, {
+    .regex(/^\d{10}$/, {
       message: "Invalid phone number format",
     }),
 });
