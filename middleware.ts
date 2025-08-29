@@ -32,7 +32,7 @@ export async function middleware(req: NextRequest) {
       req.nextUrl.pathname === '/signin'
     )
   ) {
-    return NextResponse.redirect(new URL('/dashboard', req.url));
+    return NextResponse.redirect(new URL('/book-ride', req.url));
   }
 
   if (
