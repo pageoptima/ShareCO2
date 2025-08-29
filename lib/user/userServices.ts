@@ -125,8 +125,6 @@ export async function updateProfileImage({
 }
 
 
-
-
 /**
  * Get a user by id
  * @param email
