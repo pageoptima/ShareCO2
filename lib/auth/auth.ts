@@ -18,10 +18,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return await prisma.$transaction(async (tx) => {
         const user = await tx.user.create({
           data: {
-            email        : data.email,
+            email: data.email,
             emailVerified: data.emailVerified,
-            name         : data?.name,
-            image        : data?.image,
+            name: data?.name,
+            image: data?.image,
+            cePoints: 0,
           },
         });
 
@@ -98,8 +99,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         // Update user id, name, eamil
         if (dbUser) {
-          session.user.id    = dbUser.id;
-          session.user.name  = dbUser.name;
+          session.user.id = dbUser.id;
+          session.user.name = dbUser.name;
           session.user.email = dbUser.email;
         }
 

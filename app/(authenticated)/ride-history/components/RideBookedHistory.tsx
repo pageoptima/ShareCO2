@@ -2,7 +2,7 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle, Calendar, Clock, MapPin } from "lucide-react";
+import { AlertCircle, Calendar, Clock, MapPin, Leaf } from "lucide-react"; // Added Leaf icon
 import React from "react";
 import { getUserRideBookings } from "../actions";
 import { PublicRideBookingStatus, PublicRideStatus } from "../types";
@@ -30,6 +30,7 @@ const ShimmerCard = () => (
           <div className="h-6 w-20 bg-gray-600/50 rounded-3xl" />
           <div className="h-6 w-24 bg-gray-600/50 rounded-3xl" />
           <div className="h-6 w-24 bg-gray-600/50 rounded-3xl" />
+          <div className="h-6 w-20 bg-gray-600/50 rounded-3xl" /> {/* Added for cePoints */}
         </div>
       </div>
 
@@ -161,6 +162,10 @@ const RideBookedHistory = () => {
                         Ride: {rideBooking.ride.status}
                       </div>
                     )}
+                    <div className="flex items-center bg-white/10 rounded-3xl px-2 py-1 text-emerald-400">
+                      <Leaf className="h-3 w-3 mr-1" />
+                      {rideBooking.ride.cePointsEarned.toFixed(2)} CP
+                    </div>
                   </div>
                 </div>
               </div>

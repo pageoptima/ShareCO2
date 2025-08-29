@@ -16,6 +16,7 @@ export interface PublicUserRides {
   status: PublicRideStatus;
   startingTime: Date;
   carbonCost: number;
+  cePointsEarned: number;
   vehicle: {
     model: string | null;
     id: string;
@@ -39,7 +40,7 @@ export interface PublicUserRides {
     };
   }[];
 }
-
+// types.ts
 export interface PublicUserRideBookings {
   id: string;
   status: PublicRideBookingStatus;
@@ -48,6 +49,7 @@ export interface PublicUserRideBookings {
     id: string;
     startingTime: Date;
     status: PublicRideStatus;
+    cePointsEarned: number;
     startingLocation: {
       id: string;
       name: string;

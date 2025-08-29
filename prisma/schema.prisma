@@ -21,6 +21,7 @@ model User {
   emailVerified      DateTime?
   isProfileCompleted Boolean   @default(false)
   disclaimerAccepted Boolean   @default(false)
+  cePoints           Float     @default(0)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
@@ -109,6 +110,7 @@ model Ride {
   carbonCost            Float               @default(0)
   maxPassengers         Int                 @default(3)
   createdAt             DateTime            @default(now())
+  cePointsEarned        Float               @default(0)
   bookings              RideBooking[]
   messages              ChatMessage[]
   WalletTransaction     WalletTransaction[]
@@ -130,6 +132,7 @@ model RideBooking {
   carbonCost        Float               @default(0)
   status            RideBookingStatus   @default(Confirmed)
   createdAt         DateTime            @default(now())
+  cePointsEarned    Float               @default(0)
   WalletTransaction WalletTransaction[]
 
   @@unique([rideId, userId])

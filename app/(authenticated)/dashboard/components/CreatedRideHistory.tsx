@@ -110,6 +110,7 @@ const CreatedRideHistory = () => {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [rideToCancel, setRideToCancel] = useState<string | null>(null);
   const [isCarbonPopupOpen, setIsCarbonPopupOpen] = useState(false);
+  const [carbonSaved, setCarbonSaved] = useState<number | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -172,7 +173,8 @@ const CreatedRideHistory = () => {
       onSuccess: async (result) => {
         if (result.success) {
           toast.success("Ride completed successfully");
-           setIsCarbonPopupOpen(true);
+          setCarbonSaved(result.championCePoints);
+          setIsCarbonPopupOpen(true);
           await queryClient.invalidateQueries({ queryKey: ["carbonpoint"] });
         } else {
           toast.error(result.error);
@@ -559,8 +561,11 @@ const CreatedRideHistory = () => {
       {/* Carbon Emission Popup */}
       <CarbonEmissionPopup
         isOpen={isCarbonPopupOpen}
-        onClose={() => setIsCarbonPopupOpen(false)}
-        carbonSaved={175} // Hardcoded for now; replace with dynamic value if available
+        onClose={() => {
+          setIsCarbonPopupOpen(false);
+          setCarbonSaved(null);
+        }}
+        carbonSaved={carbonSaved ?? 0}
       />
 
       {/* Chat Modal */}
