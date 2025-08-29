@@ -46,9 +46,6 @@ export async function uploadImageToS3(
 
     const cleanedUserName = cleanUserName(userName);
 
-
-    
-
     // Initialize S3 client
     const s3Client = new S3Client({
       region: process.env.AWS_S3_REGION,
