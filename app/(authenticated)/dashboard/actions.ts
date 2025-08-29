@@ -116,18 +116,20 @@ export async function completeRide(rideId: string) {
       throw new Error("User not authenticated");
     }
 
-    const success = await completeRideDb({
+    const response = await completeRideDb({
       userId: session.user.id,
       rideId: rideId,
     });
 
     return {
-      success: success,
+      success: response.success,
+      championCePoints: response.championCePoints || null,
       error: null,
     };
   } catch (error) {
     return {
       success: false,
+      championCePoints: null,
       error: (error as Error).message,
     };
   }

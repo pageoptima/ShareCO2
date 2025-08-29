@@ -237,9 +237,8 @@ export async function cancelRide({
         sendPushNotification({
           userId: rideBooking.userId,
           title: "😔 Ride Cancelled",
-          body: `Oops, ${
-            rideBooking.user.name || "Rider"
-          }, the driver cancelled your ride. No worries—book another one and let’s roll! 🚗`,
+          body: `Oops, ${rideBooking.user.name || "Rider"
+            }, the driver cancelled your ride. No worries—book another one and let’s roll! 🚗`,
           eventName: "ride_cancelled",
           redirectUrl: "/dashboard?tab=booked",
         })
@@ -295,9 +294,8 @@ export async function activateRide({
       if (rideBooking.status == RideBookingStatus.Confirmed) {
         throw new Error(
           `
-            Rider ${
-              rideBooking.user.name || rideBooking.user.email
-            } is not reached yet.
+            Rider ${rideBooking.user.name || rideBooking.user.email
+          } is not reached yet.
           `
         );
       }
@@ -315,9 +313,8 @@ export async function activateRide({
         sendPushNotification({
           userId: rideBooking.userId,
           title: "🚗 Your Ride Is On the Way!",
-          body: `Buckle up, ${
-            rideBooking.user.name || "Rider"
-          }! Your journey has begun. Enjoy the ride! 🎉`,
+          body: `Buckle up, ${rideBooking.user.name || "Rider"
+            }! Your journey has begun. Enjoy the ride! 🎉`,
           eventName: "ride_started",
           redirectUrl: "/dashboard?tab=booked",
         })
@@ -330,6 +327,19 @@ export async function activateRide({
     throw error;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Complete a ride
@@ -350,6 +360,8 @@ export async function completeRide({
           user: true,
         },
       },
+      startingLocation: true,
+      destinationLocation: true,
     },
   });
 
@@ -382,29 +394,83 @@ export async function completeRide({
     }
   }
 
-  // Update the ride status to active
+  // Re-fetch ride bookings to get updated statuses
+  const updatedRide = await prisma.ride.findUnique({
+    where: { id: rideId },
+    include: {
+      bookings: {
+        include: {
+          user: true,
+        },
+      },
+    },
+  });
+
+  if (!updatedRide) {
+    throw new Error("Failed to fetch updated ride data");
+  }
+  const updatedBookings = updatedRide.bookings;
+
+  // Calculate distance
+  if (!ride.startingLocation || !ride.destinationLocation) {
+    throw new Error(
+      "Invalid ride: Both starting and destination locations must be defined"
+    );
+  }
+
+  // Since one location is guaranteed non-organization, select its distanceFromOrg
+  const distance = ride.startingLocation.isOrganization
+    ? ride.destinationLocation.distanceFromOrg
+    : ride.startingLocation.distanceFromOrg;
+
+  // Calculate CE Points for champion
+  const cePointsPerKmPerRider = 125;
+  const completedBookings = updatedBookings.filter(b => b.status === RideBookingStatus.Completed);
+
+  const riderCount = completedBookings.length;
+
+  const championCePoints = parseFloat((cePointsPerKmPerRider * distance * riderCount).toFixed(2));
+
+  // Update ride with champion's cePointsEarned and status
   await prisma.ride.update({
     where: { id: rideId },
-    data: { status: RideStatus.Completed },
+    data: {
+      status: RideStatus.Completed,
+      cePointsEarned: championCePoints,
+    },
   });
+
+  // Increment champion's cumulative cePoints
+  await prisma.user.update({
+    where: { id: ride.driverId },
+    data: {
+      cePoints: {
+        increment: championCePoints,
+      },
+    },
+  });
+
 
   // Send notifications to all riders concurrently
   await Promise.all(
-    rideBookings.map((rideBooking) =>
+    updatedBookings.map((rideBooking) =>
       sendPushNotification({
         userId: rideBooking.userId,
         title: "🚀 Ride Complete!",
-        body: `Woohoo, ${
-          rideBooking.user.name || "Rider"
-        }! You've reached your destination. Thanks for choosing us! 🌟`,
+        body: `Woohoo, ${rideBooking.user.name || "Rider"
+          }! You've reached your destination. You earned ${rideBooking.cePointsEarned} CE Points for saving ${rideBooking.cePointsEarned} grams of CO2! 🌟`,
         eventName: "ride_completed",
         redirectUrl: "/dashboard?tab=booked",
       })
     )
   );
 
-  return true;
+  return {
+    success: true,
+    championCePoints,
+  };
 }
+
 
 /**
  * Get all rides of a user
@@ -450,6 +516,7 @@ export async function getUserRides(userId: string, limit: number = 20) {
     throw error;
   }
 }
+
 
 /**
  * Get ride details by ride ID

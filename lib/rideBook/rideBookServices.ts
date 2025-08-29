@@ -142,9 +142,8 @@ export async function bookRide({
       await sendPushNotification({
         userId: currentRide.driverId, // Use driverId from currentRide
         title: "Ride Booked Successfully!",
-        body: `${
-          user.name || "A passenger"
-        } has booked your ride. Get ready for the journey!`,
+        body: `${user.name || "A passenger"
+          } has booked your ride. Get ready for the journey!`,
         eventName: "booking_confirmation",
         redirectUrl: "/dashboard?tab=created",
       });
@@ -194,9 +193,8 @@ export async function activateRideBooking({
   await sendPushNotification({
     userId: booking.ride.driverId,
     title: "🌟 Rider Arrived!",
-    body: `${
-      booking.user.name || "Rider"
-    } is at the starting point! Time to kick off the journey! 🚀`,
+    body: `${booking.user.name || "Rider"
+      } is at the starting point! Time to kick off the journey! 🚀`,
     eventName: "ride_activated",
     redirectUrl: "/dashboard?tab=created",
   });
@@ -247,6 +245,20 @@ export async function activateRideBookingByChampionService({
   return true;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**
  * Complete a ride booking
  */
@@ -260,7 +272,14 @@ export async function completeRideBooking({
   // Find the booking and verify the driver is the ride owner
   const booking = await prisma.rideBooking.findUnique({
     where: { id: bookingId },
-    include: { ride: true },
+    include: {
+      ride: {
+        include: {
+          startingLocation: true,
+          destinationLocation: true,
+        },
+      },
+    },
   });
 
   if (!booking) {
@@ -270,6 +289,21 @@ export async function completeRideBooking({
   if (booking.ride.driverId !== driverId) {
     throw new Error("Not authorized to manage this booking");
   }
+
+  // Calculate distance for CE Points
+  if (!booking.ride.startingLocation || !booking.ride.destinationLocation) {
+    throw new Error(
+      "Invalid ride: Both starting and destination locations must be defined"
+    );
+  }
+  // Since one location is guaranteed non-organization, select its distanceFromOrg
+  const distance = booking.ride.startingLocation.isOrganization
+    ? booking.ride.destinationLocation.distanceFromOrg
+    : booking.ride.startingLocation.distanceFromOrg;
+
+  // Calculate rider CE Points
+  const cePointsPerKm = 125;
+  const riderCePoints = parseFloat((cePointsPerKm * distance).toFixed(2));
 
   await prisma.$transaction(async (tx) => {
     // Settle the ride cost from rider
@@ -290,15 +324,45 @@ export async function completeRideBooking({
       amount: booking.carbonCost,
     });
 
-    // Update the ride booking status
-    await prisma.rideBooking.update({
+    // Update the ride booking status and cePointsEarned
+    await tx.rideBooking.update({
       where: { id: bookingId },
-      data: { status: RideBookingStatus.Completed },
+      data: {
+        status: RideBookingStatus.Completed,
+        cePointsEarned: riderCePoints,
+      },
+    });
+
+    // Increment rider's cumulative cePoints
+    await tx.user.update({
+      where: { id: booking.userId },
+      data: { cePoints: { increment: riderCePoints } },
     });
   });
 
   return true;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Cancle ride booking by driver on purpose
@@ -542,9 +606,8 @@ export async function cancleRideBookingByUser({
   await sendPushNotification({
     userId: booking.ride.driverId,
     title: "🚗 Booking Cancelled",
-    body: `${
-      booking.user.name || "A rider"
-    } has cancelled their booking. Check your ride details! 🌟`,
+    body: `${booking.user.name || "A rider"
+      } has cancelled their booking. Check your ride details! 🌟`,
     eventName: "booking_cancelled",
     redirectUrl: "/dashboard?tab=created",
   });
@@ -568,6 +631,7 @@ export async function getUserRideBookings(userId: string, limit: number = 20) {
             id: true,
             status: true,
             startingTime: true,
+            cePointsEarned: true,
             startingLocation: {
               select: { id: true, name: true },
             },

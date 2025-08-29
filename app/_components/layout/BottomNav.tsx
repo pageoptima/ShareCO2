@@ -8,9 +8,10 @@ export function BottomNav() {
   const pathname = usePathname();
 
   const navItems = [
-    { name: "My Rides", path: "/dashboard" },
     { name: "Book Ride", path: "/book-ride" },
     { name: "Create Ride", path: "/create-ride" },
+    { name: "My Rides", path: "/dashboard" },
+
   ];
 
   return (

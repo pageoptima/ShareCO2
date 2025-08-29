@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   ShieldX,
   UserCircle,
+  Leaf, // Imported Leaf icon
 } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { denyRideBooking, getUserRides } from "../actions";
@@ -87,11 +88,12 @@ const RideCardShimmer = () => {
             </div>
           </div>
 
-          {/* Shimmer for date, time, and status */}
+          {/* Shimmer for date, time, status, and cePoints */}
           <div className="flex flex-wrap gap-3">
             <div className="h-6 w-20 bg-gray-600/50 rounded-3xl" />
             <div className="h-6 w-20 bg-gray-600/50 rounded-3xl" />
             <div className="h-6 w-20 bg-gray-600/50 rounded-3xl" />
+            <div className="h-6 w-20 bg-gray-600/50 rounded-3xl" /> {/* Added for cePoints */}
           </div>
         </div>
 
@@ -243,6 +245,10 @@ const CreatedRideHistory = () => {
                     >
                       <AlertCircle className="h-3 w-3 mr-1" />
                       {ride.status}
+                    </div>
+                    <div className="flex items-center bg-white/10 rounded-3xl px-2 py-1 text-emerald-400">
+                      <Leaf className="h-3 w-3 mr-1" />
+                      {ride.cePointsEarned.toFixed(2)} CEP
                     </div>
                   </div>
                 </div>

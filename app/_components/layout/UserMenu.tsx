@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import {
   Sheet,
   SheetContent,
@@ -17,28 +18,43 @@ import {
   History,
   Wallet,
   CreditCard,
-  HelpCircle, // Imported Bell icon
+  HelpCircle,
+  Leaf,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { getUserProfile } from "@/app/(authenticated)/profile/components/ProfileManager/actions";
 
-// Add types for user with isAdmin
+// Add types for user with isAdmin and cePoints
 interface ExtendedUser {
   id: string;
   email: string;
   isAdmin?: boolean;
   name?: string;
   image?: string;
+  cePoints?: number; // Added cePoints to the interface
 }
 
 export function UserMenu() {
   const router = useRouter();
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Fetch user profile using useQuery
+  const {
+    data: userData,
+    isLoading: isUserDataFetching,
+    isError: isUserDataError,
+  } = useQuery({
+    queryKey: ["userProfile"],
+    queryFn: getUserProfile,
+    enabled: !!session?.user?.id, // Only fetch if user is logged in
+  });
+
   if (!session?.user) return null;
 
-  // Type assertion for session user
-  const user = session.user as ExtendedUser;
+  // Use userData from useQuery, fallback to session if needed
+  const user = userData as ExtendedUser | undefined;
 
   const handleNavigate = (path: string) => {
     setIsOpen(false);
@@ -64,13 +80,27 @@ export function UserMenu() {
     }
   };
 
-
   return (
-    <>
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetTrigger asChild>
-          <Button variant="ghost" className="rounded-full p-0 w-10 h-10">
-            <Avatar className="h-10 w-10 border-2 border-emerald-600">
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetTrigger asChild>
+        <Button variant="ghost" className="rounded-full p-0 w-10 h-10">
+          <Avatar className="h-10 w-10 border-2 border-emerald-600">
+            <AvatarImage
+              src={`https://avatar.vercel.sh/${session.user.email}`}
+              alt={session.user.email || ""}
+            />
+            <AvatarFallback className="bg-emerald-800 text-white">
+              {session.user.email
+                ? session.user.email.substring(0, 2).toUpperCase()
+                : "U"}
+            </AvatarFallback>
+          </Avatar>
+        </Button>
+      </SheetTrigger>
+      <SheetContent className="bg-[#1A3C34] text-white border-none [&>button]:cursor-pointer">
+        <SheetHeader>
+          <SheetTitle className="text-white flex items-center gap-2">
+            <Avatar className="h-10 w-10">
               <AvatarImage
                 src={`https://avatar.vercel.sh/${session.user.email}`}
                 alt={session.user.email || ""}
@@ -81,89 +111,85 @@ export function UserMenu() {
                   : "U"}
               </AvatarFallback>
             </Avatar>
+            <div className="flex flex-col items-start">
+              {isUserDataFetching ? (
+                <span className="font-medium">Loading...</span>
+              ) : isUserDataError ? (
+                <span className="font-medium text-red-400">
+                  Error loading profile
+                </span>
+              ) : (
+                <>
+                  <span className="font-medium">
+                    {user?.name || user?.email?.split("@")[0] || "User"}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {user?.email || session.user.email}
+                  </span>
+                  <span className="text-xs text-emerald-400 flex items-center gap-1">
+                    <Leaf className="h-4 w-4" />
+                    Lifetime Carbon Saved: {user?.cePoints?.toFixed(2) || 0} grams
+                  </span>
+                </>
+              )}
+            </div>
+          </SheetTitle>
+        </SheetHeader>
+        <div className="mt-8 space-y-2">
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-white hover:bg-white/10 cursor-pointer"
+            onClick={() => handleNavigate("/profile")}
+          >
+            <User className="mr-2 h-5 w-5" />
+            My Profile
           </Button>
-        </SheetTrigger>
-        <SheetContent className="bg-[#1A3C34] text-white border-none [&>button]:cursor-pointer">
-          <SheetHeader>
-            <SheetTitle className="text-white flex items-center gap-2">
-              <Avatar className="h-10 w-10">
-                <AvatarImage
-                  src={`https://avatar.vercel.sh/${session.user.email}`}
-                  alt={session.user.email || ""}
-                />
-                <AvatarFallback className="bg-emerald-800 text-white">
-                  {session.user.email
-                    ? session.user.email.substring(0, 2).toUpperCase()
-                    : "U"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col items-start">
-                <span className="font-medium">
-                  {session.user.name || session.user.email?.split("@")[0]}
-                </span>
-                <span className="text-xs text-gray-400">
-                  {session.user.email}
-                </span>
-              </div>
-            </SheetTitle>
-          </SheetHeader>
-          <div className="mt-8 space-y-2">
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-white hover:bg-white/10 cursor-pointer"
-              onClick={() => handleNavigate("/profile")}
-            >
-              <User className="mr-2 h-5 w-5" />
-              My Profile
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-white hover:bg-white/10 cursor-pointer"
-              onClick={() => handleNavigate("/ride-history")}
-            >
-              <History className="mr-2 h-5 w-5" />
-              Ride History
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-white hover:bg-white/10 cursor-pointer"
-              onClick={() => handleNavigate("/wallet")}
-            >
-              <Wallet className="mr-2 h-5 w-5" /> Wallet
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-white hover:bg-white/10 cursor-pointer"
-              onClick={() => handleNavigate("/support")}
-            >
-              <HelpCircle className="mr-2 h-5 w-5" /> Support
-            </Button>
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-white hover:bg-white/10 cursor-pointer"
+            onClick={() => handleNavigate("/ride-history")}
+          >
+            <History className="mr-2 h-5 w-5" />
+            Ride History
+          </Button>
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-white hover:bg-white/10 cursor-pointer"
+            onClick={() => handleNavigate("/wallet")}
+          >
+            <Wallet className="mr-2 h-5 w-5" /> Wallet
+          </Button>
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-white hover:bg-white/10 cursor-pointer"
+            onClick={() => handleNavigate("/support")}
+          >
+            <HelpCircle className="mr-2 h-5 w-5" /> Support
+          </Button>
 
-            {/* Admin-only menu item for Recharge Requests */}
-            {user.isAdmin && (
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-white hover:bg-white/10"
-                onClick={() => handleNavigate("/admin/recharge-requests")}
-              >
-                <CreditCard className="mr-2 h-5 w-5" />
-                Recharge Requests
-              </Button>
-            )}
-
-            <hr className="border-white/10 my-4" />
+          {/* Admin-only menu item for Recharge Requests */}
+          {user?.isAdmin && (
             <Button
               variant="ghost"
-              className="w-full justify-start text-white hover:bg-white/10 hover:text-red-400 cursor-pointer"
-              onClick={handleSignOut}
+              className="w-full justify-start text-white hover:bg-white/10"
+              onClick={() => handleNavigate("/admin/recharge-requests")}
             >
-              <LogOut className="mr-2 h-5 w-5" />
-              Log Out
+              <CreditCard className="mr-2 h-5 w-5" />
+              Recharge Requests
             </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
+          )}
 
-    </>
+          <hr className="border-white/10 my-4" />
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-white hover:bg-white/10 hover:text-red-400 cursor-pointer"
+            onClick={handleSignOut}
+          >
+            <LogOut className="mr-2 h-5 w-5" />
+            Log Out
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
