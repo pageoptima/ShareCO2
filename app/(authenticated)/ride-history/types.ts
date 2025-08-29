@@ -45,11 +45,11 @@ export interface PublicUserRideBookings {
   id: string;
   status: PublicRideBookingStatus;
   userId: string;
+  cePointsEarned: number; // Moved cePointsEarned to top-level RideBooking
   ride: {
     id: string;
     startingTime: Date;
     status: PublicRideStatus;
-    cePointsEarned: number;
     startingLocation: {
       id: string;
       name: string;
