@@ -626,12 +626,12 @@ export async function getUserRideBookings(userId: string, limit: number = 20) {
         id: true,
         status: true,
         userId: true,
+        cePointsEarned: true,
         ride: {
           select: {
             id: true,
             status: true,
             startingTime: true,
-            cePointsEarned: true,
             startingLocation: {
               select: { id: true, name: true },
             },

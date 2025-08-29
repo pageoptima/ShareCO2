@@ -163,7 +163,7 @@ const RideBookedHistory = () => {
                     )}
                     <div className="flex items-center bg-white/10 rounded-3xl px-2 py-1 text-emerald-400">
                       <Leaf className="h-3 w-3 mr-1" />
-                      {rideBooking.ride.cePointsEarned.toFixed(2)} CEP
+                      {rideBooking.cePointsEarned.toFixed(2)} CEP
                     </div>
                   </div>
                 </div>
