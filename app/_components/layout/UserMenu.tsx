@@ -84,33 +84,55 @@ export function UserMenu() {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" className="rounded-full p-0 w-10 h-10">
-          <Avatar className="h-10 w-10 border-2 border-emerald-600">
-            <AvatarImage
-              src={`https://avatar.vercel.sh/${session.user.email}`}
-              alt={session.user.email || ""}
-            />
-            <AvatarFallback className="bg-emerald-800 text-white">
-              {session.user.email
-                ? session.user.email.substring(0, 2).toUpperCase()
-                : "U"}
-            </AvatarFallback>
-          </Avatar>
+          {isUserDataFetching ? (
+            <div className="h-10 w-10 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-emerald-600"></div>
+            </div>
+          ) : isUserDataError ? (
+            <Avatar className="h-10 w-10 border-2 border-emerald-600">
+              <AvatarImage src="/default-avatar.png" alt="Error" />
+              <AvatarFallback className="bg-emerald-800 text-white text-2xl">
+                {session?.user?.name?.[0] || session?.user?.email?.[0] || ""}
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <Avatar className="h-10 w-10 border-2 border-emerald-600">
+              <AvatarImage
+                src={user?.image || "/default-avatar.png"}
+                alt={session.user.email || ""}
+              />
+              <AvatarFallback className="bg-emerald-800 text-white text-2xl">
+                {session?.user?.name?.[0] || session?.user?.email?.[0] || ""}
+              </AvatarFallback>
+            </Avatar>
+          )}
         </Button>
       </SheetTrigger>
       <SheetContent className="bg-[#1A3C34] text-white border-none [&>button]:cursor-pointer">
         <SheetHeader>
           <SheetTitle className="text-white flex items-center gap-2">
-            <Avatar className="h-10 w-10">
-              <AvatarImage
-                src={`https://avatar.vercel.sh/${session.user.email}`}
-                alt={session.user.email || ""}
-              />
-              <AvatarFallback className="bg-emerald-800 text-white">
-                {session.user.email
-                  ? session.user.email.substring(0, 2).toUpperCase()
-                  : "U"}
-              </AvatarFallback>
-            </Avatar>
+            {isUserDataFetching ? (
+              <div className="h-10 w-10 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-emerald-600"></div>
+              </div>
+            ) : isUserDataError ? (
+              <Avatar className="h-10 w-10">
+                <AvatarImage src="/default-avatar.png" alt="Error" />
+                <AvatarFallback className="bg-emerald-800 text-white text-2xl">
+                  {session?.user?.name?.[0] || session?.user?.email?.[0] || ""}
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <Avatar className="h-10 w-10">
+                <AvatarImage
+                  src={user?.image || "/default-avatar.png"}
+                  alt={session.user.email || ""}
+                />
+                <AvatarFallback className="bg-emerald-800 text-white text-2xl">
+                  {session?.user?.name?.[0] || session?.user?.email?.[0] || ""}
+                </AvatarFallback>
+              </Avatar>
+            )}
             <div className="flex flex-col items-start">
               {isUserDataFetching ? (
                 <span className="font-medium">Loading...</span>

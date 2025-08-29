@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth/auth";
-import { getUserById } from "@/lib/user/userServices";
+import { getUserById, updateProfileImage } from "@/lib/user/userServices";
 import { updateProfile } from "@/lib/user/userServices";
 
 /**
@@ -17,6 +17,7 @@ export async function getUserProfile() {
   const user = await getUserById(session.user.id);
   return user;
 }
+
 
 /**
  * Update the user profiles
@@ -49,6 +50,44 @@ export async function updateUserProfile({
       gender,
       age,
       phone,
+    });
+
+    return {
+      success: success,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
+  }
+}
+
+
+/**
+ * Update the user profile image
+ */
+export async function updateUserProfileImage(formData: FormData) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      throw new Error("You must be logged in to update your profile image");
+    }
+
+    const file = formData.get('profileImage') as File;
+    if (!file) {
+      throw new Error("No image file provided");
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const imageBuffer = Buffer.from(arrayBuffer);
+
+    const success = await updateProfileImage({
+      id: session.user.id,
+      imageBuffer,
+      mimeType: file.type,
     });
 
     return {
