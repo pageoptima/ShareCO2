@@ -176,6 +176,7 @@ const CreatedRideHistory = () => {
           setCarbonSaved(result.championCePoints);
           setIsCarbonPopupOpen(true);
           await queryClient.invalidateQueries({ queryKey: ["carbonpoint"] });
+          await queryClient.invalidateQueries({ queryKey: ["userProfile"] });
         } else {
           toast.error(result.error);
         }
