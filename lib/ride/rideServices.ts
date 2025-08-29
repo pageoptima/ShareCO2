@@ -329,18 +329,6 @@ export async function activateRide({
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  * Complete a ride
  */
@@ -424,7 +412,7 @@ export async function completeRide({
     : ride.startingLocation.distanceFromOrg;
 
   // Calculate CE Points for champion
-  const cePointsPerKmPerRider = 125;
+  const cePointsPerKmPerRider = parseFloat(process.env.CE_POINTS_PER_KM || "125");
   const completedBookings = updatedBookings.filter(b => b.status === RideBookingStatus.Completed);
 
   const riderCount = completedBookings.length;

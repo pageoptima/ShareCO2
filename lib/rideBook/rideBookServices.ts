@@ -302,7 +302,7 @@ export async function completeRideBooking({
     : booking.ride.startingLocation.distanceFromOrg;
 
   // Calculate rider CE Points
-  const cePointsPerKm = 125;
+  const cePointsPerKm = parseFloat(process.env.CE_POINTS_PER_KM || "125");
   const riderCePoints = parseFloat((cePointsPerKm * distance).toFixed(2));
 
   await prisma.$transaction(async (tx) => {

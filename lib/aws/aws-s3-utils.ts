@@ -1,13 +1,5 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
-// AWS Configuration
-const AWS_CONFIG = {
-  ACCESS_KEY_ID: 'AKIAXK2LUP5EUEIDQ4FS',
-  SECRET_ACCESS_KEY: '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',
-  S3_BUCKET_NAME: 'shareco2-user-profiles',
-  S3_REGION: 'ap-south-1',
-  S3_BASE_URL: 'https://shareco2-user-profiles.s3.ap-south-1.amazonaws.com'
-};
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 // Validates that the image size is within the allowed limit
 function validateImageSize(imageBuffer: Buffer, maxSizeInBytes: number = 1 * 1024 * 1024): void {
@@ -54,12 +46,15 @@ export async function uploadImageToS3(
 
     const cleanedUserName = cleanUserName(userName);
 
+
+    
+
     // Initialize S3 client
     const s3Client = new S3Client({
-      region: AWS_CONFIG.S3_REGION,
+      region: process.env.AWS_S3_REGION,
       credentials: {
-        accessKeyId: AWS_CONFIG.ACCESS_KEY_ID,
-        secretAccessKey: AWS_CONFIG.SECRET_ACCESS_KEY,
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
       },
     });
 
@@ -68,7 +63,7 @@ export async function uploadImageToS3(
 
     // Upload to S3
     const uploadCommand = new PutObjectCommand({
-      Bucket: AWS_CONFIG.S3_BUCKET_NAME,
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
       Key: uniqueKey,
       Body: imageBuffer,
       ContentType: mimeType,
@@ -77,7 +72,7 @@ export async function uploadImageToS3(
     await s3Client.send(uploadCommand);
 
     // Construct and return the public URL
-    const imageUrl = `${AWS_CONFIG.S3_BASE_URL}/${uniqueKey}`;
+    const imageUrl = `${process.env.AWS_S3_BASE_URL}/${uniqueKey}`;
     return imageUrl;
   } catch (error) {
     console.error("Error uploading to S3:", error);
