@@ -2,27 +2,14 @@ import React from "react";
 
 const Loading = () => {
   return (
-    <div className="p-6">
-      <div className="space-y-4">
-        {[...Array(3)].map((_, index) => (
-          <div
-            key={index}
-            className="flex items-center justify-between p-3 rounded-lg bg-black/20 border border-gray-700 animate-pulse"
-          >
-            <div className="flex items-center w-full">
-              <div className="rounded-full bg-emerald-700 p-2 mr-3 w-9 h-9 flex-shrink-0"></div>
-              <div className="space-y-2 flex-grow">
-                <div className="h-5 w-28 bg-gray-700 rounded"></div>
-                <div className="h-3.5 w-40 bg-gray-600 rounded"></div>
-              </div>
-            </div>
-            <div className="flex gap-2 flex-shrink-0">
-              <div className="h-8 w-8 bg-gray-700 rounded-md"></div>
-              <div className="h-8 w-8 bg-red-600/50 rounded-md"></div>
-            </div>
-          </div>
-        ))}
+    <div className="flex flex-col items-center justify-center py-8">
+      {/* Animated shimmer spinner */}
+      <div className="relative w-12 h-12">
+        <div className="absolute inset-0 border-4 border-gray-700 border-t-emerald-600 rounded-full animate-spin"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse rounded-full"></div>
       </div>
+      {/* Shimmer text placeholder */}
+      <div className="mt-4 h-4 w-32 bg-gray-700/50 rounded animate-pulse"></div>
     </div>
   );
 };
