@@ -2,6 +2,7 @@ import logger from "@/config/logger";
 import { prisma } from "@/config/prisma";
 import { User } from "@prisma/client";
 import { z } from "zod";
+import { uploadImageToS3 } from "../aws/aws-s3-utils";
 
 // Validate the inputs
 const userProfileSchema = z.object({
@@ -19,6 +20,8 @@ const userProfileSchema = z.object({
       message: "Invalid phone number format",
     }),
 });
+
+
 
 /**
  * Update a user
@@ -72,6 +75,57 @@ export async function updateProfile({
     throw error;
   }
 }
+
+
+
+/**
+ * Update user profile image by uploading to AWS S3 and saving URL to Prisma
+ * @param {string} id - User ID
+ * @param {Buffer} imageBuffer - Binary data of the image
+ * @param {string} mimeType - MIME type (e.g., 'image/jpeg')
+ * @returns {Promise<boolean>} - True if successful
+ */
+export async function updateProfileImage({
+  id,
+  imageBuffer,
+  mimeType,
+}: {
+  id: string;
+  imageBuffer: Buffer;
+  mimeType: string;
+}) {
+  try {
+    // Fetch user from Prisma to get username
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { name: true },
+    });
+
+    if (!user || !user.name) {
+      throw new Error("User not found or username not set");
+    }
+
+    // Upload image to S3 using the reusable library
+    const imageUrl = await uploadImageToS3(imageBuffer, user.name, mimeType, id);
+    console.log("Image uploaded to S3");
+
+    // Update Prisma user with the image URL
+    await prisma.user.update({
+      where: { id },
+      data: {
+        image: imageUrl,
+      },
+    });
+
+    return true;
+  } catch (error) {
+    logger.error(`Error updating profile image: ${error}`);
+    throw error;
+  }
+}
+
+
+
 
 /**
  * Get a user by id
