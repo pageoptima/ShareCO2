@@ -10,39 +10,38 @@ import { utcIsoToLocalDate, utcIsoToLocalTime12 } from "@/utils/time";
 
 // Shimmer Component for Loading State
 const ShimmerCard = () => (
-  <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 animate-pulse">
-    <div className="flex flex-col gap-3">
+  <div className="p-3 sm:p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 animate-pulse">
+    <div className="flex flex-col gap-2 sm:gap-3">
       <div className="space-y-2">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-          <div className="flex items-center">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+          <div className="flex items-center w-full sm:w-auto">
             <div className="h-4 w-4 bg-gray-600/50 rounded-full mr-1" />
-            <div className="h-4 w-32 bg-gray-600/50 rounded" />
+            <div className="h-4 w-full sm:w-32 bg-gray-600/50 rounded" />
           </div>
           <span className="hidden sm:inline mx-1">→</span>
-          <div className="flex items-center">
+          <div className="flex items-center w-full sm:w-auto">
             <div className="h-4 w-4 bg-gray-600/50 rounded-full mr-1" />
-            <div className="h-4 w-32 bg-gray-600/50 rounded" />
+            <div className="h-4 w-full sm:w-32 bg-gray-600/50 rounded" />
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <div className="h-6 w-20 bg-gray-600/50 rounded-3xl" />
-          <div className="h-6 w-20 bg-gray-600/50 rounded-3xl" />
-          <div className="h-6 w-24 bg-gray-600/50 rounded-3xl" />
-          <div className="h-6 w-24 bg-gray-600/50 rounded-3xl" />
-          <div className="h-6 w-20 bg-gray-600/50 rounded-3xl" /> {/* Added for cePoints */}
+        <div className="flex flex-wrap gap-2 sm:gap-3">
+          <div className="h-6 w-16 sm:w-20 bg-gray-600/50 rounded-3xl" />
+          <div className="h-6 w-16 sm:w-20 bg-gray-600/50 rounded-3xl" />
+          <div className="h-6 w-20 sm:w-24 bg-gray-600/50 rounded-3xl" />
+          <div className="h-6 w-20 sm:w-24 bg-gray-600/50 rounded-3xl" />
+          <div className="h-6 w-16 sm:w-20 bg-gray-600/50 rounded-3xl" /> {/* For cePoints */}
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <div className="h-8 w-24 bg-gray-600/50 rounded" />
-        <div className="h-8 w-24 bg-gray-600/50 rounded" />
-        <div className="h-8 w-20 bg-gray-600/50 rounded" />
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="h-8 w-20 sm:w-24 bg-gray-600/50 rounded" />
+        <div className="h-8 w-20 sm:w-24 bg-gray-600/50 rounded" />
+        <div className="h-8 w-16 sm:w-20 bg-gray-600/50 rounded" />
       </div>
     </div>
   </div>
 );
-
 /**
  * Get the color of the ride status
  */
@@ -164,7 +163,7 @@ const RideBookedHistory = () => {
                     )}
                     <div className="flex items-center bg-white/10 rounded-3xl px-2 py-1 text-emerald-400">
                       <Leaf className="h-3 w-3 mr-1" />
-                      {rideBooking.ride.cePointsEarned.toFixed(2)} CP
+                      {rideBooking.ride.cePointsEarned.toFixed(2)} CEP
                     </div>
                   </div>
                 </div>
