@@ -14,7 +14,7 @@ model User {
   name               String?
   email              String    @unique
   gender             String?
-  image              String?
+  imageKey           String?
   age                Int?
   phone              String?
   isAdmin            Boolean   @default(false)

@@ -23,7 +23,7 @@ function validateFileSize(file: File, maxSizeInBytes: number = 1 * 1024 * 1024):
 }
 
 // Validate file extension based on MIME type
-function validateFileType(file: File, allowedTypes: string[] = ["image/jpeg", "image/jpg", "image/png", "image/gif"]): boolean {
+function validateFileType(file: File, allowedTypes: string[] = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp", "image/heic", "image/heif"]): boolean {
   if (!allowedTypes.includes(file.type.toLowerCase())) {
     toast.error("Only JPG, JPEG, PNG, and GIF files are allowed");
     return false;
@@ -130,7 +130,7 @@ export default function ProfilePage() {
           <>
             <Avatar className="h-24 w-24 border-4 border-emerald-600">
               <AvatarImage
-                src={userData?.image || "/default-avatar.png"}
+                src={userData?.imageUrl || "/default-avatar.png"}
                 alt={session?.user?.name || session?.user?.email || ""}
               />
               <AvatarFallback className="bg-emerald-800 text-white text-2xl">

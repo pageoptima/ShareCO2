@@ -2,7 +2,7 @@ import logger from "@/config/logger";
 import { prisma } from "@/config/prisma";
 import { User } from "@prisma/client";
 import { z } from "zod";
-import { uploadImageToS3 } from "../aws/aws-s3-utils";
+import { uploadImageToS3, getProfileImageUrl, deleteS3Object } from "../aws/aws-s3-utils";
 
 // Validate the inputs
 const userProfileSchema = z.object({
@@ -77,9 +77,8 @@ export async function updateProfile({
 }
 
 
-
 /**
- * Update user profile image by uploading to AWS S3 and saving URL to Prisma
+ * Update user profile image by uploading to AWS S3 and saving S3 key to Prisma
  * @param {string} id - User ID
  * @param {Buffer} imageBuffer - Binary data of the image
  * @param {string} mimeType - MIME type (e.g., 'image/jpeg')
@@ -95,25 +94,29 @@ export async function updateProfileImage({
   mimeType: string;
 }) {
   try {
-    // Fetch user from Prisma to get username
+    // Fetch user from Prisma to get username and existing imageKey
     const user = await prisma.user.findUnique({
       where: { id },
-      select: { name: true },
+      select: { name: true, imageKey: true },
     });
 
     if (!user || !user.name) {
       throw new Error("User not found or username not set");
     }
 
-    // Upload image to S3 using the reusable library
-    const imageUrl = await uploadImageToS3(imageBuffer, user.name, mimeType, id);
-    console.log("Image uploaded to S3");
+    // Delete old image from S3 if it exists
+    if (user.imageKey) {
+      await deleteS3Object(user.imageKey);
+    }
 
-    // Update Prisma user with the image URL
+    // Upload image to S3 and get the S3 key
+    const imageKey = await uploadImageToS3(imageBuffer, user.name, mimeType, id);
+
+    // Update Prisma user with the S3 key
     await prisma.user.update({
       where: { id },
       data: {
-        image: imageUrl,
+        imageKey, // Store the S3 key
       },
     });
 
@@ -126,22 +129,27 @@ export async function updateProfileImage({
 
 
 /**
- * Get a user by id
- * @param email
- * @returns
+ * Get a user by id with pre-signed image URL
+ * @param id - User ID
+ * @returns {Promise<User & { imageUrl: string | null }>} - User object with pre-signed image URL
  */
-export async function getUserById(id: string): Promise<User> {
+export async function getUserById(id: string): Promise<User & { imageUrl: string | null }> {
   const user = await prisma.user.findUnique({
-    where: { id: id },
+    where: { id },
   });
 
   if (!user) {
     throw new Error("User not found");
   }
 
-  return user;
-}
+  // Generate pre-signed URL if imageKey exists
+  const imageUrl = user.imageKey ? await getProfileImageUrl(user.imageKey) : null;
 
+  return {
+    ...user,
+    imageUrl, // Add pre-signed URL to the response
+  };
+}
 
 
 /**
