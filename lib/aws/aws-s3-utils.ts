@@ -98,6 +98,7 @@ export async function uploadImageToS3(
   }
 }
 
+
 /**
  * Generates a pre-signed URL for an S3 object
  * @param {string} key - S3 object key
@@ -131,6 +132,7 @@ export async function getProfileImageUrl(key: string, expiresIn: number = 3600):
     throw new Error(`Failed to generate pre-signed URL: ${(error as Error).message}`);
   }
 }
+
 
 /**
  * Deletes an object from AWS S3
