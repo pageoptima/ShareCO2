@@ -31,7 +31,7 @@ interface ExtendedUser {
   email: string;
   isAdmin?: boolean;
   name?: string;
-  image?: string;
+  imageUrl?: string;
   cePoints?: number; // Added cePoints to the interface
 }
 
@@ -98,7 +98,7 @@ export function UserMenu() {
           ) : (
             <Avatar className="h-10 w-10 border-2 border-emerald-600">
               <AvatarImage
-                src={user?.image || "/default-avatar.png"}
+                src={user?.imageUrl || "/default-avatar.png"}
                 alt={session.user.email || ""}
               />
               <AvatarFallback className="bg-emerald-800 text-white text-2xl">
@@ -125,7 +125,7 @@ export function UserMenu() {
             ) : (
               <Avatar className="h-10 w-10">
                 <AvatarImage
-                  src={user?.image || "/default-avatar.png"}
+                  src={user?.imageUrl || "/default-avatar.png"}
                   alt={session.user.email || ""}
                 />
                 <AvatarFallback className="bg-emerald-800 text-white text-2xl">
