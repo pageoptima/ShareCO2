@@ -13,5 +13,6 @@
       "path": "/api/send-reminders?type=evening",
       "schedule": "* * * * *"
     }
+    
   ]
 }
