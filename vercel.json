@@ -11,7 +11,7 @@
     },
     {
       "path": "/api/send-reminders?type=evening",
-      "schedule": "*/1 * * * *"
+      "schedule": "* * * * *"
     }
   ]
 }
