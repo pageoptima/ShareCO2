@@ -141,3 +141,26 @@ export async function getUserById(id: string): Promise<User> {
 
   return user;
 }
+
+
+
+/**
+ * Get all users from the database
+ * @returns Array of users with id and name
+ * @throws Error if query fails
+ */
+export async function getAllUsers(): Promise<{ id: string; name: string | null }[]> {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+    return users;
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    logger.error(`[ScheduleService] Error fetching all users: ${errorMessage}`, { error });
+    throw new Error("Failed to fetch users");
+  }
+}
