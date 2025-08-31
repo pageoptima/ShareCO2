@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -14,7 +14,6 @@ import {
   MessageCircle,
   ShieldCheck,
   ShieldX,
-  UserCircle,
   Phone,
 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -31,6 +30,7 @@ import { toast } from "sonner";
 import { utcIsoToLocalDate, utcIsoToLocalTime12 } from "@/utils/time";
 import { RideChatModal } from "@/app/_components/modals/RideChatModal/RideChatModal";
 import { CancelRideModal } from "@/app/_components/modals/CancelRideModal";
+import { UserImageModal } from "@/app/_components/modals/UserImageModal";
 import CarbonEmissionPopup from "@/app/_components/modals/CarbonEmissionPopup";
 
 /**
@@ -111,6 +111,9 @@ const CreatedRideHistory = () => {
   const [rideToCancel, setRideToCancel] = useState<string | null>(null);
   const [isCarbonPopupOpen, setIsCarbonPopupOpen] = useState(false);
   const [carbonSaved, setCarbonSaved] = useState<number | null>(null);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedUserImage, setSelectedUserImage] = useState<string | null>(null);
+  const [selectedUserName, setSelectedUserName] = useState<string>("");
 
   const queryClient = useQueryClient();
 
@@ -300,7 +303,23 @@ const CreatedRideHistory = () => {
     setIsChatOpen(false);
   };
 
+  /**
+   * Handle open user image modal
+   */
+  const handleOpenImageModal = (imageUrl: string | null, userName: string) => {
+    setSelectedUserImage(imageUrl);
+    setSelectedUserName(userName);
+    setIsImageModalOpen(true);
+  };
 
+  /**
+   * Handle close user image modal
+   */
+  const handleCloseImageModal = () => {
+    setSelectedUserImage(null);
+    setSelectedUserName("");
+    setIsImageModalOpen(false);
+  };
 
   if (
     isCreatedRidesFetching ||
@@ -481,12 +500,26 @@ const CreatedRideHistory = () => {
                             className="bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10 hover:border-white/20 transition-all"
                           >
                             <div className="flex items-center gap-3">
-                              <Avatar className="h-8 w-8 bg-gradient-to-br from-emerald-700 to-emerald-900 text-white border border-emerald-600/30 flex justify-center items-center">
-                                <UserCircle className="h-5 w-5" />
+                              <Avatar
+                                className="h-8 w-8 cursor-pointer"
+                                onClick={() =>
+                                  handleOpenImageModal(
+                                    booking.user.imageUrl,
+                                    booking.user.name || booking.user.email || "Unknown User"
+                                  )
+                                }
+                              >
+                                <AvatarImage
+                                  src={booking.user.imageUrl ?? undefined}
+                                  alt={booking.user.name || booking.user.email || "Unknown User"}
+                                />
+                                <AvatarFallback className="bg-emerald-800 text-white text-sm">
+                                  {booking.user.name?.[0] || booking.user.email?.[0] || "U"}
+                                </AvatarFallback>
                               </Avatar>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium truncate">
-                                  {booking.user.name || booking.user.email}
+                                  {booking.user.name || booking.user.email || "Unknown User"}
                                 </p>
                                 <div className="flex flex-wrap items-center gap-2 mt-1.5">
                                   <Badge
@@ -600,6 +633,15 @@ const CreatedRideHistory = () => {
               )
               : false
           }
+        />
+      )}
+      {/* User Image Modal */}
+      {isImageModalOpen && (
+        <UserImageModal
+          isOpen={isImageModalOpen}
+          onClose={handleCloseImageModal}
+          imageUrl={selectedUserImage}
+          userName={selectedUserName}
         />
       )}
     </>

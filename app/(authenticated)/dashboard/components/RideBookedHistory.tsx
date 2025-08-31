@@ -24,6 +24,8 @@ import { utcIsoToLocalDate, utcIsoToLocalTime12 } from "@/utils/time";
 import { toast } from "sonner";
 import { RideChatModal } from "@/app/_components/modals/RideChatModal/RideChatModal";
 import { CancelRideModal } from "@/app/_components/modals/CancelRideModal";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { UserImageModal } from "@/app/_components/modals/UserImageModal";
 
 const getStatusColor = (status: PublicRideStatus) => {
   switch (status) {
@@ -72,6 +74,9 @@ const RideBookedHistory = () => {
   const [expandedRideId, setExpandedRideId] = useState<string | null>(null);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedUserImage, setSelectedUserImage] = useState<string | null>(null);
+  const [selectedUserName, setSelectedUserName] = useState<string>("");
 
   const queryClient = useQueryClient();
 
@@ -163,6 +168,24 @@ const RideBookedHistory = () => {
 
   const toggleDetails = (rideId: string) => {
     setExpandedRideId(expandedRideId === rideId ? null : rideId);
+  };
+
+  /**
+   * Handle open user image modal
+   */
+  const handleOpenImageModal = (imageUrl: string | null, userName: string) => {
+    setSelectedUserImage(imageUrl);
+    setSelectedUserName(userName);
+    setIsImageModalOpen(true);
+  };
+
+  /**
+   * Handle close user image modal
+   */
+  const handleCloseImageModal = () => {
+    setSelectedUserImage(null);
+    setSelectedUserName("");
+    setIsImageModalOpen(false);
   };
 
   if (isRideBookingsFetching || isRideBookingsRefetching) {
@@ -285,7 +308,28 @@ const RideBookedHistory = () => {
                             <Car className="h-4 w-4 mr-1" />
                             Champion Details
                           </h4>
-                          <p>Name: {rideBooking.ride.driver.name || "N/A"}</p>
+                          <div className="flex items-center gap-3">
+                            <Avatar
+                              className="h-8 w-8 cursor-pointer"
+                              onClick={() =>
+                                handleOpenImageModal(
+                                  rideBooking.ride.driver.imageUrl,
+                                  rideBooking.ride.driver.name || rideBooking.ride.driver.email || "Champion"
+                                )
+                              }
+                            >
+                              <AvatarImage
+                                src={rideBooking.ride.driver.imageUrl ?? undefined}
+                                alt={rideBooking.ride.driver.name || rideBooking.ride.driver.email || "Champion"}
+                              />
+                              <AvatarFallback className="bg-emerald-800 text-white text-sm">
+                                {rideBooking.ride.driver.name?.[0] || rideBooking.ride.driver.email?.[0] || "C"}
+                              </AvatarFallback>
+                            </Avatar>
+                            <p className="text-sm font-medium truncate">
+                              {rideBooking.ride.driver.name || rideBooking.ride.driver.email || "Champion"}
+                            </p>
+                          </div>
                           <p>Phone: {rideBooking.ride.driver.phone || "N/A"}</p>
                           <p>
                             Car details:{" "}
@@ -310,11 +354,30 @@ const RideBookedHistory = () => {
                                     key={b.id}
                                     className="flex sm:flex-row sm:items-center gap-3"
                                   >
-                                    <span className="text-sm truncate ">
-                                      {b.user.name ||
-                                        b.user.email ||
-                                        "Unnamed User"}
-                                    </span>
+                                    <div className="flex items-center gap-3">
+                                      <Avatar
+                                        className="h-8 w-8 cursor-pointer"
+                                        onClick={() =>
+                                          handleOpenImageModal(
+                                            b.user.imageUrl,
+                                            b.user.name || b.user.email || "Unnamed User"
+                                          )
+                                        }
+                                      >
+                                        <AvatarImage
+                                          src={b.user.imageUrl ?? undefined}
+                                          alt={b.user.name || b.user.email || "Unnamed User"}
+                                        />
+                                        <AvatarFallback className="bg-emerald-800 text-white text-sm">
+                                          {b.user.name?.[0] || b.user.email?.[0] || "U"}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <span className="text-sm truncate ">
+                                        {b.user.name ||
+                                          b.user.email ||
+                                          "Unnamed User"}
+                                      </span>
+                                    </div>
                                     {b.user.phone && (
                                       <a
                                         href={`tel:${b.user.phone}`}
@@ -419,6 +482,15 @@ const RideBookedHistory = () => {
               )
               : false
           }
+        />
+      )}
+      {/* User Image Modal */}
+      {isImageModalOpen && (
+        <UserImageModal
+          isOpen={isImageModalOpen}
+          onClose={handleCloseImageModal}
+          imageUrl={selectedUserImage}
+          userName={selectedUserName}
         />
       )}
     </>

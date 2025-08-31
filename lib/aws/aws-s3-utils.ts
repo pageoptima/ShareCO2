@@ -22,9 +22,9 @@ function validateImageSize(imageBuffer: Buffer, maxSizeInBytes: number = 1 * 102
 }
 
 // Validates that the MIME type is allowed
-function validateMimeType(mimeType: string, allowedTypes: string[] = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']): void {
+function validateMimeType(mimeType: string, allowedTypes: string[] = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', "image/webp", "image/heic", "image/heif"]): void {
   if (!allowedTypes.includes(mimeType.toLowerCase())) {
-    throw new Error("Only JPG, JPEG, PNG and GIF image types are allowed");
+    throw new Error("Only JPG, JPEG, PNG WEBP, HEIC, HEIF and GIF image types are allowed");
   }
 }
 
