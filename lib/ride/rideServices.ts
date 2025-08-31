@@ -13,6 +13,7 @@ import {
 import { isMoreThanNMinutesLeft } from "@/utils/time";
 import { addDays, endOfDay } from "date-fns";
 import { sendPushNotification } from "@/services/ably";
+import { getProfileImageUrl } from "../aws/aws-s3-utils";
 
 // Validate the inputs
 const createRideSchema = z.object({
@@ -487,6 +488,7 @@ export async function getUserRides(userId: string, limit: number = 20) {
                 name: true,
                 email: true,
                 phone: true,
+                imageKey: true,
               },
             },
           },
@@ -498,13 +500,30 @@ export async function getUserRides(userId: string, limit: number = 20) {
       take: limit,
     });
 
-    return rides;
+    // Map rides to include pre-signed image URLs for users in bookings
+    const ridesWithImageUrls = await Promise.all(
+      rides.map(async (ride) => ({
+        ...ride,
+        bookings: await Promise.all(
+          ride.bookings.map(async (booking) => ({
+            ...booking,
+            user: {
+              ...booking.user,
+              imageUrl: booking.user.imageKey
+                ? await getProfileImageUrl(booking.user.imageKey)
+                : null,
+            },
+          }))
+        ),
+      }))
+    );
+
+    return ridesWithImageUrls;
   } catch (error) {
     logger.error(`Error on fetching user rides: ${error}`);
     throw error;
   }
 }
-
 
 /**
  * Get ride details by ride ID
@@ -573,6 +592,7 @@ export async function getAvailableRidesForUser(userId: string) {
           name: true,
           email: true,
           phone: true,
+          imageKey: true,
         },
       },
       bookings: {
@@ -588,23 +608,24 @@ export async function getAvailableRidesForUser(userId: string) {
     },
   });
 
-  return rides
-    .filter((ride) => {
-      // Check if user has already booked this ride (any status)
-      const userHasBooked = ride.bookings.some(
-        (booking) => booking.userId === userId
-      );
-      if (userHasBooked) {
-        return false; // Exclude rides already booked by user
-      }
+  const filteredRides = rides.filter((ride) => {
+    // Check if user has already booked this ride (any status)
+    const userHasBooked = ride.bookings.some(
+      (booking) => booking.userId === userId
+    );
+    if (userHasBooked) {
+      return false; // Exclude rides already booked by user
+    }
 
-      // Additional filter to ensure seats are available
-      const confirmedBookings = ride.bookings.filter(
-        (booking) => booking.status === RideBookingStatus.Confirmed
-      ).length;
-      return ride.maxPassengers > confirmedBookings; // Only show rides with available seats
-    })
-    .map((ride) => {
+    // Additional filter to ensure seats are available
+    const confirmedBookings = ride.bookings.filter(
+      (booking) => booking.status === RideBookingStatus.Confirmed
+    ).length;
+    return ride.maxPassengers > confirmedBookings; // Only show rides with available seats
+  });
+
+  return Promise.all(
+    filteredRides.map(async (ride) => {
       const confirmedBookings = ride.bookings.filter(
         (booking) => booking.status === RideBookingStatus.Confirmed
       ).length;
@@ -619,11 +640,15 @@ export async function getAvailableRidesForUser(userId: string) {
         driverName: ride.driver.name,
         driverEmail: ride.driver.email,
         driverPhone: ride.driver.phone,
+        driverImageUrl: ride.driver.imageKey
+          ? await getProfileImageUrl(ride.driver.imageKey)
+          : null,
         startingTime: ride.startingTime,
         vehicleId: ride.vehicle?.id,
         vehicleName: ride.vehicle?.model,
         vehicleType: ride.vehicle?.type,
         vehicleNumber: ride.vehicle?.vehicleNumber,
       };
-    });
+    })
+  );
 }

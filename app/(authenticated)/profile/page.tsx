@@ -128,14 +128,20 @@ export default function ProfilePage() {
           </div>
         ) : (
           <>
-            <Avatar className="h-24 w-24 border-4 border-emerald-600">
-              <AvatarImage
-                src={userData?.imageUrl || "/default-avatar.png"}
-                alt={session?.user?.name || session?.user?.email || ""}
-              />
-              <AvatarFallback className="bg-emerald-800 text-white text-2xl">
-                {session?.user?.name?.[0] || session?.user?.email?.[0] || ""}
-              </AvatarFallback>
+            <Avatar className="h-24 w-24 border-4 border-emerald-600 flex items-center justify-center">
+              {isUploading ? (
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-600"></div>
+              ) : (
+                <>
+                  <AvatarImage
+                    src={userData?.imageUrl || "/default-avatar.png"}
+                    alt={session?.user?.name || session?.user?.email || ""}
+                  />
+                  <AvatarFallback className="bg-emerald-800 text-white text-2xl">
+                    {session?.user?.name?.[0] || session?.user?.email?.[0] || ""}
+                  </AvatarFallback>
+                </>
+              )}
             </Avatar>
             <Button
               variant="outline"
@@ -144,11 +150,7 @@ export default function ProfilePage() {
               onClick={handleEditClick}
               disabled={isUploading}
             >
-              {isUploading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-              ) : (
-                <Camera className="h-4 w-4" />
-              )}
+              <Camera className="h-4 w-4" />
             </Button>
             <input
               type="file"

@@ -36,7 +36,8 @@ export interface PublicUserRides {
       id: string;
       name: string | null;
       email: string | null;
-     phone: string | null;
+      phone: string | null;
+      imageUrl: string | null;
     };
   }[];
 }
@@ -59,8 +60,10 @@ export interface PublicUserRideBookings {
     };
     driver: {
       id: string;
-      name: string;
-      phone?: string;
+      name: string | null;
+      email: string | null;
+      phone: string | null;
+      imageUrl: string | null;
     };
     vehicle?: {
       id: string;
@@ -71,7 +74,10 @@ export interface PublicUserRideBookings {
       id: string;
       user: {
         id: string;
-        name: string;
+        name: string | null;
+        email: string | null;
+        phone: string | null;
+        imageUrl: string | null;
       };
     }[];
   };

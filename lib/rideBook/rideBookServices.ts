@@ -11,6 +11,7 @@ import {
 } from "@/lib/wallet/walletServices";
 import { hasPassedNMinutes, isMoreThanNMinutesLeft } from "@/utils/time";
 import { sendPushNotification } from "@/services/ably";
+import { getProfileImageUrl } from "../aws/aws-s3-utils";
 
 export async function bookRide({
   userId,
@@ -642,7 +643,9 @@ export async function getUserRideBookings(userId: string, limit: number = 20) {
               select: {
                 id: true,
                 name: true,
+                email: true,
                 phone: true,
+                imageKey: true,
               },
             },
             vehicle: {
@@ -661,6 +664,7 @@ export async function getUserRideBookings(userId: string, limit: number = 20) {
                     name: true,
                     email: true,
                     phone: true,
+                    imageKey: true,
                   },
                 },
               },
@@ -672,9 +676,36 @@ export async function getUserRideBookings(userId: string, limit: number = 20) {
       take: limit,
     });
 
-    return rideBookings;
+    // Map ride bookings to include pre-signed image URLs for driver and users in bookings
+    const rideBookingsWithImageUrls = await Promise.all(
+      rideBookings.map(async (booking) => ({
+        ...booking,
+        ride: {
+          ...booking.ride,
+          driver: {
+            ...booking.ride.driver,
+            imageUrl: booking.ride.driver.imageKey
+              ? await getProfileImageUrl(booking.ride.driver.imageKey)
+              : null,
+          },
+          bookings: await Promise.all(
+            booking.ride.bookings.map(async (rideBooking) => ({
+              ...rideBooking,
+              user: {
+                ...rideBooking.user,
+                imageUrl: rideBooking.user.imageKey
+                  ? await getProfileImageUrl(rideBooking.user.imageKey)
+                  : null,
+              },
+            }))
+          ),
+        },
+      }))
+    );
+
+    return rideBookingsWithImageUrls;
   } catch (error) {
-    logger.error(`Error on fetching user rides: ${error}`);
+    logger.error(`Error on fetching user ride bookings: ${error}`);
     throw error;
   }
 }

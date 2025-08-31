@@ -18,9 +18,12 @@ import { bookRide, getAvialableRides } from "./actions";
 import { PublicAvialableRides } from "./types";
 import { utcIsoToLocalTime12 } from "@/utils/time";
 import { useRouter } from "next/navigation";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { UserImageModal } from "@/app/_components/modals/UserImageModal";
 
 const AvailableRides = ({
-  onSuccess, onError
+  onSuccess,
+  onError,
 }: {
   onSuccess: (message: string) => void;
   onError: (message: string) => void;
@@ -28,6 +31,9 @@ const AvailableRides = ({
   const router = useRouter();
   // State to track pending status for each ride
   const [pendingRides, setPendingRides] = useState<{ [key: string]: boolean }>({});
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedUserImage, setSelectedUserImage] = useState<string | null>(null);
+  const [selectedUserName, setSelectedUserName] = useState<string>("");
 
   // Hook for fetching available rides
   const {
@@ -84,6 +90,24 @@ const AvailableRides = ({
   const handleBookRide = async (rideId: string) => {
     setPendingRides((prev) => ({ ...prev, [rideId]: true }));
     await mutation.mutateAsync(rideId);
+  };
+
+  /**
+   * Handle open user image modal
+   */
+  const handleOpenImageModal = (imageUrl: string | null, userName: string) => {
+    setSelectedUserImage(imageUrl);
+    setSelectedUserName(userName);
+    setIsImageModalOpen(true);
+  };
+
+  /**
+   * Handle close user image modal
+   */
+  const handleCloseImageModal = () => {
+    setSelectedUserImage(null);
+    setSelectedUserName("");
+    setIsImageModalOpen(false);
   };
 
   if (isAvailableRidesFetching || isAvailableRidesRefetching) {
@@ -191,15 +215,34 @@ const AvailableRides = ({
                     </div>
                     <div className="flex items-center text-sm">
                       <User className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
-                      <span>
-                        <strong> Champion: </strong>
-                        {ride.driverName || ride.driverEmail}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <Avatar
+                          className="h-6 w-6 cursor-pointer"
+                          onClick={() =>
+                            handleOpenImageModal(
+                              ride.driverImageUrl,
+                              ride.driverName || ride.driverEmail || "Champion"
+                            )
+                          }
+                        >
+                          <AvatarImage
+                            src={ride.driverImageUrl ?? undefined}
+                            alt={ride.driverName || ride.driverEmail || "Champion"}
+                          />
+                          <AvatarFallback className="bg-emerald-800 text-white text-xs">
+                            {ride.driverName?.[0] || ride.driverEmail?.[0] || "C"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>
+                          <strong>Champion:</strong>{" "}
+                          {ride.driverName || ride.driverEmail}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex items-center text-sm">
                       <Phone className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
                       <span>
-                        <strong> Phone: </strong>
+                        <strong>Phone:</strong>{" "}
                         {ride.driverPhone || "Not provided"}
                       </span>
                     </div>
@@ -231,8 +274,8 @@ const AvailableRides = ({
                     variant="default"
                     size="sm"
                     className={`w-full justify-center cursor-pointer ${!hasSeats
-                      ? "bg-red-700/50 hover:bg-red-700/60"
-                      : "bg-[#2E7D32]"
+                        ? "bg-red-700/50 hover:bg-red-700/60"
+                        : "bg-[#2E7D32]"
                       }`}
                   >
                     {pendingRides[ride.id] ? (
@@ -285,6 +328,16 @@ const AvailableRides = ({
           </Card>
         )}
       </div>
+
+      {/* User Image Modal */}
+      {isImageModalOpen && (
+        <UserImageModal
+          isOpen={isImageModalOpen}
+          onClose={handleCloseImageModal}
+          imageUrl={selectedUserImage}
+          userName={selectedUserName}
+        />
+      )}
     </>
   );
 };
