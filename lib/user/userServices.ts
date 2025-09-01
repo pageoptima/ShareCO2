@@ -177,6 +177,7 @@ export async function getUserById(id: string): Promise<User & { imageUrl: string
   };
 }
 
+
 /**
  * Get all users from the database
  * @returns Array of users with id and name
