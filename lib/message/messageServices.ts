@@ -1,5 +1,50 @@
 import logger from "@/config/logger";
 import { prisma } from "@/config/prisma";
+import { getProfileImageUrl } from "../aws/aws-s3-utils";
+
+
+
+// Helper function to get user with pre-signed image URL
+const getUserWithImageUrl = async (user: {
+  id: string;
+  name: string | null;
+  email: string;
+  imageKey?: string | null;
+  imageUrl?: string | null;
+  imageUrlExpiresAt?: Date | null;
+}) => {
+  let imageUrl: string | null = null;
+
+  // Check if imageKey exists
+  if (user.imageKey) {
+    const now = new Date();
+    // Check if stored URL is valid and not expired
+    if (user.imageUrl && user.imageUrlExpiresAt && now < user.imageUrlExpiresAt) {
+      imageUrl = user.imageUrl;
+    } else {
+      // Generate new pre-signed URL if expired or missing
+      imageUrl = await getProfileImageUrl(user.imageKey);
+      const imageUrlExpiresAt = new Date(Date.now() + 604800 * 1000); // 7 days expiration
+      // Update Prisma with new URL and expiration
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          imageUrl,
+          imageUrlExpiresAt,
+        },
+      });
+    }
+  }
+
+  return {
+    id: user.id,
+    name: user.name || "Unknown",
+    email: user.email,
+    imageUrl, // Add pre-signed URL
+  };
+};
+
+
 
 /**
  * Insert message into database.
@@ -59,24 +104,26 @@ export async function getMessagesByRide({
     where: { rideId },
     include: {
       user: {
-        select: { id: true, name: true, email: true },
+        select: { id: true, name: true, email: true, imageKey: true, imageUrl: true, imageUrlExpiresAt: true },
       },
     },
     orderBy: { createdAt: "asc" },
   });
 
   // Map messages to include isDriver field
-  const messagesWithRole = messages.map((message) => ({
-    ...message,
-    user: {
-      ...message.user,
-      isDriver: message.user.id === ride.driverId, // true if user is driver, false if rider
-    },
+  const messagesWithRole = await Promise.all(messages.map(async (message) => {
+    const userWithImage = await getUserWithImageUrl(message.user);
+    return {
+      ...message,
+      user: {
+        ...userWithImage,
+        isDriver: message.user.id === ride.driverId, // true if user is driver, false if rider
+      },
+    };
   }));
 
   return messagesWithRole;
 }
-
 /**
  * Validate the credential for accessing the chat
  */
@@ -141,7 +188,7 @@ async function validateCredentials({
 }
 
 /**
- * Get ride participants by ride ID
+ * Get ride participants by ride ID, including pre-signed image URLs
  */
 export async function getRideParticipants(rideId: string) {
   try {
@@ -155,6 +202,9 @@ export async function getRideParticipants(rideId: string) {
             id: true,
             name: true,
             email: true,
+            imageKey: true, // Include imageKey for URL generation
+            imageUrl: true, // Include existing imageUrl
+            imageUrlExpiresAt: true, // Include expiration for validation
           },
         },
         bookings: {
@@ -164,6 +214,9 @@ export async function getRideParticipants(rideId: string) {
                 id: true,
                 name: true,
                 email: true,
+                imageKey: true, // Include imageKey for URL generation
+                imageUrl: true, // Include existing imageUrl
+                imageUrlExpiresAt: true, // Include expiration for validation
               },
             },
           },
@@ -175,26 +228,30 @@ export async function getRideParticipants(rideId: string) {
       throw new Error("Ride not found");
     }
 
-    // Map driver as a participant (isDriver: true)
-    const driverParticipant = {
-      id: ride.driver.id,
-      name: ride.driver.name || "Champion",
-      email: ride.driver.email,
-      isDriver: true,
-    };
+    // Collect all users (driver + passengers) into one array
+    const allUsers = [
+      ride.driver,
+      ...ride.bookings.map((booking) => booking.user),
+    ];
 
-    // Map passengers as participants (isDriver: false)
-    const passengerParticipants = ride.bookings.map((booking) => ({
-      id: booking.user.id,
-      name: booking.user.name || "Rider",
-      email: booking.user.email,
-      isDriver: false,
-    }));
+    // Process all users in parallel, adding isDriver flag
+    const participants = await Promise.all(
+      allUsers.map(async (user) => {
+        const userWithImage = await getUserWithImageUrl({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          imageKey: user.imageKey,
+          imageUrl: user.imageUrl,
+          imageUrlExpiresAt: user.imageUrlExpiresAt,
+        });
+        return {
+          ...userWithImage,
+          isDriver: user.id === ride.driver.id,
+        };
+      })
+    );
 
-    // Combine driver and passengers into a single array
-    const participants = [driverParticipant, ...passengerParticipants];
-
-    // console.log("participants", participants);
     return participants;
   } catch (error) {
     logger.error(`Error fetching participants for ride ID ${rideId}: ${error}`);

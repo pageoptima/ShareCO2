@@ -102,7 +102,7 @@ export async function createRideRequest({
           title: "New Ride Request 🚗",
           body: `Your colleague is requesting a ride at ${formattedTime}. Help them by sharing a ride with you!`,
           eventName: "ride_request_created",
-          redirectUrl: "/dashboard",
+          redirectUrl: "/create-ride",
         })
       )
     );
@@ -291,6 +291,10 @@ export const getUserRideRequests = async (userId: string) => {
     throw error;
   }
 };
+
+
+
+
 /**
  * Get aggregated ride requests by 30-minute time windows for today and future
  */
