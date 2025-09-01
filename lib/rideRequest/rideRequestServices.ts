@@ -1,13 +1,17 @@
 import logger from "@/config/logger";
 import { prisma } from "@/config/prisma";
+import { sendPushNotification } from "@/services/ably";
 import { RideRequestStatus } from "@prisma/client";
 import {
+  format,
   addDays,
   addMinutes,
   endOfDay,
   startOfDay,
   startOfMinute,
 } from "date-fns";
+
+
 
 /**
  * Create a new ride request for user
@@ -27,7 +31,7 @@ export async function createRideRequest({
     // Check if user profile is complete
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { isProfileCompleted: true },
+      select: { isProfileCompleted: true, name: true },
     });
 
     if (!user || !user.isProfileCompleted) {
@@ -79,12 +83,38 @@ export async function createRideRequest({
       },
     });
 
+    // Fetch all users except the requester
+    const usersToNotify = await prisma.user.findMany({
+      where: {
+        id: { not: userId },
+      },
+      select: { id: true },
+    });
+
+    // Format the starting time for notification
+    const formattedTime = format(new Date(startingTime), "h:mm a");
+
+    // Send notification to all users except the requester
+    await Promise.all(
+      usersToNotify.map((recipient) =>
+        sendPushNotification({
+          userId: recipient.id,
+          title: "New Ride Request 🚗",
+          body: `Your colleague is requesting a ride at ${formattedTime}. Help them by sharing a ride with you!`,
+          eventName: "ride_request_created",
+          redirectUrl: "/dashboard",
+        })
+      )
+    );
+
     return true;
   } catch (error) {
     logger.error(`Error creating ride request: ${error}`);
     throw error;
   }
 }
+
+
 
 /**
  * Cancel ride request for a user by a user
