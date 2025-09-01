@@ -106,7 +106,7 @@ export async function uploadImageToS3(
  * @returns {Promise<string>} - Pre-signed URL
  * @throws {Error} - If generating pre-signed URL fails
  */
-export async function getProfileImageUrl(key: string, expiresIn: number = 3600): Promise<string> {
+export async function getProfileImageUrl(key: string, expiresIn: number = 604800): Promise<string> {
   try {
     // Validate environment variables
     if (!process.env.AWS_S3_BUCKET_NAME || !process.env.AWS_S3_REGION || !process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {

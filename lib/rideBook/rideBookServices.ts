@@ -633,6 +633,7 @@ export async function getUserRideBookings(userId: string, limit: number = 20) {
             id: true,
             status: true,
             startingTime: true,
+            driverId: true, // Added to use in driver update
             startingLocation: {
               select: { id: true, name: true },
             },
@@ -646,6 +647,8 @@ export async function getUserRideBookings(userId: string, limit: number = 20) {
                 email: true,
                 phone: true,
                 imageKey: true,
+                imageUrl: true,
+                imageUrlExpiresAt: true,
               },
             },
             vehicle: {
@@ -665,6 +668,8 @@ export async function getUserRideBookings(userId: string, limit: number = 20) {
                     email: true,
                     phone: true,
                     imageKey: true,
+                    imageUrl: true,
+                    imageUrlExpiresAt: true,
                   },
                 },
               },
@@ -678,29 +683,83 @@ export async function getUserRideBookings(userId: string, limit: number = 20) {
 
     // Map ride bookings to include pre-signed image URLs for driver and users in bookings
     const rideBookingsWithImageUrls = await Promise.all(
-      rideBookings.map(async (booking) => ({
-        ...booking,
-        ride: {
-          ...booking.ride,
-          driver: {
-            ...booking.ride.driver,
-            imageUrl: booking.ride.driver.imageKey
-              ? await getProfileImageUrl(booking.ride.driver.imageKey)
-              : null,
-          },
-          bookings: await Promise.all(
-            booking.ride.bookings.map(async (rideBooking) => ({
+      rideBookings.map(async (booking) => {
+        // Handle driver image URL
+        let driverImageUrl: string | null = null;
+        if (booking.ride.driver.imageKey) {
+          const now = new Date();
+          // Check if stored driver URL is valid and not expired
+          if (
+            booking.ride.driver.imageUrl &&
+            booking.ride.driver.imageUrlExpiresAt &&
+            now < booking.ride.driver.imageUrlExpiresAt
+          ) {
+            driverImageUrl = booking.ride.driver.imageUrl;
+          } else {
+            // Generate new pre-signed URL for driver if expired or missing
+            driverImageUrl = await getProfileImageUrl(booking.ride.driver.imageKey);
+            const imageUrlExpiresAt = new Date(Date.now() + 604800 * 1000);
+            // Update driver's record with new URL and expiration
+            await prisma.user.update({
+              where: { id: booking.ride.driverId },
+              data: {
+                imageUrl: driverImageUrl,
+                imageUrlExpiresAt,
+              },
+            });
+          }
+        }
+
+        // Handle user image URLs in bookings
+        const bookingsWithImageUrls = await Promise.all(
+          booking.ride.bookings.map(async (rideBooking) => {
+            let userImageUrl: string | null = null;
+            if (rideBooking.user.imageKey) {
+              const now = new Date();
+              // Check if stored user URL is valid and not expired
+              if (
+                rideBooking.user.imageUrl &&
+                rideBooking.user.imageUrlExpiresAt &&
+                now < rideBooking.user.imageUrlExpiresAt
+              ) {
+                userImageUrl = rideBooking.user.imageUrl;
+              } else {
+                // Generate new pre-signed URL for user if expired or missing
+                userImageUrl = await getProfileImageUrl(rideBooking.user.imageKey);
+                const imageUrlExpiresAt = new Date(Date.now() + 604800 * 1000);
+                // Update user's record with new URL and expiration
+                await prisma.user.update({
+                  where: { id: rideBooking.user.id },
+                  data: {
+                    imageUrl: userImageUrl,
+                    imageUrlExpiresAt,
+                  },
+                });
+              }
+            }
+
+            return {
               ...rideBooking,
               user: {
                 ...rideBooking.user,
-                imageUrl: rideBooking.user.imageKey
-                  ? await getProfileImageUrl(rideBooking.user.imageKey)
-                  : null,
+                imageUrl: userImageUrl,
               },
-            }))
-          ),
-        },
-      }))
+            };
+          })
+        );
+
+        return {
+          ...booking,
+          ride: {
+            ...booking.ride,
+            driver: {
+              ...booking.ride.driver,
+              imageUrl: driverImageUrl,
+            },
+            bookings: bookingsWithImageUrls,
+          },
+        };
+      })
     );
 
     return rideBookingsWithImageUrls;

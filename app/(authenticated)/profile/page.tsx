@@ -146,7 +146,7 @@ export default function ProfilePage() {
             <Button
               variant="outline"
               size="icon"
-              className="absolute bottom-0 right-0 bg-emerald-600 text-white hover:bg-emerald-700 border-none rounded-full h-8 w-8"
+              className="absolute bottom-0 right-0 bg-emerald-600 text-white hover:bg-emerald-700 border-none rounded-full h-8 w-8 cursor-pointer"
               onClick={handleEditClick}
               disabled={isUploading}
             >

@@ -489,6 +489,8 @@ export async function getUserRides(userId: string, limit: number = 20) {
                 email: true,
                 phone: true,
                 imageKey: true,
+                imageUrl: true,
+                imageUrlExpiresAt: true,
               },
             },
           },
@@ -505,15 +507,42 @@ export async function getUserRides(userId: string, limit: number = 20) {
       rides.map(async (ride) => ({
         ...ride,
         bookings: await Promise.all(
-          ride.bookings.map(async (booking) => ({
-            ...booking,
-            user: {
-              ...booking.user,
-              imageUrl: booking.user.imageKey
-                ? await getProfileImageUrl(booking.user.imageKey)
-                : null,
-            },
-          }))
+          ride.bookings.map(async (booking) => {
+            let imageUrl: string | null = null;
+
+            // Check if user has an imageKey
+            if (booking.user.imageKey) {
+              const now = new Date();
+              // Check if stored URL is valid and not expired
+              if (
+                booking.user.imageUrl &&
+                booking.user.imageUrlExpiresAt &&
+                now < booking.user.imageUrlExpiresAt
+              ) {
+                imageUrl = booking.user.imageUrl;
+              } else {
+                // Generate new pre-signed URL if expired or missing
+                imageUrl = await getProfileImageUrl(booking.user.imageKey);
+                const imageUrlExpiresAt = new Date(Date.now() + 604800 * 1000);
+                // Update user's record with new URL and expiration
+                await prisma.user.update({
+                  where: { id: booking.user.id },
+                  data: {
+                    imageUrl,
+                    imageUrlExpiresAt,
+                  },
+                });
+              }
+            }
+
+            return {
+              ...booking,
+              user: {
+                ...booking.user,
+                imageUrl, // Add pre-signed URL to the response
+              },
+            };
+          })
         ),
       }))
     );
@@ -524,6 +553,7 @@ export async function getUserRides(userId: string, limit: number = 20) {
     throw error;
   }
 }
+
 
 /**
  * Get ride details by ride ID
@@ -568,6 +598,7 @@ export async function getRideById(rideId: string) {
   }
 }
 
+
 /**
  * Get avialable ride for a user
  */
@@ -593,6 +624,8 @@ export async function getAvailableRidesForUser(userId: string) {
           email: true,
           phone: true,
           imageKey: true,
+          imageUrl: true,
+          imageUrlExpiresAt: true,
         },
       },
       bookings: {
@@ -630,6 +663,33 @@ export async function getAvailableRidesForUser(userId: string) {
         (booking) => booking.status === RideBookingStatus.Confirmed
       ).length;
 
+      let driverImageUrl: string | null = null;
+
+      // Check if driver has an imageKey
+      if (ride.driver.imageKey) {
+        const now = new Date();
+        // Check if stored URL is valid and not expired
+        if (
+          ride.driver.imageUrl &&
+          ride.driver.imageUrlExpiresAt &&
+          now < ride.driver.imageUrlExpiresAt
+        ) {
+          driverImageUrl = ride.driver.imageUrl;
+        } else {
+          // Generate new pre-signed URL if expired or missing
+          driverImageUrl = await getProfileImageUrl(ride.driver.imageKey);
+          const imageUrlExpiresAt = new Date(Date.now() + 604800 * 1000);
+          // Update driver's record with new URL and expiration
+          await prisma.user.update({
+            where: { id: ride.driverId },
+            data: {
+              imageUrl: driverImageUrl,
+              imageUrlExpiresAt,
+            },
+          });
+        }
+      }
+
       return {
         id: ride.id,
         startingLocationId: ride.startingLocationId,
@@ -640,9 +700,7 @@ export async function getAvailableRidesForUser(userId: string) {
         driverName: ride.driver.name,
         driverEmail: ride.driver.email,
         driverPhone: ride.driver.phone,
-        driverImageUrl: ride.driver.imageKey
-          ? await getProfileImageUrl(ride.driver.imageKey)
-          : null,
+        driverImageUrl,
         startingTime: ride.startingTime,
         vehicleId: ride.vehicle?.id,
         vehicleName: ride.vehicle?.model,

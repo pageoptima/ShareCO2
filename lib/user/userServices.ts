@@ -112,11 +112,17 @@ export async function updateProfileImage({
     // Upload image to S3 and get the S3 key
     const imageKey = await uploadImageToS3(imageBuffer, user.name, mimeType, id);
 
+    // Generate pre-signed URL with 7-day expiration
+    const imageUrl = await getProfileImageUrl(imageKey);
+    const imageUrlExpiresAt = new Date(Date.now() + 604800 * 1000);
+
     // Update Prisma user with the S3 key
     await prisma.user.update({
       where: { id },
       data: {
         imageKey, // Store the S3 key
+        imageUrl, // Store the pre-signed URL
+        imageUrlExpiresAt, // Store the expiration timestamp
       },
     });
 
@@ -142,15 +148,34 @@ export async function getUserById(id: string): Promise<User & { imageUrl: string
     throw new Error("User not found");
   }
 
-  // Generate pre-signed URL if imageKey exists
-  const imageUrl = user.imageKey ? await getProfileImageUrl(user.imageKey) : null;
+  let imageUrl: string | null = null;
+
+  // Check if imageKey exists
+  if (user.imageKey) {
+    const now = new Date();
+    // Check if stored URL is valid and not expired
+    if (user.imageUrl && user.imageUrlExpiresAt && now < user.imageUrlExpiresAt) {
+      imageUrl = user.imageUrl;
+    } else {
+      // Generate new pre-signed URL if expired or missing
+      imageUrl = await getProfileImageUrl(user.imageKey);
+      const imageUrlExpiresAt = new Date(Date.now() + 604800 * 1000);
+      // Update Prisma with new URL and expiration
+      await prisma.user.update({
+        where: { id },
+        data: {
+          imageUrl,
+          imageUrlExpiresAt,
+        },
+      });
+    }
+  }
 
   return {
     ...user,
     imageUrl, // Add pre-signed URL to the response
   };
 }
-
 
 /**
  * Get all users from the database
