@@ -25,7 +25,7 @@ export default function RideRequestCard({
 }: RideRequestCardProps) {
   const router = useRouter();
 
-  // Hook for cancell ride request
+  // Hook for cancel ride request
   const {
     mutateAsync: mutateCancellRideRequest,
     isPending: isRideReqestCancellPending,
@@ -89,14 +89,12 @@ export default function RideRequestCard({
               <div className="flex justify-start">
                 <Badge
                   variant="outline"
-                  className={`
-                                        ${
-                                          rideRequest.status === "Pending"
-                                            ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
-                                            : rideRequest.status === "Fulfilled"
-                                            ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
-                                            : "bg-gray-500/20 text-gray-300 border-gray-500/30"
-                                        } text-xs px-2 py-1 flex-shrink-0`}
+                  className={`${rideRequest.status === "Pending"
+                    ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                    : rideRequest.status === "Fulfilled"
+                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                      : "bg-gray-500/20 text-gray-300 border-gray-500/30"
+                    } text-xs px-2 py-1 flex-shrink-0`}
                 >
                   {rideRequest.status}
                 </Badge>

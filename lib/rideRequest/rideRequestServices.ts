@@ -176,6 +176,8 @@ export const getOthersRideRequests = async (userId: string) => {
   }
 };
 
+
+
 /**
  * Get all of the user's ride requests for today
  */
@@ -186,14 +188,26 @@ export const getUserRideRequests = async (userId: string) => {
     const startDay = startOfDay(today);
     const endDay = endOfDay(today);
 
-    // Get all the user's ride requests for today
+    // Get all the user's pending ride requests and those created today
     const rideRequests = await prisma.rideRequest.findMany({
       where: {
         userId,
-        createdAt: {
-          gte: startDay,
-          lte: endDay,
-        },
+        OR: [
+          // Fetch ride requests created today
+          {
+            createdAt: {
+              gte: startDay,
+              lte: endDay,
+            },
+          },
+          // Fetch pending ride requests with startingTime in the past
+          {
+            status: 'Pending',
+            startingTime: {
+              lte: new Date(),
+            },
+          },
+        ],
       },
       include: {
         user: {
@@ -210,13 +224,43 @@ export const getUserRideRequests = async (userId: string) => {
       },
     });
 
-    return rideRequests;
+    // Check and update expired ride requests
+    const currentTime = new Date();
+    const timeWindowMinutes = Number(process.env.NEXT_PUBLIC_RIDE_REQUEST_TIME_WINDOW_MINUTES) || 60;
+    const bufferTimeMs = (timeWindowMinutes / 2) * 60 * 1000; // Use half of the time window in milliseconds
+    const updatedRideRequests = await Promise.all(
+      rideRequests.map(async (request) => {
+        if (
+          request.status === 'Pending' &&
+          request.startingTime <= new Date(currentTime.getTime() - bufferTimeMs) // Half of the time window buffer
+        ) {
+          // Update the status to Expired in the database
+          const updatedRequest = await prisma.rideRequest.update({
+            where: { id: request.id },
+            data: { status: 'Expired' },
+            include: {
+              user: {
+                select: {
+                  name: true,
+                  email: true,
+                },
+              },
+              startingLocation: { select: { id: true, name: true } },
+              destinationLocation: { select: { id: true, name: true } },
+            },
+          });
+          return updatedRequest;
+        }
+        return request;
+      })
+    );
+
+    return updatedRideRequests;
   } catch (error) {
     logger.error(`Error fetching ride requests: ${error}`);
     throw error;
   }
 };
-
 /**
  * Get aggregated ride requests by 30-minute time windows for today and future
  */

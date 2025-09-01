@@ -1,6 +1,6 @@
 import logger from "@/config/logger";
 import { prisma } from "@/config/prisma";
-import { RideBookingStatus, RideStatus, VehicleType } from "@prisma/client";
+import { RideBookingStatus, RideRequestStatus, RideStatus, VehicleType } from "@prisma/client";
 import {
   applyFineChargeRidebooking,
   creditDriverPayout,
@@ -13,6 +13,8 @@ import { hasPassedNMinutes, isMoreThanNMinutesLeft } from "@/utils/time";
 import { sendPushNotification } from "@/services/ably";
 import { getProfileImageUrl } from "../aws/aws-s3-utils";
 
+
+// Book Ride by Rider
 export async function bookRide({
   userId,
   rideId,
@@ -148,6 +150,30 @@ export async function bookRide({
         eventName: "booking_confirmation",
         redirectUrl: "/dashboard?tab=created",
       });
+
+      // Fulfill matching pending ride requests
+      if (currentRide.startingLocationId && currentRide.destinationLocationId) {
+        const timeWindowMinutes = Number(process.env.NEXT_PUBLIC_RIDE_REQUEST_TIME_WINDOW_MINUTES) || 60; // Default to 60 minutes if not set
+        const timeWindowMs = timeWindowMinutes * 60 * 1000; // Convert to milliseconds
+        const startTimeMin = new Date(currentRide.startingTime.getTime() - timeWindowMs / 2);
+        const startTimeMax = new Date(currentRide.startingTime.getTime() + timeWindowMs / 2);
+
+        await tx.rideRequest.updateMany({
+          where: {
+            userId,
+            status: RideRequestStatus.Pending,
+            startingLocationId: currentRide.startingLocationId,
+            destinationLocationId: currentRide.destinationLocationId,
+            startingTime: {
+              gte: startTimeMin,
+              lte: startTimeMax,
+            },
+          },
+          data: {
+            status: RideRequestStatus.Fulfilled,
+          },
+        });
+      }
     });
 
     return true;
@@ -156,6 +182,9 @@ export async function bookRide({
     throw error;
   }
 }
+
+
+
 
 /**
  * Activate( Start ) the ride booking by user

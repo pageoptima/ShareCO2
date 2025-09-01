@@ -22,7 +22,7 @@ export async function getAvialableRides() {
 }
 
 /**
- * Book ride for the user
+ * Book ride for the Rider
  */
 export async function bookRide(rideId: string) {
   try {

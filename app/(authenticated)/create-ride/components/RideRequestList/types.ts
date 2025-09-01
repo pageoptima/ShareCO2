@@ -10,7 +10,6 @@ export interface PublicRideRequest {
     startingTime         : Date;
     createdAt            : Date;
     userId               : string;
-    fulfilled            : boolean;
     user                 : {
         name : string | null,
         email: string | null
