@@ -1,15 +1,9 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import fs from 'fs/promises';
 import logger from '@/config/logger';
 
 interface EmailConfig {
-  host: string;
-  port: number;
-  secure: boolean;
-  auth: {
-    user: string;
-    pass: string;
-  };
+  apiKey: string;
   from: string;
 }
 
@@ -19,22 +13,29 @@ interface Attachment {
 }
 
 const getEmailConfig = (): EmailConfig => {
-  const host = process.env.SMTP_HOST;
-  const port = Number(process.env.SMTP_PORT);
-  const secure = process.env.SMTP_SECURE === 'true';
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const from = process.env.EMAIL_FROM;
+  const apiKey = process.env.AUTH_RESEND_KEY;
+  const from = process.env.AUTH_RESEND_FROM;
 
-  if (!host || !port || !user || !pass || !from) {
-    throw new Error('Missing required email configuration in environment variables.');
+  if (!apiKey || !from) {
+    const missingVars = [
+      !apiKey && 'AUTH_RESEND_KEY',
+      !from && 'AUTH_RESEND_FROM',
+    ].filter(Boolean).join(', ');
+    const errorMessage = `Missing required email configuration in environment variables: ${missingVars}`;
+    logger.error(errorMessage);
+    throw new Error(errorMessage);
   }
 
+  // Validate AUTH_RESEND_FROM is a valid email address
+  if (!from.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)) {
+    const errorMessage = 'Invalid AUTH_RESEND_FROM format. Expected a valid email address.';
+    logger.error(errorMessage);
+    throw new Error(errorMessage);
+  }
+
+  logger.info('Resend Configuration', { from });
   return {
-    host,
-    port,
-    secure,
-    auth: { user, pass },
+    apiKey,
     from,
   };
 };
@@ -46,38 +47,34 @@ export async function mailSender(
   attachments?: Attachment[]
 ): Promise<void> {
   const config = getEmailConfig();
-
-  const transporter = nodemailer.createTransport({
-    host: config.host,
-    port: config.port,
-    secure: config.secure,
-    auth: config.auth,
-  });
-
-  const mailOptions: nodemailer.SendMailOptions = {
-    from: config.from,
-    to,
-    subject,
-    html,
-  };
-
-  if (attachments && attachments.length > 0) {
-    mailOptions.attachments = await Promise.all(
-      attachments.map(async (attachment) => {
-        await fs.access(attachment.path); // Check if file exists
-        return {
-          filename: attachment.filename,
-          path: attachment.path,
-        };
-      })
-    );
-  }
+  const resend = new Resend(config.apiKey);
 
   try {
-    await transporter.sendMail(mailOptions);
+    const attachmentFiles = attachments
+      ? await Promise.all(
+        attachments.map(async (attachment) => {
+          await fs.access(attachment.path); // Check if file exists
+          const content = await fs.readFile(attachment.path);
+          return {
+            filename: attachment.filename,
+            content: content, // Buffer for the file content
+          };
+        })
+      )
+      : [];
+
+    await resend.emails.send({
+      from: `PageOptima <${config.from}>`, // e.g., PageOptima <info@pageoptima.com>
+      to,
+      subject,
+      html,
+      attachments: attachmentFiles,
+    });
+
+    logger.info(`Email sent successfully to ${to}`);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.log("err", errorMessage)
+    console.log("err", errorMessage);
     logger.error('Error sending email:', errorMessage);
     throw new Error(`Failed to send email: ${errorMessage}`);
   }
