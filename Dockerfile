@@ -5,22 +5,17 @@ FROM node:18 AS builder
 
 WORKDIR /app
 
-# Copy package files first (for caching)
+# Copy package files first (leverage Docker cache)
 COPY package.json package-lock.json ./
 
-# Install dependencies (all, including dev)
+# Install all deps (including dev for Next.js build)
 RUN npm install
 
-# Copy all source code
+# Copy source code
 COPY . .
 
-# Copy environment file for build
-COPY .env .env
-
-# Set NODE_ENV to production for Next.js build
-ENV NODE_ENV=production
-
 # Build Next.js app
+ENV NODE_ENV=production
 RUN npm run build
 
 # --------------------
@@ -33,20 +28,18 @@ WORKDIR /app
 # Copy package files
 COPY --from=builder /app/package.json /app/package-lock.json ./
 
-# Install only production dependencies
-RUN npm install --only=production
+# Install only production deps
+RUN npm install --omit=dev
 
-# Copy build output & public assets
+# Copy Next.js build and public assets
 COPY --from=builder /app/.next .next
 COPY --from=builder /app/public public
 
-# Copy prisma schema
+# Copy Prisma schema (needed for generate)
 COPY --from=builder /app/prisma prisma
 
-# Generate Prisma client inside container
-RUN npx prisma generate
-
-# Expose Next.js port
+# Expose port (your ECS task maps this)
 EXPOSE 3000
 
-CMD ["npm", "start"]
+# Run Prisma generate at runtime (so ECS env vars are available), then start Next.js
+CMD npx prisma generate && npm start
