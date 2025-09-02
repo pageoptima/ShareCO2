@@ -21,7 +21,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             email: data.email,
             emailVerified: data.emailVerified,
             name: data?.name,
-            // image:data?.,
             cePoints: 0,
           },
         });
