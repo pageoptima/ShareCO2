@@ -3,14 +3,13 @@ import { prisma } from "@/config/prisma";
 import { sendPushNotification } from "@/services/ably";
 import { RideRequestStatus } from "@prisma/client";
 import {
-  format,
   addDays,
   addMinutes,
   endOfDay,
   startOfDay,
   startOfMinute,
 } from "date-fns";
-
+import { formatInTimeZone } from "date-fns-tz";
 
 
 /**
@@ -91,8 +90,8 @@ export async function createRideRequest({
       select: { id: true },
     });
 
-    // Format the starting time for notification
-    const formattedTime = format(new Date(startingTime), "h:mm a");
+    // Format the starting time for notification in IST (New Delhi)
+    const formattedTime = formatInTimeZone(new Date(startingTime), "Asia/Kolkata", "h:mm a");
 
     // Send notification to all users except the requester
     await Promise.all(
@@ -113,8 +112,6 @@ export async function createRideRequest({
     throw error;
   }
 }
-
-
 
 /**
  * Cancel ride request for a user by a user
