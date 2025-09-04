@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth/auth";
 const MART_SECRET_KEY = process.env.MART_SECRET_KEY;
 const MART_SERVER_URL = process.env.MART_SERVER_URL;
 
-export async function GET(req: Request) {
+export async function GET() {
     try {
         // Authentication check
         const session = await auth();
@@ -39,7 +39,7 @@ export async function GET(req: Request) {
         // Redirect to WordPress SSO handler
         return NextResponse.redirect(`${MART_SERVER_URL}/sso?token=${token}`);
 
-    } catch (error: any) {
+    } catch (error) {
         logger.error("GET /api/sso error:", error);
         return NextResponse.redirect(`${MART_SERVER_URL}/sso?error=${ encodeURIComponent( 'Unable to generate SSO token' )}`);
     }
