@@ -3,8 +3,9 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { User as UserIcon, Car, HomeIcon, Camera } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserImageModal } from "@/app/_components/modals/UserImageModal";
 import VehicleManager from "./components/VehicleManager";
 import ProfileManager from "./components/ProfileManager";
 import { getUserProfile, updateUserProfileImage } from "./components/ProfileManager/actions";
@@ -37,6 +38,9 @@ export default function ProfilePage() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedUserImage, setSelectedUserImage] = useState<string | null>(null);
+  const [selectedUserName, setSelectedUserName] = useState<string>("");
 
   // Fetch user profile using useQuery
   const {
@@ -99,6 +103,24 @@ export default function ProfilePage() {
     fileInputRef.current?.click();
   };
 
+  /**
+   * Handle open user image modal
+   */
+  const handleOpenImageModal = (imageUrl: string | null, userName: string) => {
+    setSelectedUserImage(imageUrl);
+    setSelectedUserName(userName);
+    setIsImageModalOpen(true);
+  };
+
+  /**
+   * Handle close user image modal
+   */
+  const handleCloseImageModal = () => {
+    setSelectedUserImage(null);
+    setSelectedUserName("");
+    setIsImageModalOpen(false);
+  };
+
   return (
     <div className="p-4 pb-20 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-4">
@@ -128,27 +150,37 @@ export default function ProfilePage() {
           </div>
         ) : (
           <>
-            <Avatar className="h-24 w-24 border-4 border-emerald-600">
-              <AvatarImage
-                src={userData?.imageUrl || "/default-avatar.png"}
-                alt={session?.user?.name || session?.user?.email || ""}
-              />
-              <AvatarFallback className="bg-emerald-800 text-white text-2xl">
-                {session?.user?.name?.[0] || session?.user?.email?.[0] || ""}
-              </AvatarFallback>
+            <Avatar
+              className="h-24 w-24 border-4 border-emerald-600 flex items-center justify-center cursor-pointer"
+              onClick={() =>
+                handleOpenImageModal(
+                  userData?.imageUrl || null,
+                  session?.user?.name || session?.user?.email || "User"
+                )
+              }
+            >
+              {isUploading ? (
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-600"></div>
+              ) : (
+                <>
+                  <AvatarImage
+                    src={userData?.imageUrl || "/default-avatar.png"}
+                    alt={session?.user?.name || session?.user?.email || ""}
+                  />
+                  <AvatarFallback className="bg-emerald-800 text-white text-2xl">
+                    {session?.user?.name?.[0] || session?.user?.email?.[0] || ""}
+                  </AvatarFallback>
+                </>
+              )}
             </Avatar>
             <Button
               variant="outline"
               size="icon"
-              className="absolute bottom-0 right-0 bg-emerald-600 text-white hover:bg-emerald-700 border-none rounded-full h-8 w-8"
+              className="absolute bottom-0 right-0 bg-emerald-600 text-white hover:bg-emerald-700 border-none rounded-full h-8 w-8 cursor-pointer"
               onClick={handleEditClick}
               disabled={isUploading}
             >
-              {isUploading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-              ) : (
-                <Camera className="h-4 w-4" />
-              )}
+              <Camera className="h-4 w-4" />
             </Button>
             <input
               type="file"
@@ -187,6 +219,16 @@ export default function ProfilePage() {
           <VehicleManager />
         </TabsContent>
       </Tabs>
+
+      {/* User Image Modal */}
+      {isImageModalOpen && (
+        <UserImageModal
+          isOpen={isImageModalOpen}
+          onClose={handleCloseImageModal}
+          imageUrl={selectedUserImage}
+          userName={selectedUserName}
+        />
+      )}
     </div>
   );
 }

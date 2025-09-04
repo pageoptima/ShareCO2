@@ -13,6 +13,7 @@ import {
 import { isMoreThanNMinutesLeft } from "@/utils/time";
 import { addDays, endOfDay } from "date-fns";
 import { sendPushNotification } from "@/services/ably";
+import { getProfileImageUrl } from "../aws/aws-s3-utils";
 
 // Validate the inputs
 const createRideSchema = z.object({
@@ -487,6 +488,9 @@ export async function getUserRides(userId: string, limit: number = 20) {
                 name: true,
                 email: true,
                 phone: true,
+                imageKey: true,
+                imageUrl: true,
+                imageUrlExpiresAt: true,
               },
             },
           },
@@ -498,7 +502,52 @@ export async function getUserRides(userId: string, limit: number = 20) {
       take: limit,
     });
 
-    return rides;
+    // Map rides to include pre-signed image URLs for users in bookings
+    const ridesWithImageUrls = await Promise.all(
+      rides.map(async (ride) => ({
+        ...ride,
+        bookings: await Promise.all(
+          ride.bookings.map(async (booking) => {
+            let imageUrl: string | null = null;
+
+            // Check if user has an imageKey
+            if (booking.user.imageKey) {
+              const now = new Date();
+              // Check if stored URL is valid and not expired
+              if (
+                booking.user.imageUrl &&
+                booking.user.imageUrlExpiresAt &&
+                now < booking.user.imageUrlExpiresAt
+              ) {
+                imageUrl = booking.user.imageUrl;
+              } else {
+                // Generate new pre-signed URL if expired or missing
+                imageUrl = await getProfileImageUrl(booking.user.imageKey);
+                const imageUrlExpiresAt = new Date(Date.now() + 604800 * 1000);
+                // Update user's record with new URL and expiration
+                await prisma.user.update({
+                  where: { id: booking.user.id },
+                  data: {
+                    imageUrl,
+                    imageUrlExpiresAt,
+                  },
+                });
+              }
+            }
+
+            return {
+              ...booking,
+              user: {
+                ...booking.user,
+                imageUrl, // Add pre-signed URL to the response
+              },
+            };
+          })
+        ),
+      }))
+    );
+
+    return ridesWithImageUrls;
   } catch (error) {
     logger.error(`Error on fetching user rides: ${error}`);
     throw error;
@@ -549,6 +598,7 @@ export async function getRideById(rideId: string) {
   }
 }
 
+
 /**
  * Get avialable ride for a user
  */
@@ -573,6 +623,9 @@ export async function getAvailableRidesForUser(userId: string) {
           name: true,
           email: true,
           phone: true,
+          imageKey: true,
+          imageUrl: true,
+          imageUrlExpiresAt: true,
         },
       },
       bookings: {
@@ -588,26 +641,54 @@ export async function getAvailableRidesForUser(userId: string) {
     },
   });
 
-  return rides
-    .filter((ride) => {
-      // Check if user has already booked this ride (any status)
-      const userHasBooked = ride.bookings.some(
-        (booking) => booking.userId === userId
-      );
-      if (userHasBooked) {
-        return false; // Exclude rides already booked by user
-      }
+  const filteredRides = rides.filter((ride) => {
+    // Check if user has already booked this ride (any status)
+    const userHasBooked = ride.bookings.some(
+      (booking) => booking.userId === userId
+    );
+    if (userHasBooked) {
+      return false; // Exclude rides already booked by user
+    }
 
-      // Additional filter to ensure seats are available
+    // Additional filter to ensure seats are available
+    const confirmedBookings = ride.bookings.filter(
+      (booking) => booking.status === RideBookingStatus.Confirmed
+    ).length;
+    return ride.maxPassengers > confirmedBookings; // Only show rides with available seats
+  });
+
+  return Promise.all(
+    filteredRides.map(async (ride) => {
       const confirmedBookings = ride.bookings.filter(
         (booking) => booking.status === RideBookingStatus.Confirmed
       ).length;
-      return ride.maxPassengers > confirmedBookings; // Only show rides with available seats
-    })
-    .map((ride) => {
-      const confirmedBookings = ride.bookings.filter(
-        (booking) => booking.status === RideBookingStatus.Confirmed
-      ).length;
+
+      let driverImageUrl: string | null = null;
+
+      // Check if driver has an imageKey
+      if (ride.driver.imageKey) {
+        const now = new Date();
+        // Check if stored URL is valid and not expired
+        if (
+          ride.driver.imageUrl &&
+          ride.driver.imageUrlExpiresAt &&
+          now < ride.driver.imageUrlExpiresAt
+        ) {
+          driverImageUrl = ride.driver.imageUrl;
+        } else {
+          // Generate new pre-signed URL if expired or missing
+          driverImageUrl = await getProfileImageUrl(ride.driver.imageKey);
+          const imageUrlExpiresAt = new Date(Date.now() + 604800 * 1000);
+          // Update driver's record with new URL and expiration
+          await prisma.user.update({
+            where: { id: ride.driverId },
+            data: {
+              imageUrl: driverImageUrl,
+              imageUrlExpiresAt,
+            },
+          });
+        }
+      }
 
       return {
         id: ride.id,
@@ -619,11 +700,13 @@ export async function getAvailableRidesForUser(userId: string) {
         driverName: ride.driver.name,
         driverEmail: ride.driver.email,
         driverPhone: ride.driver.phone,
+        driverImageUrl,
         startingTime: ride.startingTime,
         vehicleId: ride.vehicle?.id,
         vehicleName: ride.vehicle?.model,
         vehicleType: ride.vehicle?.type,
         vehicleNumber: ride.vehicle?.vehicleNumber,
       };
-    });
+    })
+  );
 }

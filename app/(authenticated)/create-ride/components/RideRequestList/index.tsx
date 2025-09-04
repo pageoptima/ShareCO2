@@ -88,7 +88,7 @@ const RideRequestList = ({
   }
 
   return (
-    <div className="mt-10" id="popular-routes-section">
+    <div className="mt-10 mb-10" id="popular-routes-section">
       <h2 className="text-xl font-semibold text-white mb-4">
         Popular Routes Today
       </h2>
@@ -146,37 +146,35 @@ const RideRequestList = ({
                       <Card
                         key={index}
                         className={`bg-teal-800/50 text-white border-none shadow-md hover:shadow-lg transition-all hover:scale-[1.01] ${highlightedRequestId &&
-                            rideRequest.requestIds.includes(highlightedRequestId)
-                            ? "ring-2 ring-green-500 ring-opacity-75 animate-pulse"
-                            : ""
+                          rideRequest.requestIds.includes(highlightedRequestId)
+                          ? "ring-2 ring-green-500 ring-opacity-75 animate-pulse"
+                          : ""
                           }`}
                       >
                         <CardHeader className="pb-2 border-b border-white/10">
-                          <div className="flex flex-col gap-2">
-                            <CardTitle className="text-base sm:text-lg font-medium flex items-center justify-between">
-                              <div className="flex flex-col sm:flex-row sm:items-center gap-1">
-                                <div className="flex items-center">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <CardTitle className="text-base sm:text-lg font-medium flex flex-col sm:flex-row sm:items-center gap-1 w-full">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-1 w-full sm:w-auto">
+                                <div className="flex items-center min-w-0">
                                   <MapPin className="h-4 w-4 text-emerald-400 mr-1 flex-shrink-0" />
-                                  <span className="text-white/90 truncate">
+                                  <span className="text-white/90 truncate max-w-[150px] sm:max-w-[200px]">
                                     {rideRequest.startingLocation?.name}
                                   </span>
                                 </div>
                                 <span className="hidden sm:inline mx-1">→</span>
-                                <div className="flex items-center">
+                                <div className="flex items-center min-w-0">
                                   <MapPin className="h-4 w-4 text-red-400 mr-1 flex-shrink-0" />
-                                  <span className="text-white/90 truncate">
+                                  <span className="text-white/90 truncate max-w-[150px] sm:max-w-[200px]">
                                     {rideRequest.destinationLocation?.name}
                                   </span>
                                 </div>
                               </div>
                               <Badge
                                 variant="outline"
-                                className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-xs"
+                                className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-xs sm:text-sm px-2 py-1 shrink-0 max-w-[100px] truncate"
                               >
                                 {rideRequest.requestIds.length}{" "}
-                                {rideRequest.requestIds.length === 1
-                                  ? "Request"
-                                  : "Requests"}
+                                {rideRequest.requestIds.length === 1 ? "Request" : "Requests"}
                               </Badge>
                             </CardTitle>
                           </div>

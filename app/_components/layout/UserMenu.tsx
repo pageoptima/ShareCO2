@@ -123,7 +123,7 @@ export function UserMenu() {
                 </AvatarFallback>
               </Avatar>
             ) : (
-              <Avatar className="h-10 w-10">
+<Avatar className="h-10 w-10">
                 <AvatarImage
                   src={user?.imageUrl || "/default-avatar.png"}
                   alt={session.user.email || ""}
@@ -132,7 +132,7 @@ export function UserMenu() {
                   {session?.user?.name?.[0] || session?.user?.email?.[0] || ""}
                 </AvatarFallback>
               </Avatar>
-            )}
+            )}              
             <div className="flex flex-col items-start">
               {isUserDataFetching ? (
                 <span className="font-medium">Loading...</span>

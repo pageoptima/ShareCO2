@@ -1,6 +1,6 @@
 import logger from "@/config/logger";
 import { prisma } from "@/config/prisma";
-import { RideBookingStatus, RideStatus, VehicleType } from "@prisma/client";
+import { RideBookingStatus, RideRequestStatus, RideStatus, VehicleType } from "@prisma/client";
 import {
   applyFineChargeRidebooking,
   creditDriverPayout,
@@ -11,7 +11,10 @@ import {
 } from "@/lib/wallet/walletServices";
 import { hasPassedNMinutes, isMoreThanNMinutesLeft } from "@/utils/time";
 import { sendPushNotification } from "@/services/ably";
+import { getProfileImageUrl } from "../aws/aws-s3-utils";
 
+
+// Book Ride by Rider
 export async function bookRide({
   userId,
   rideId,
@@ -147,6 +150,30 @@ export async function bookRide({
         eventName: "booking_confirmation",
         redirectUrl: "/dashboard?tab=created",
       });
+
+      // Fulfill matching pending ride requests
+      if (currentRide.startingLocationId && currentRide.destinationLocationId) {
+        const timeWindowMinutes = Number(process.env.NEXT_PUBLIC_RIDE_REQUEST_TIME_WINDOW_MINUTES) || 60; // Default to 60 minutes if not set
+        const timeWindowMs = timeWindowMinutes * 60 * 1000; // Convert to milliseconds
+        const startTimeMin = new Date(currentRide.startingTime.getTime() - timeWindowMs / 2);
+        const startTimeMax = new Date(currentRide.startingTime.getTime() + timeWindowMs / 2);
+
+        await tx.rideRequest.updateMany({
+          where: {
+            userId,
+            status: RideRequestStatus.Pending,
+            startingLocationId: currentRide.startingLocationId,
+            destinationLocationId: currentRide.destinationLocationId,
+            startingTime: {
+              gte: startTimeMin,
+              lte: startTimeMax,
+            },
+          },
+          data: {
+            status: RideRequestStatus.Fulfilled,
+          },
+        });
+      }
     });
 
     return true;
@@ -155,6 +182,9 @@ export async function bookRide({
     throw error;
   }
 }
+
+
+
 
 /**
  * Activate( Start ) the ride booking by user
@@ -632,6 +662,7 @@ export async function getUserRideBookings(userId: string, limit: number = 20) {
             id: true,
             status: true,
             startingTime: true,
+            driverId: true, // Added to use in driver update
             startingLocation: {
               select: { id: true, name: true },
             },
@@ -642,7 +673,11 @@ export async function getUserRideBookings(userId: string, limit: number = 20) {
               select: {
                 id: true,
                 name: true,
+                email: true,
                 phone: true,
+                imageKey: true,
+                imageUrl: true,
+                imageUrlExpiresAt: true,
               },
             },
             vehicle: {
@@ -661,6 +696,9 @@ export async function getUserRideBookings(userId: string, limit: number = 20) {
                     name: true,
                     email: true,
                     phone: true,
+                    imageKey: true,
+                    imageUrl: true,
+                    imageUrlExpiresAt: true,
                   },
                 },
               },
@@ -672,9 +710,90 @@ export async function getUserRideBookings(userId: string, limit: number = 20) {
       take: limit,
     });
 
-    return rideBookings;
+    // Map ride bookings to include pre-signed image URLs for driver and users in bookings
+    const rideBookingsWithImageUrls = await Promise.all(
+      rideBookings.map(async (booking) => {
+        // Handle driver image URL
+        let driverImageUrl: string | null = null;
+        if (booking.ride.driver.imageKey) {
+          const now = new Date();
+          // Check if stored driver URL is valid and not expired
+          if (
+            booking.ride.driver.imageUrl &&
+            booking.ride.driver.imageUrlExpiresAt &&
+            now < booking.ride.driver.imageUrlExpiresAt
+          ) {
+            driverImageUrl = booking.ride.driver.imageUrl;
+          } else {
+            // Generate new pre-signed URL for driver if expired or missing
+            driverImageUrl = await getProfileImageUrl(booking.ride.driver.imageKey);
+            const imageUrlExpiresAt = new Date(Date.now() + 604800 * 1000);
+            // Update driver's record with new URL and expiration
+            await prisma.user.update({
+              where: { id: booking.ride.driverId },
+              data: {
+                imageUrl: driverImageUrl,
+                imageUrlExpiresAt,
+              },
+            });
+          }
+        }
+
+        // Handle user image URLs in bookings
+        const bookingsWithImageUrls = await Promise.all(
+          booking.ride.bookings.map(async (rideBooking) => {
+            let userImageUrl: string | null = null;
+            if (rideBooking.user.imageKey) {
+              const now = new Date();
+              // Check if stored user URL is valid and not expired
+              if (
+                rideBooking.user.imageUrl &&
+                rideBooking.user.imageUrlExpiresAt &&
+                now < rideBooking.user.imageUrlExpiresAt
+              ) {
+                userImageUrl = rideBooking.user.imageUrl;
+              } else {
+                // Generate new pre-signed URL for user if expired or missing
+                userImageUrl = await getProfileImageUrl(rideBooking.user.imageKey);
+                const imageUrlExpiresAt = new Date(Date.now() + 604800 * 1000);
+                // Update user's record with new URL and expiration
+                await prisma.user.update({
+                  where: { id: rideBooking.user.id },
+                  data: {
+                    imageUrl: userImageUrl,
+                    imageUrlExpiresAt,
+                  },
+                });
+              }
+            }
+
+            return {
+              ...rideBooking,
+              user: {
+                ...rideBooking.user,
+                imageUrl: userImageUrl,
+              },
+            };
+          })
+        );
+
+        return {
+          ...booking,
+          ride: {
+            ...booking.ride,
+            driver: {
+              ...booking.ride.driver,
+              imageUrl: driverImageUrl,
+            },
+            bookings: bookingsWithImageUrls,
+          },
+        };
+      })
+    );
+
+    return rideBookingsWithImageUrls;
   } catch (error) {
-    logger.error(`Error on fetching user rides: ${error}`);
+    logger.error(`Error on fetching user ride bookings: ${error}`);
     throw error;
   }
 }

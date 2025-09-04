@@ -1,8 +1,8 @@
 "use client";
 
+import React, { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useChannel, ChannelProvider } from "ably/react";
 import { utcIsoToLocalDate, utcIsoToLocalTime12 } from "@/utils/time";
+import { UserImageModal } from "@/app/_components/modals/UserImageModal";
 import ParticipantContainer from "./ParticipantContainer";
 
 // Interface for message
@@ -32,6 +33,7 @@ interface Message {
     email: string;
     name: string | null;
     isDriver: boolean;
+    imageUrl: string | null;
   };
 }
 
@@ -59,6 +61,9 @@ function RideChatModal_({
   const userId = session.data?.user?.id;
 
   const [message, setMessage] = useState("");
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedUserImage, setSelectedUserImage] = useState<string | null>(null);
+  const [selectedUserName, setSelectedUserName] = useState<string>("");
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const [showParticipants, setShowParticipants] = useState(false);
 
@@ -109,6 +114,24 @@ function RideChatModal_({
     if (isMessageSending) return;
     await mutateSendMessage({ rideId, content: message });
     setMessage("");
+  };
+
+  /**
+   * Handle open user image modal
+   */
+  const handleOpenImageModal = (imageUrl: string | null, userName: string) => {
+    setSelectedUserImage(imageUrl);
+    setSelectedUserName(userName);
+    setIsImageModalOpen(true);
+  };
+
+  /**
+   * Handle close user image modal
+   */
+  const handleCloseImageModal = () => {
+    setSelectedUserImage(null);
+    setSelectedUserName("");
+    setIsImageModalOpen(false);
   };
 
   useChannel(`ride:${rideId}`, () => {
@@ -163,19 +186,30 @@ function RideChatModal_({
                           : "flex-row"
                           }`}
                       >
-                        <Avatar className="h-8 w-8">
+                        <Avatar
+                          className="h-8 w-8 cursor-pointer"
+                          onClick={() =>
+                            handleOpenImageModal(
+                              msg.user.imageUrl,
+                              msg.user.name || msg.user.email || (msg.user.isDriver ? "Champion" : "Rider")
+                            )
+                          }
+                        >
                           <AvatarImage
-                            src={`https://avatar.vercel.sh/${msg.user.email}`}
+                            src={msg.user.imageUrl || undefined}
+                            alt={msg.user.name || msg.user.email || (msg.user.isDriver ? "Champion" : "Rider")}
                           />
-                          <AvatarFallback>
-                            {msg.user.name?.substring(0, 2).toUpperCase()}
+                          <AvatarFallback
+                            className={`${msg.user.isDriver ? "bg-emerald-800" : "bg-blue-800"} text-white text-xs`}
+                          >
+                            {msg.user.name?.[0] || msg.user.email?.[0] || (msg.user.isDriver ? "C" : "R")}
                           </AvatarFallback>
                         </Avatar>
 
                         <div>
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-xs text-gray-400">
-                              {msg.user.name}
+                              {msg.user.name || msg.user.email.split("@")[0]}
                             </span>
                             <Badge
                               className={`text-[0.6rem] py-0 h-4 ${msg.user.isDriver
@@ -223,7 +257,6 @@ function RideChatModal_({
         </div>
 
         {/* Footer - Fixed */}
-
         <div className="p-4 border-t border-white/10 bg-[#1A3C34] shrink-0">
           <div className="flex gap-2">
             <Input
@@ -270,6 +303,16 @@ function RideChatModal_({
             </Button>
           </div>
         </div>
+
+        {/* User Image Modal */}
+        {isImageModalOpen && (
+          <UserImageModal
+            isOpen={isImageModalOpen}
+            onClose={handleCloseImageModal}
+            imageUrl={selectedUserImage}
+            userName={selectedUserName}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
