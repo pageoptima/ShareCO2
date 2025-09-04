@@ -210,6 +210,14 @@ export function UserMenu() {
             <LogOut className="mr-2 h-5 w-5" />
             Log Out
           </Button>
+          <a href="/api/mart/sso" target="_blank">
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-white hover:bg-white/10 hover:text-red-400 cursor-pointer"
+            >
+              Shopping
+            </Button>
+          </a>
         </div>
       </SheetContent>
     </Sheet>
