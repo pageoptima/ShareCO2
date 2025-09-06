@@ -34,10 +34,10 @@ transports.push(
     })
 );
 
-// Only use file transport if not on Vercel
-const isVercel = process.env.VERCEL === '1';
+// Only use file transport if not on production
+const isProduction = process.env.NODE_ENV == 'production';
 
-if (!isVercel) {
+if (!isProduction) {
     const transport: DailyRotateFile = new DailyRotateFile({
         filename: `${process.env.LOG_FOLDER}${process.env.LOG_FILE}`, // e.g., 'logs/app-%DATE%.log'
         datePattern: 'YYYY-MM-DD-HH',
