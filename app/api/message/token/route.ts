@@ -1,7 +1,7 @@
 import logger from '@/config/logger';
 import { NextResponse } from 'next/server';
 import { auth } from "@/lib/auth/auth";
-import ably from '@/services/ably';
+import { getAbly } from '@/services/ably';
 
 export async function GET() {
 
@@ -13,6 +13,7 @@ export async function GET() {
     const userId = session.user.id;
 
     try {
+        const ably  = getAbly();
         const token = await ably.auth.createTokenRequest({
             clientId: userId,
         });
