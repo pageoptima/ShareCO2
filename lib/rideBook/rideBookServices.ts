@@ -276,19 +276,6 @@ export async function activateRideBookingByChampionService({
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  * Complete a ride booking
  */

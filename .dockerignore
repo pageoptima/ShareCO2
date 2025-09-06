@@ -1,0 +1,13 @@
+node_modules
+node_modules/.prisma
+.next/cache
+.next/static
+.env
+.env.* 
+.git
+.gitignore
+*.log
+.vscode
+coverage
+dist
+*.md

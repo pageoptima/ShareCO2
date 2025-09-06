@@ -177,6 +177,52 @@ export async function getUserById(id: string): Promise<User & { imageUrl: string
   };
 }
 
+/**
+ * Get a user by email with pre-signed image URL
+ * @param email - User Email
+ * @returns {Promise<User & { imageUrl: string | null }>} - User object with pre-signed image URL
+ */
+export async function getUserByEmail(email: string) {
+  
+  const user = await prisma.user.findUnique({
+    where: { email },
+    include: { Wallet: true }
+  });
+
+  if (!user) { return null }
+
+  let imageUrl: string | null = null;
+
+  // Check if imageKey exists
+  if (user.imageKey) {
+
+    const now = new Date();
+    // Check if stored URL is valid and not expired
+    
+    if (user.imageUrl && user.imageUrlExpiresAt && now < user.imageUrlExpiresAt) {
+      imageUrl = user.imageUrl;
+    } else {
+      // Generate new pre-signed URL if expired or missing
+      imageUrl = await getProfileImageUrl(user.imageKey);
+      const imageUrlExpiresAt = new Date(Date.now() + 604800 * 1000);
+      
+      // Update Prisma with new URL and expiration
+      await prisma.user.update({
+        where: { email },
+        data: {
+          imageUrl,
+          imageUrlExpiresAt,
+        },
+      });
+    }
+  }
+
+  return {
+    ...user,
+    imageUrl, // Add pre-signed URL to the response
+  };
+}
+
 
 /**
  * Get all users from the database

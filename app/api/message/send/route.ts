@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/auth';
 import { insertMessage } from '@/lib/message/messageServices';
 import logger from '@/config/logger';
-import ably from '@/services/ably';
+import {getAbly} from '@/services/ably';
 
 export async function POST(req: Request) {  // rideId, content
 
@@ -33,6 +33,7 @@ export async function POST(req: Request) {  // rideId, content
     }
 
     // Broadcast message to ride chanal
+    const ably = getAbly();
     await ably
         .channels.get(`ride:${rideId}`)
         .publish( 'message', {

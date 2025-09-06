@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/auth';
-import ably from '@/services/ably';
+import { getAbly } from '@/services/ably';
 
 export async function POST(req: Request) {
 
@@ -18,6 +18,7 @@ export async function POST(req: Request) {
     }
 
     // Unegister the device
+    const ably = getAbly();
     await ably.push.admin.deviceRegistrations.remove(deviceId);
 
     return NextResponse.json({ success: true }, { status: 201 });
