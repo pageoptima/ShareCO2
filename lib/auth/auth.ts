@@ -26,7 +26,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         });
 
         await tx.wallet.create({
-          data: { userId: user.id },
+          data: {
+            userId: user.id,
+            spendableBalance: 180,
+          },
         });
 
         return user;
@@ -44,7 +47,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
 
-  trustHost : true,
+  trustHost: true,
 
   // —————————————
   // SESSIONS
