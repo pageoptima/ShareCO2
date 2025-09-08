@@ -5,7 +5,6 @@ import { getUserByEmail } from "@/lib/user/userServices";
 const MART_SECRET_KEY = process.env.MART_SECRET_KEY;
 
 /**
- * GET /api/sso?email=user@example.com
  * Requires: Authorization: Bearer <signed-token>
  */
 export async function GET(req: Request) {
@@ -37,7 +36,9 @@ export async function GET(req: Request) {
             );
         }
 
-        const { email } = await req.json();
+        // Extract email from query parameters
+        const url   = new URL(req.url);
+        const email = url.searchParams.get('email');
 
         // Varify param
         if (!email) {
@@ -58,11 +59,11 @@ export async function GET(req: Request) {
 
         return NextResponse.json({
             user: {
-                id         : user.id,
-                email      : user.email,
-                phone      : user.phone,
-                name       : user.name ?? '',
-                carbonpoint: user.Wallet?.spendableBalance ?? 0,
+                id        : user.id,
+                email     : user.email,
+                phone     : user.phone,
+                name      : user.name ?? '',
+                carboncoin: user.Wallet?.spendableBalance ?? 0,
             },
         });
 
