@@ -28,14 +28,15 @@ model User {
   updatedAt          DateTime  @updatedAt
 
   // User relation
-  Payment      Payment[]
-  transactions Transaction[]
-  createdRides Ride[]        @relation("DriverRides")
-  bookedRides  RideBooking[]
-  rideRequests RideRequest[]
-  messages     ChatMessage[]
-  vehicles     Vehicle[]
-  Wallet       Wallet?
+  Payment       Payment[]
+  transactions  Transaction[]
+  createdRides  Ride[]          @relation("DriverRides")
+  bookedRides   RideBooking[]
+  rideRequests  RideRequest[]
+  messages      ChatMessage[]
+  vehicles      Vehicle[]
+  Wallet        Wallet?
+  ExternalOrder ExternalOrder[]
 }
 
 // Add the VerificationToken model for Auth.js
@@ -248,12 +249,14 @@ model WalletTransaction {
   createdAt   DateTime                   @default(now())
 
   // exactly one reference
-  ride          Ride?        @relation(fields: [rideId], references: [id])
-  rideId        String?      @db.ObjectId
-  rideBook      RideBooking? @relation(fields: [rideBookId], references: [id])
-  rideBookId    String?      @db.ObjectId
-  transaction   Transaction? @relation(fields: [transactionId], references: [id])
-  transactionId String?      @db.ObjectId
+  ride            Ride?          @relation(fields: [rideId], references: [id])
+  rideId          String?        @db.ObjectId
+  rideBook        RideBooking?   @relation(fields: [rideBookId], references: [id])
+  rideBookId      String?        @db.ObjectId
+  transaction     Transaction?   @relation(fields: [transactionId], references: [id])
+  transactionId   String?        @db.ObjectId
+  externalOrder   ExternalOrder? @relation(fields: [transactionId], references: [id])
+  externalOrderId String?        @db.ObjectId
 
   @@index([walletId])
 }
@@ -272,6 +275,35 @@ enum WalletTransactionPurpose {
   PAYOUT // on ride complete driver (CREDIT)
   REFUND // for refunds back to user (DEBIT)
   FINE_CHARGE // penalty or fine deducted from user
-  PROMOTION // marketing or referral bonuses (DEBIT)
+  PROMOTION // marketing or referral bonuses (CREDIT)
   ADJUSTMENT // admin/system corrections
+
+  PRODUCT_PURCHASE // User purchase a product (DEBIT)
+  PRODUCT_CANCEL // User cancle a product (CREDIT)
+  PRODUCT_REFUND // User refunded to a product (CREDIT)
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
+model ExternalOrder {
+  id             String      @id @default(auto()) @map("_id") @db.ObjectId
+  user           User        @relation(fields: [userId], references: [id])
+  userId         String      @db.ObjectId
+  amount         Float
+  coinAmount     Float
+  conversionRate Float
+  status         OrderStatus @default(PROCESSING)
+  extOrderId     String      @unique
+  extUserId      String
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  WalletTransaction WalletTransaction[]
+}
+
+enum OrderStatus {
+  PROCESSING
+  COMPLETED
+  CANCELLED
+  REFUNDED
 }
