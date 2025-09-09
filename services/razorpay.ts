@@ -7,12 +7,26 @@ import {
 /**
  * Define rozorpay server instent
  */
-const razorpay = new Razorpay({
-    key_id    : process.env.NEXT_PUBLIC_RAZORPAY_KEY,
-    key_secret: process.env.RAZORPAY_SECRET_KEY,
-});
+let razorpayInstance: Razorpay | null = null;
 
-export default razorpay;
+/**
+ * Get the razorpay
+ */
+export function getRazorpay() {
+
+    if (razorpayInstance) return razorpayInstance;
+
+    const key_id     = process.env.RAZORPAY_KEY_ID;
+    const key_secret = process.env.RAZORPAY_KEY_SECRET;
+    
+    if (!key_id || !key_secret) {
+        throw new Error("RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET is missing. Cannot initialize Razorpay.");
+    }
+
+    razorpayInstance = new Razorpay({ key_id, key_secret });
+
+    return razorpayInstance;
+}
 
 /**
  * Creates a Razorpay order.
@@ -21,19 +35,20 @@ export default razorpay;
  */
 export async function createOrder(
     option: {
-        amount          : number;
-        currency        : string;
-        receipt        ?: string;
-        notes          ?: Record<string, any>;
+        amount: number;
+        currency: string;
+        receipt?: string;
+        notes?: Record<string, any>;
         payment_capture?: number;
-        [key: string]   : any;
+        [key: string]: any;
     }
 ) {
     if (!option) {
-        throw new Error( "Invalid options" );
+        throw new Error("Invalid options");
     }
 
-    const order = await razorpay.orders.create({...option, payment_capture: true });
+    const razorpay = getRazorpay();
+    const order    = await razorpay.orders.create({ ...option, payment_capture: true });
 
     return order;
 }
@@ -43,12 +58,14 @@ export async function createOrder(
  * @param orderId - The Razorpay order ID.
  * @returns The full Razorpay order details.
  */
-export async function getOrderDetailsById( orderId: string ) {
+export async function getOrderDetailsById(orderId: string) {
     if (!orderId) {
         throw new Error("Order id required");
     }
 
+    const razorpay     = getRazorpay();
     const orderDetails = await razorpay.orders.fetch(orderId);
+    
     return orderDetails;
 }
 
@@ -57,12 +74,14 @@ export async function getOrderDetailsById( orderId: string ) {
  * @param paymentId - The Razorpay payment ID 
  * @returns The full Razorpay payment details
  */
-export async function getPaymentDetailsById( paymentId: string) {
-    if ( !paymentId ) {
+export async function getPaymentDetailsById(paymentId: string) {
+    if (!paymentId) {
         throw new Error("Payment id required");
     }
 
-    const payment = await razorpay.payments.fetch(paymentId);
+    const razorpay = getRazorpay();
+    const payment  = await razorpay.payments.fetch(paymentId);
+    
     return payment;
 }
 
@@ -80,10 +99,10 @@ export const verifyPayment = (
         razorpaySignature
     }: {
         razorpayPaymentId: string,
-        razorpayOrderId  : string,
+        razorpayOrderId: string,
         razorpaySignature: string
     }
-) : boolean => {
+): boolean => {
 
     return validatePaymentVerification(
         {
@@ -107,7 +126,7 @@ export function verifyWebhook(
         body,
         signature,
     }: {
-        body     : unknown;
+        body: unknown;
         signature: string;
     }
 ): boolean {

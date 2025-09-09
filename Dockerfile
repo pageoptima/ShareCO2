@@ -1,22 +1,24 @@
 # --------------------
 # Stage 1: Builder
 # --------------------
-FROM node:18 AS builder
+FROM node:18-alpine AS builder
 
+# set working dir
 WORKDIR /app
 
-# Copy package files first (leverage Docker cache)
-COPY package.json package-lock.json ./
+# copy package files first (cache friendliness)
+COPY package.json package-lock.json* ./
 
-# Install all deps (including dev for Next.js build)
-RUN npm install
+# install all dependencies (including dev)
+RUN npm ci
 
-# Copy source code
+# copy source
 COPY . .
 
 # Build Next.js app
 ENV NODE_ENV=production
 RUN npm run build
+
 
 # --------------------
 # Stage 2: Runner
@@ -24,22 +26,23 @@ RUN npm run build
 FROM node:18-alpine AS runner
 
 WORKDIR /app
+ENV NODE_ENV=production
 
-# Copy package files
-COPY --from=builder /app/package.json /app/package-lock.json ./
+# copy package files and install only production deps
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev
 
-# Install only production deps
-RUN npm install --omit=dev
-
-# Copy Next.js build and public assets
+# copy next build output & public assets
 COPY --from=builder /app/.next .next
 COPY --from=builder /app/public public
 
-# Copy Prisma schema (needed for generate)
+# optionally copy prisma schema if you want it available in the image
 COPY --from=builder /app/prisma prisma
 
-# Expose port (your ECS task maps this)
+# copy any other runtime config files your app needs
+# e.g. next.config.js, .env.defaults (do NOT copy secrets)
+
 EXPOSE 3000
 
-# Run Prisma generate at runtime (so ECS env vars are available), then start Next.js
-CMD npx prisma generate && npm start
+# Run Prisma generate at runtime, then start Next.js
+CMD [ "sh", "-c", "npx prisma generate && npm start" ]

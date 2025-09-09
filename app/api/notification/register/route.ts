@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/auth';
-import ably from '@/services/ably';
+import { getAbly } from '@/services/ably';
 
 export async function POST(req: Request) {
 
@@ -24,6 +24,7 @@ export async function POST(req: Request) {
     }
 
     // Register the device
+    const ably = getAbly();
     await ably.push.admin.deviceRegistrations.save({
         id        : deviceId,
         platform  : platform,
