@@ -62,7 +62,7 @@ export async function getWalletTransactions({
           include: {
             payment: {
               select: {
-                id: true, 
+                id: true,
               },
             },
           },
@@ -461,6 +461,41 @@ export async function creditUserTopup({
           purpose: WalletTransactionPurpose.TOPUP,
           transaction: { connect: { id: transactionId } },
           description: `Credited topup amount ${amount} coins`,
+        },
+      },
+    },
+  });
+
+  return true;
+}
+
+
+
+/**
+ * Bonus CP to new user
+ * - Increment `spendableBalance` by `amount`
+ * - logs a CREDIT transaction
+ */
+export async function creditUserBonus({
+  tx,
+  userId,
+  amount,
+}: {
+  tx: Prisma.TransactionClient;
+  userId: string;
+  amount: number;
+}): Promise<boolean> {
+
+  await tx.wallet.update({
+    where: { userId },
+    data: {
+      spendableBalance: { increment: amount },
+      transactions: {
+        create: {
+          amount: amount,
+          direction: WalletTransactionDirection.CREDIT,
+          purpose: WalletTransactionPurpose.PROMOTION,
+          description: `Credited Bonus amount ${amount} coins`,
         },
       },
     },

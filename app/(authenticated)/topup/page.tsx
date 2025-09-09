@@ -67,7 +67,7 @@ export default function TopUpPage() {
                             onChange={(e) => handleInputChange("amount", e.target.value)}
                             className="bg-black/30 border-gray-700"
                             min="0"
-                            step="0.01"
+                            step="1"
                         />
                     </div>
 
