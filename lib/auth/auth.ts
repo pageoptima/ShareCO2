@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/config/prisma";
 import Resend from "next-auth/providers/resend";
+import { creditUserBonus } from "../wallet/walletServices";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   // —————————————
@@ -28,8 +29,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         await tx.wallet.create({
           data: {
             userId: user.id,
-            spendableBalance: 180,
           },
+        });
+
+
+        await creditUserBonus({
+          tx,
+          userId: user.id,
+          amount: 100
         });
 
         return user;
