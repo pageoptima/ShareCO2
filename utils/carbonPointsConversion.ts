@@ -2,7 +2,7 @@
  * Carbon Points Conversion Utilities
  */
 
-export const RUPEES_PER_CARBON_POINT = Number(process.env.NEXT_PUBLIC_RUPEES_PER_CARBON_POINT);
+export const RUPEES_PER_CARBON_POINT = parseFloat(process.env.NEXT_PUBLIC_RUPEES_PER_CARBON_POINT || "18");
 
 /**
  * Get the carbonpoint conversion rate
