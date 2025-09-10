@@ -1,15 +1,15 @@
-import { NextResponse } from "next/server";
-import logger from "@/config/logger";
-import { getUserByEmail } from "@/lib/user/userServices";
+import logger from '@/config/logger';
+import { NextResponse } from 'next/server';
+import { cancelExternalOrder } from '@/lib/externalOrder/externalOrderServices';
+
 
 const MART_SECRET_KEY = process.env.MART_SECRET_KEY;
 
 /**
  * Requires: Authorization: Bearer <signed-token>
  */
-export async function GET(req: Request) {
+export async function POST(req: Request) {
     try {
-
         // Check if mart secret key is present or not
         if ( ! MART_SECRET_KEY) {
             return NextResponse.json(
@@ -36,41 +36,33 @@ export async function GET(req: Request) {
             );
         }
 
-        // Extract email from query parameters
-        const url   = new URL(req.url);
-        const email = url.searchParams.get('email');
+        // Get the order information from request body
+        const { orderId } = await req.json();
 
-        // Varify param
-        if (!email) {
+        // Varify params
+        if (!orderId) {
             return NextResponse.json(
-                { error: "Missing email parameter" },
+                { error: "Missing order id parameter" },
                 { status: 400 }
             );
         }
 
-        // Get the user by email
-        const user = await getUserByEmail(email);
-        if (!user) {
+        // Cancel the external order
+        const success = await cancelExternalOrder(orderId);
+
+        if ( ! success ) {
             return NextResponse.json(
-                { error: 'User not found' },
-                { status: 404 }
+                { error: 'Unable to cancel order' },
+                { status: 500 }
             );
         }
 
-        return NextResponse.json({
-            user: {
-                id        : user.id,
-                email     : user.email,
-                phone     : user.phone,
-                name      : user.name ?? '',
-                carboncoin: user.Wallet?.spendableBalance ?? 0,
-            },
-        });
+        return NextResponse.json({ success: true });
 
     } catch (error) {
-        logger.error( 'GET /api/mart/user error:', error );
+        logger.error( 'GET /api/mart/order/cancel error:', error );
         return NextResponse.json(
-            { error: 'Unable to process request' },
+            { error: 'Unable to cancel order' },
             { status: 500 }
         );
     }

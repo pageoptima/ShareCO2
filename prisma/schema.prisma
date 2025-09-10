@@ -278,9 +278,8 @@ enum WalletTransactionPurpose {
   PROMOTION // marketing or referral bonuses (CREDIT)
   ADJUSTMENT // admin/system corrections
 
-  PRODUCT_PURCHASE // User purchase a product (DEBIT)
-  PRODUCT_CANCEL // User cancle a product (CREDIT)
-  PRODUCT_REFUND // User refunded to a product (CREDIT)
+  ORDER_PURCHASE // User purchase a product (DEBIT)
+  ORDER_REFUND // User refunded to a product (CREDIT)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
