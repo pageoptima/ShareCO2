@@ -15,9 +15,9 @@ import { useRef, useState } from "react";
 import { toast } from "sonner"; // Use sonner for toast notifications
 
 // Validate file size (1MB = 1,048,576 bytes)
-function validateFileSize(file: File, maxSizeInBytes: number = 1 * 1024 * 1024): boolean {
+function validateFileSize(file: File, maxSizeInBytes: number = 5 * 1024 * 1024): boolean {
   if (file.size > maxSizeInBytes) {
-    toast.error("Image size exceeds 1MB limit");
+    toast.error("Image size exceeds 5MB limit");
     return false;
   }
   return true;

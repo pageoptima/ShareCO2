@@ -15,9 +15,9 @@ import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } fro
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 // Validates that the image size is within the allowed limit
-function validateImageSize(imageBuffer: Buffer, maxSizeInBytes: number = 1 * 1024 * 1024): void {
+function validateImageSize(imageBuffer: Buffer, maxSizeInBytes: number = 5 * 1024 * 1024): void {
   if (imageBuffer.length > maxSizeInBytes) {
-    throw new Error("Image size exceeds 1MB limit");
+    throw new Error("Image size exceeds 5MB limit");
   }
 }
 
