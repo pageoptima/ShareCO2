@@ -20,6 +20,7 @@ import {
   CreditCard,
   HelpCircle,
   Leaf,
+  ShoppingCart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -123,7 +124,7 @@ export function UserMenu() {
                 </AvatarFallback>
               </Avatar>
             ) : (
-<Avatar className="h-10 w-10">
+              <Avatar className="h-10 w-10">
                 <AvatarImage
                   src={user?.imageUrl || "/default-avatar.png"}
                   alt={session.user.email || ""}
@@ -132,7 +133,7 @@ export function UserMenu() {
                   {session?.user?.name?.[0] || session?.user?.email?.[0] || ""}
                 </AvatarFallback>
               </Avatar>
-            )}              
+            )}
             <div className="flex flex-col items-start">
               {isUserDataFetching ? (
                 <span className="font-medium">Loading...</span>
@@ -189,16 +190,27 @@ export function UserMenu() {
             <HelpCircle className="mr-2 h-5 w-5" /> Support
           </Button>
 
-          {/* Admin-only menu item for Recharge Requests */}
+          {/* Admin-only menu items */}
           {user?.isAdmin && (
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-white hover:bg-white/10"
-              onClick={() => handleNavigate("/admin/recharge-requests")}
-            >
-              <CreditCard className="mr-2 h-5 w-5" />
-              Recharge Requests
-            </Button>
+            <>
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-white hover:bg-white/10"
+                onClick={() => handleNavigate("/admin/recharge-requests")}
+              >
+                <CreditCard className="mr-2 h-5 w-5" />
+                Recharge Requests
+              </Button>
+              <a href="/api/mart/sso" target="_blank">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-white hover:bg-white/10 hover:text-red-400 cursor-pointer"
+                >
+                  <ShoppingCart className="mr-2 h-5 w-5" />
+                  Shopping
+                </Button>
+              </a>
+            </>
           )}
 
           <hr className="border-white/10 my-4" />
@@ -210,14 +222,6 @@ export function UserMenu() {
             <LogOut className="mr-2 h-5 w-5" />
             Log Out
           </Button>
-          <a href="/api/mart/sso" target="_blank">
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-white hover:bg-white/10 hover:text-red-400 cursor-pointer"
-            >
-              Shopping
-            </Button>
-          </a>
         </div>
       </SheetContent>
     </Sheet>
