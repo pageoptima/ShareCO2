@@ -184,8 +184,6 @@ export async function bookRide({
 }
 
 
-
-
 /**
  * Activate( Start ) the ride booking by user
  */
@@ -359,27 +357,6 @@ export async function completeRideBooking({
 
   return true;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * Cancle ride booking by driver on purpose
