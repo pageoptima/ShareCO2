@@ -43,7 +43,7 @@ export function CarbonPointsCard() {
         <div>
           <p className="text-sm text-gray-300 text-center">Carbon Points</p>
           <p className="text-2xl font-semibold text-center">
-            {carbonPoint} CP
+            {carbonPoint.toFixed(2)} CP
           </p>
         </div>
         <Button
