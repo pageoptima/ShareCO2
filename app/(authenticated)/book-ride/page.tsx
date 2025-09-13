@@ -46,7 +46,7 @@ export default function BookRidePage() {
         ) : (
           <p className="text-white">
             Your Carbon Points:{" "}
-            <span className="font-bold text-amber-400">{carbonPoint}</span>
+            <span className="font-bold text-amber-400">{carbonPoint.toFixed(2)}</span>
           </p>
         )}
       </div>
