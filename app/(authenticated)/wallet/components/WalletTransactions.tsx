@@ -79,6 +79,10 @@ const getPurposeLabel = (purpose: PublicWalletTransaction["purpose"]) => {
       return "Promotion Bonus";
     case "ADJUSTMENT":
       return "Balance Adjustment";
+    case "ORDER_PURCHASE":
+      return "Order Purchase";
+    case "ORDER_REFUND":
+      return "Order Refund";
     default:
       return "Unknown Transaction";
   }
@@ -200,7 +204,18 @@ const WalletTransactions = () => {
                             : ""}
                         {txn.amount.toFixed(2)} CP
                       </Badge>
-                      {txn.purpose === "TOPUP" && txn.paymentId ? (
+                      {(txn.purpose === "ORDER_PURCHASE" || txn.purpose === "ORDER_REFUND") && txn.externalOrderId ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            router.push(`/shoppingOrderDetails/${txn.externalOrderId}`)
+                          }
+                          className="text-white hover:bg-white/10 cursor-pointer text-xs px-2 py-0 h-6"
+                        >
+                          Order Details
+                        </Button>
+                      ) : txn.purpose === "TOPUP" && txn.paymentId ? (
                         <Button
                           variant="ghost"
                           size="sm"
