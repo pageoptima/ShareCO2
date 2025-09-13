@@ -67,6 +67,12 @@ export async function getWalletTransactions({
                         },
                     },
                 },
+                externalOrder: {
+                    select: {
+                        id: true,
+                        extOrderId: true,
+                    },
+                },
             },
         }),
         prisma.walletTransaction.count({
@@ -449,7 +455,6 @@ export async function creditUserTopup({
     transactionId: string;
     amount: number;
 }): Promise<boolean> {
-
     await tx.wallet.update({
         where: { userId },
         data: {
@@ -483,7 +488,6 @@ export async function creditUserBonus({
     userId: string;
     amount: number;
 }): Promise<boolean> {
-
     await tx.wallet.update({
         where: { userId },
         data: {
@@ -519,12 +523,11 @@ export async function entryOrderPurchase({
     extOrderId: string;
     amount: number;
 }): Promise<boolean> {
-
     // Prevent duplicate entry for same external order
     const alreadyFined = await tx.walletTransaction.findFirst({
         where: {
             externalOrderId: extOrderId,
-            purpose        : WalletTransactionPurpose.ORDER_PURCHASE,
+            purpose: WalletTransactionPurpose.ORDER_PURCHASE,
         },
     });
 
@@ -539,11 +542,11 @@ export async function entryOrderPurchase({
             spendableBalance: { decrement: amount },
             transactions: {
                 create: {
-                    amount       : -amount,
-                    direction    : WalletTransactionDirection.DEBIT,
-                    purpose      : WalletTransactionPurpose.ORDER_PURCHASE,
+                    amount: -amount,
+                    direction: WalletTransactionDirection.DEBIT,
+                    purpose: WalletTransactionPurpose.ORDER_PURCHASE,
                     externalOrder: { connect: { id: extOrderId } },
-                    description  : `Purcase product of ${amount} coins for order ${extOrderId}`,
+                    description: `Purcase product of ${amount} coins for order ${extOrderId}`,
                 },
             },
         },
@@ -569,12 +572,11 @@ export async function entryOrderRefund({
     extOrderId: string;
     amount: number;
 }): Promise<boolean> {
-
     // Prevent duplicate entry for same external order cancel
     const alreadyFined = await tx.walletTransaction.findFirst({
         where: {
             externalOrderId: extOrderId,
-            purpose        : WalletTransactionPurpose.ORDER_REFUND,
+            purpose: WalletTransactionPurpose.ORDER_REFUND,
         },
     });
 
@@ -589,11 +591,11 @@ export async function entryOrderRefund({
             spendableBalance: { increment: amount },
             transactions: {
                 create: {
-                    amount       : amount,
-                    direction    : WalletTransactionDirection.CREDIT,
-                    purpose      : WalletTransactionPurpose.ORDER_REFUND,
+                    amount: amount,
+                    direction: WalletTransactionDirection.CREDIT,
+                    purpose: WalletTransactionPurpose.ORDER_REFUND,
                     externalOrder: { connect: { id: extOrderId } },
-                    description  : `Refund for order ${extOrderId} refund coin ${amount}`,
+                    description: `Refund for order ${extOrderId} refund coin ${amount}`,
                 },
             },
         },

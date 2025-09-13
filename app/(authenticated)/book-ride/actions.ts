@@ -2,12 +2,13 @@
 
 import { auth } from "@/lib/auth/auth";
 import { getWalletByUserId } from "@/lib/wallet/walletServices";
+import { formatCarbonPointsForUI } from "@/utils/carbonPointsConversion";
 
 /**
  * Get the carbon point of the user
  * @returns
  */
-export async function getCarbonPoint(): Promise<number> {
+export async function getCarbonPoint(): Promise<string> {
   // Get authenticated user
   const session = await auth();
 
@@ -20,5 +21,9 @@ export async function getCarbonPoint(): Promise<number> {
 
   //console.log(user)
 
-  return wallet.spendableBalance + wallet.reservedBalance;
+  // Calculate total balance
+  const totalBalance = wallet.spendableBalance + wallet.reservedBalance;
+
+  // Return formatted balance
+  return formatCarbonPointsForUI(totalBalance);
 }
