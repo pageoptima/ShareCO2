@@ -1,0 +1,71 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: ap-south-1
+    ECR_REPOSITORY: share-co2
+    ECS_SERVICE: share-co2-service
+    ECS_CLUSTER: share-co2
+    CONTAINER_NAME: share-co2
+    ECS_TASK_DEFINITION: .aws/task-definition.json
+
+phases:
+  pre_build:
+    commands:
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query 'Account' --output text).dkr.ecr.$AWS_REGION.amazonaws.com
+      
+      - echo "Preparing build environment..."
+      - export ECR_REGISTRY=$(aws sts get-caller-identity --query 'Account' --output text).dkr.ecr.$AWS_REGION.amazonaws.com
+      - export IMAGE_TAG=$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - export IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+  build:
+    commands:
+      - echo "Building Docker image..."
+      - docker build -t $IMAGE_URI .
+      - docker tag $IMAGE_URI $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+  post_build:
+    commands:
+      - echo "Pushing Docker image to ECR..."
+      - docker push $IMAGE_URI
+      - docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+      
+      - echo "Registering new task definition with updated image..."
+      - aws ecs register-task-definition \
+          --cli-input-json file://$ECS_TASK_DEFINITION \
+          --region $AWS_REGION \
+          --overrides '{
+            "containerOverrides": [{
+              "name": "'"$CONTAINER_NAME"'",
+              "image": "'"$IMAGE_URI"'"
+            }]
+          }'
+      
+      - echo "Deploying to ECS..."
+      - aws ecs update-service \
+          --cluster $ECS_CLUSTER \
+          --service $ECS_SERVICE \
+          --task-definition $(basename $ECS_TASK_DEFINITION .json) \
+          --region $AWS_REGION \
+          --force-new-deployment
+      
+      - echo "Waiting for service to stabilize..."
+      - aws ecs wait services-stable \
+          --cluster $ECS_CLUSTER \
+          --service $ECS_SERVICE \
+          --region $AWS_REGION
+      
+      - echo "Deployment completed successfully!"
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: '.'
+  discard-paths: no
+
+cache:
+  paths:
+    - '/root/.cache/**/*'
+    - '/var/lib/docker/**/*'
