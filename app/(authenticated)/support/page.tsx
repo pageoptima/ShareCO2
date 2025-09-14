@@ -116,6 +116,8 @@ export default function SupportPage() {
                 required
               />
             </div>
+
+            {/* Submit Button */}
             <Button
               type="submit"
               disabled={mutation.isPending}
