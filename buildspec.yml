@@ -2,51 +2,42 @@ version: 0.2
 
 env:
   variables:
-    # Define environment variables for ECR repository and container name
-    ECR_REPOSITORY: "share-co2"  # Replace with your ECR repository name
-    CONTAINER_NAME: "share-co2" # Replace with your container name (from task definition)
-    AWS_REGION: "ap-south-1"         # Replace with your AWS region (e.g., us-east-1)
-  # parameter-store:
-    # Optional: Use AWS Systems Manager Parameter Store for sensitive data
-    # AWS_ACCOUNT_ID: "/codebuild/aws_account_id"
+    # Set these environment variables in CodeBuild console or project configuration
+    AWS_REGION: "ap-south-1"                   # e.g., us-east-1
+    ECR_REPOSITORY: "share-co2"                # Your ECR repository name
+    ECS_CLUSTER: "share-co2"                   # Your ECS cluster name
+    ECS_SERVICE: "share-co2-service"           # Your ECS service name
+    CONTAINER_NAME: "share-co2"                # Container name in task definition
+    # IMAGE_TAG will be set dynamically below
 
 phases:
   pre_build:
     commands:
       - echo "Logging in to Amazon ECR..."
-      - aws --version
-      # Login to ECR using AWS CLI
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-      - echo "Setting image tags..."
-      # Set environment variables for image tagging
-      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - echo "Setting image tag..."
+      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)  # Short commit hash
       - ECR_REGISTRY=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
       - FULL_IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       - echo "Image URI: $FULL_IMAGE_URI"
 
   build:
     commands:
-      - echo "Build started on `date`"
-      - echo "Building the Docker image..."
-      # Build the Docker image
+      - echo "Building Docker image..."
       - docker build -t $ECR_REPOSITORY:latest .
-      # Tag the image for versioning and ECR push
       - docker tag $ECR_REPOSITORY:latest $FULL_IMAGE_URI
       - docker tag $ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
   post_build:
     commands:
-      - echo "Build completed on `date`"
-      - echo "Pushing Docker images to ECR..."
-      # Push both tags to ECR
+      - echo "Pushing Docker image to ECR..."
       - docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
       - docker push $FULL_IMAGE_URI
-      - echo "Generating image definitions file for ECS..."
-      # Create imagedefinitions.json for ECS deployment
+      - echo "Generating imagedefinitions.json for ECS deployment..."
       - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $FULL_IMAGE_URI > imagedefinitions.json
-      - cat imagedefinitions.json  # Optional: Verify file content
+      - cat imagedefinitions.json  # Verify content
 
 artifacts:
   files:
-    - imagedefinitions.json   # Essential for ECS deployment
+    - imagedefinitions.json   # Required for ECS deployment
   discard-paths: no
