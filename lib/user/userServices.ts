@@ -177,6 +177,7 @@ export async function getUserById(id: string): Promise<User & { imageUrl: string
   };
 }
 
+
 /**
  * Get a user by email with pre-signed image URL
  * @param email - User Email
