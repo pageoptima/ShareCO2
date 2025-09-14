@@ -9,66 +9,24 @@ env:
     CONTAINER_NAME: "share-co2"
 
 phases:
-  install:
-    runtime-versions:
-      docker: 20
-    commands:
-      - echo "== install phase =="
-      - echo "aws-cli version:" && aws --version || true
-      - echo "Note: CodeBuild project must allow privileged mode to run Docker (enable 'Privileged')."
-
   pre_build:
     commands:
-      - set -euo pipefail
-      - echo "== pre_build =="
-      # If AWS_ACCOUNT_ID not set in env, derive it from the caller identity
-      - if [ -z "${AWS_ACCOUNT_ID:-}" ]; then
-          echo "AWS_ACCOUNT_ID not set — fetching via STS";
-          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text) || { echo "Failed to get account id"; exit 1; };
-        else
-          echo "AWS_ACCOUNT_ID provided";
-        fi
-      - echo "Using AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID"
-      - echo "Logging in to Amazon ECR..."
-      - ECR_REGISTRY=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
-      - echo "Docker login succeeded (if the command above didn't exit)."
-      - echo "Setting image tag..."
-      - IMAGE_TAG=$(echo ${CODEBUILD_RESOLVED_SOURCE_VERSION:-unknown} | cut -c 1-7)
+      - AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      - echo "AWS Account ID: $AWS_ACCOUNT_ID"
+      - "echo \"Logging in to Amazon ECR...\""
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - ECR_REGISTRY=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
       - FULL_IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-      - echo "Image URI: $FULL_IMAGE_URI"
-      # create repo if missing (idempotent)
-      - |
-        if ! aws ecr describe-repositories --repository-names "$ECR_REPOSITORY" --region $AWS_REGION >/dev/null 2>&1; then
-          echo "ECR repo $ECR_REPOSITORY not found — creating..."
-          aws ecr create-repository --repository-name "$ECR_REPOSITORY" --region $AWS_REGION >/dev/null
-          echo "Created $ECR_REPOSITORY"
-        else
-          echo "ECR repo exists"
-        fi
-
   build:
     commands:
-      - echo "== build =="
-      - echo "Building Docker image and tagging..."
       - docker build -t $ECR_REPOSITORY:latest .
       - docker tag $ECR_REPOSITORY:latest $FULL_IMAGE_URI
-      - docker tag $ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
-      - echo "Built and tagged images."
-
   post_build:
     commands:
-      - echo "== post_build =="
-      - echo "Pushing images to ECR..."
-      - docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
       - docker push $FULL_IMAGE_URI
-      - echo "Images pushed: $FULL_IMAGE_URI and latest"
-      - echo "Generating imagedefinitions.json for ECS deployment..."
-      - printf '[{"name":"%s","imageUri":"%s"}]' "$CONTAINER_NAME" "$FULL_IMAGE_URI" > imagedefinitions.json
-      - echo "imagedefinitions.json content:"
-      - cat imagedefinitions.json
+      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $FULL_IMAGE_URI > imagedefinitions.json
 
 artifacts:
   files:
     - imagedefinitions.json
-  discard-paths: no
