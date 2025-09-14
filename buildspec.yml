@@ -2,46 +2,46 @@ version: 0.2
 
 env:
   variables:
-    ECR_REPOSITORY: "share-co2"      # change to your ECR repo name
-    CONTAINER_NAME: "share-co2"      # must match the container 'name' in your ECS task definition
-    AWS_DEFAULT_REGION: "ap-south-1" # change if needed
-    IMAGE_TAG_LENGTH: "7"            # length of commit prefix to use as tag
+    ECR_REPOSITORY: "share-co2"
+    CONTAINER_NAME: "share-co2"
+    AWS_DEFAULT_REGION: "ap-south-1"
+    IMAGE_TAG_LENGTH: "7"
 
 phases:
   install:
     runtime-versions:
       docker: 20
     commands:
-      - echo "Install phase: verify aws & docker"
-      - aws --version
-      - docker --version
+      - "echo Install phase: verify aws & docker"
+      - "aws --version"
+      - "docker --version"
 
   pre_build:
     commands:
-      - echo "Pre-build: determine account/registry and login to ECR"
-      - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-      - REPOSITORY_URI="$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY"
-      - IMAGE_TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION:0:$IMAGE_TAG_LENGTH}
-      - FULL_IMAGE_URI="$REPOSITORY_URI:$IMAGE_TAG"
-      - echo "Repository URI: $REPOSITORY_URI"
-      - echo "Image tag: $IMAGE_TAG"
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin "$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"
+      - "echo Pre-build: determine account/registry and login to ECR"
+      - 'ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)'
+      - 'REPOSITORY_URI="$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY"'
+      - 'IMAGE_TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION:0:$IMAGE_TAG_LENGTH}'
+      - 'FULL_IMAGE_URI="$REPOSITORY_URI:$IMAGE_TAG"'
+      - 'echo "Repository URI: $REPOSITORY_URI"'
+      - 'echo "Image tag: $IMAGE_TAG"'
+      - 'aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin "$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"'
 
   build:
     commands:
-      - echo "Build started on `date`"
-      - docker build -t "$FULL_IMAGE_URI" .
-      - docker tag "$FULL_IMAGE_URI" "$REPOSITORY_URI:latest" || true
+      - 'echo "Build started on $(date)"'
+      - 'docker build -t "$FULL_IMAGE_URI" .'
+      - 'docker tag "$FULL_IMAGE_URI" "$REPOSITORY_URI:latest" || true'
 
   post_build:
     commands:
-      - echo "Pushing image to ECR..."
-      - docker push "$FULL_IMAGE_URI"
-      - docker push "$REPOSITORY_URI:latest" || true
-      - echo "Creating imagedefinitions.json for CodePipeline / ECS deploy"
-      - printf '[{"name":"%s","imageUri":"%s"}]' "$CONTAINER_NAME" "$FULL_IMAGE_URI" > imagedefinitions.json
-      - echo "imagedefinitions.json contents:"
-      - cat imagedefinitions.json
+      - 'echo "Pushing image to ECR..."'
+      - 'docker push "$FULL_IMAGE_URI"'
+      - 'docker push "$REPOSITORY_URI:latest" || true'
+      - 'echo "Creating imagedefinitions.json for CodePipeline / ECS deploy"'
+      - 'printf '\''[{"name":"%s","imageUri":"%s"}]'\'' "$CONTAINER_NAME" "$FULL_IMAGE_URI" > imagedefinitions.json'
+      - 'echo "imagedefinitions.json contents:"'
+      - 'cat imagedefinitions.json'
 
 artifacts:
   files:
