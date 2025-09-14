@@ -3,14 +3,8 @@ import logger from "@/config/logger";
 import { getUserById } from "@/lib/user/userServices";
 import { mailSender } from "@/services/mailSender";
 import { NextRequest, NextResponse } from "next/server";
-import { RateLimiterMemory } from "rate-limiter-flexible";
 import sanitizeHtml from "sanitize-html";
 
-// Rate limiter: max 5 requests per user per 15 minutes
-const rateLimiter = new RateLimiterMemory({
-    points: 5, // 5 requests
-    duration: 15 * 60, // 15 minutes
-});
 
 export async function POST(req: NextRequest) {
     let userId: string | undefined;
@@ -27,15 +21,6 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Rate limiting
-        try {
-            await rateLimiter.consume(userId);
-        } catch {
-            return NextResponse.json(
-                { message: "Too many requests, please try again later" },
-                { status: 429 }
-            );
-        }
         // Sanitize message
         const sanitizedMessage = sanitizeHtml(message, {
             allowedTags: [], // Disallow all HTML tags
