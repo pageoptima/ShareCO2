@@ -2,13 +2,11 @@ version: 0.2
 
 env:
   variables:
-    # Set these environment variables in CodeBuild console or project configuration
-    AWS_REGION: "ap-south-1"                   # e.g., us-east-1
-    ECR_REPOSITORY: "share-co2"                # Your ECR repository name
-    ECS_CLUSTER: "share-co2"                   # Your ECS cluster name
-    ECS_SERVICE: "share-co2-service"           # Your ECS service name
-    CONTAINER_NAME: "share-co2"                # Container name in task definition
-    # IMAGE_TAG will be set dynamically below
+    AWS_REGION: "ap-south-1"
+    ECR_REPOSITORY: "share-co2"
+    ECS_CLUSTER: "share-co2"
+    ECS_SERVICE: "share-co2-service"
+    CONTAINER_NAME: "share-co2"
 
 phases:
   pre_build:
@@ -16,9 +14,9 @@ phases:
       - echo "Logging in to Amazon ECR..."
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
       - echo "Setting image tag..."
-      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)  # Short commit hash
+      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - ECR_REGISTRY=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-      - FULL_IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+      - FULL_IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       - echo "Image URI: $FULL_IMAGE_URI"
 
   build:
@@ -35,9 +33,9 @@ phases:
       - docker push $FULL_IMAGE_URI
       - echo "Generating imagedefinitions.json for ECS deployment..."
       - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $FULL_IMAGE_URI > imagedefinitions.json
-      - cat imagedefinitions.json  # Verify content
+      - cat imagedefinitions.json
 
 artifacts:
   files:
-    - imagedefinitions.json   # Required for ECS deployment
+    - imagedefinitions.json
   discard-paths: no
