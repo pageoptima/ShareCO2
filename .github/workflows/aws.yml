@@ -45,7 +45,7 @@ permissions:
 
 jobs:
   deploy:
-    if: github.repository == 'pageoptima/ShareCO2'
+    if: github.repository == 'pageoptima/ShareCO21'
     name: Deploy
     # Use a native ARM64 runner for public repositories
     runs-on: ubuntu-24.04-arm
