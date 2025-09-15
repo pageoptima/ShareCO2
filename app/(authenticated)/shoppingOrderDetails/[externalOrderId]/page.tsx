@@ -215,7 +215,7 @@ const OrderDetailsPage = () => {
                     onClick={() => window.open("https://app.shareco2.in", "_blank")}
                     aria-label="View Orders"
                   >
-                    <span className="hidden sm:inline">View Orders</span>
+                    <span className="text-blue-500">View Orders</span>
                   </Button>
                 </div>
               </div>
