@@ -33,7 +33,6 @@ export default async function handler(request: Request) {
                     (error instanceof Error && error.message) ||
                     "Unknown error",
             },
-
             { status: 500 }
         );
     }
